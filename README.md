@@ -1,7 +1,4 @@
 # LeagueLink
-A sports management platform for organizing tournaments, tracking results, and connecting sports communities. Designed for amateur and professional players alike.
-
- LeagueLink
 
 LeagueLink is a sports management platform designed to help players, teams, and organizers create and manage tournaments, track results, and engage with sports communities. Built for both amateur and professional sports enthusiasts, LeagueLink simplifies event management and fosters community connections.
 
