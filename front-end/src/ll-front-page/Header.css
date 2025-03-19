@@ -1,4 +1,4 @@
-/* Header */
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -10,10 +10,11 @@
 }
 
 .header .logo h1 {
-  font-size: 32px; /* גודל לוגו גדול יותר */
+  font-size: 32px; 
   font-weight: bold;
-  color: #C680E3; /* צבע כחול-סגלגל להדגשת הלוגו */
+  color: #C680E3; 
 }
+  
 
 .logo {
   display: flex;
