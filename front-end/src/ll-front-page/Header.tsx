@@ -4,14 +4,12 @@ function Header() {
   return (
     <header className="header">
       <div className="logo">
-        <h1>LeagueLink</h1> {/* זה הלוגו שלך */}
+        <img src="/path/to/trophy-icon.svg" alt="Trophy Icon" className="logo-icon" />
+        <h1>LeagueLink</h1>
       </div>
       <nav>
         <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="#">Features</a></li>
-          <li><a href="#">Download</a></li>
-          <li><a href="#">Support</a></li>
+          <li><a href="#">Who We Are</a></li>
         </ul>
       </nav>
     </header>

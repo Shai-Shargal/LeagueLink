@@ -3,9 +3,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 40px;
-  background-color: #2c2f38; /* צבע כהה לקישוט */
-  color: white;
+  padding: 20px;
+  background-color: #333;
+  color: #fff;
   font-size: 24px;
 }
 
@@ -15,9 +15,21 @@
   color: #C680E3; /* צבע כחול-סגלגל להדגשת הלוגו */
 }
 
-nav ul {
-  list-style-type: none;
+.logo {
   display: flex;
+  align-items: center;
+}
+
+.logo-icon {
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 20px;
 }
 
 nav ul li {
@@ -26,7 +38,7 @@ nav ul li {
 
 nav ul li a {
   text-decoration: none;
-  color: white;
+  color: #fff;
   font-size: 18px;
   transition: color 0.3s ease;
 }
@@ -35,4 +47,3 @@ nav ul li a:hover {
   color: #7289da; /* צבע בהיר בעת העכבר על הלינק */
 }
 
-  
