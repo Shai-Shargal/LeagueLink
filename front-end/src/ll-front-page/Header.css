@@ -1,0 +1,38 @@
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background-color: #2c2f38; /* צבע כהה לקישוט */
+  color: white;
+  font-size: 24px;
+}
+
+.header .logo h1 {
+  font-size: 32px; /* גודל לוגו גדול יותר */
+  font-weight: bold;
+  color: #C680E3; /* צבע כחול-סגלגל להדגשת הלוגו */
+}
+
+nav ul {
+  list-style-type: none;
+  display: flex;
+}
+
+nav ul li {
+  margin-right: 20px;
+}
+
+nav ul li a {
+  text-decoration: none;
+  color: white;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
+nav ul li a:hover {
+  color: #7289da; /* צבע בהיר בעת העכבר על הלינק */
+}
+
+  
