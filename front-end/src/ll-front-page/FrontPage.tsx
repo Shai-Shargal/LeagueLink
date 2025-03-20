@@ -1,12 +1,14 @@
-
-import './FrontPage.css';
+import "./FrontPage.css";
+import Header from "./Header";
+import OurGoal from "./OurGoal";
 
 function FrontPage() {
   return (
     <div className="front-page">
+      <Header />
       <section className="hero">
         <h1>Welcome to LeagueLink</h1>
-        <p>Join millions of gamers online and chat with your friends</p>
+        <p>Connecting Communities, Competing Together</p>
         <button className="cta">Start Here</button>
       </section>
       <section className="features">
@@ -20,9 +22,13 @@ function FrontPage() {
         </div>
         <div className="feature">
           <h2>Free Forever</h2>
-          <p>LeagueLink is free and always will be, with no ads or premium-only features.</p>
+          <p>
+            LeagueLink is free and always will be, with no ads or premium-only
+            features.
+          </p>
         </div>
       </section>
+      <OurGoal />
     </div>
   );
 }
