@@ -1,6 +1,7 @@
 import "./FrontPage.css";
 import Header from "./Header";
 import OurGoal from "./OurGoal";
+import MeetTheTeam from "./MeetTheTeam";
 
 function FrontPage() {
   return (
@@ -29,6 +30,7 @@ function FrontPage() {
         </div>
       </section>
       <OurGoal />
+      <MeetTheTeam />
     </div>
   );
 }

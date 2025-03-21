@@ -1,0 +1,41 @@
+.meet-the-team {
+  padding: 40px 20px; /* Increase padding for more space */
+  background-color: #23272a; /* Change background color to white */
+  color: #c680e3; /* Change text color to dark */
+  font-size: 18px;
+  line-height: 1.6;
+  text-align: center; /* Center align the content */
+}
+
+.meet-the-team h2 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.meet-the-team p {
+  margin-bottom: 15px;
+}
+
+.team-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.team-member-pic {
+  width: 150px; /* Adjust the size as needed */
+  height: 150px; /* Adjust the size as needed */
+  border-radius: 50%; /* Make the picture round */
+  margin-bottom: 10px;
+}
+
+.team-member h3 {
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+
+.team-member p {
+  font-size: 16px;
+  color: #c680e3; /* Slightly lighter color for the role */
+}
