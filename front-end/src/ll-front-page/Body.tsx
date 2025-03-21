@@ -1,4 +1,5 @@
 import "./Body.css";
+import StartHere from "./StartHere";
 
 function Body() {
   return (
@@ -6,7 +7,7 @@ function Body() {
       <section className="hero">
         <h1>Welcome to LeagueLink</h1>
         <p>Connecting Communities, Competing Together</p>
-        <button className="cta">Start Here</button>
+        <StartHere />
       </section>
       <section className="features">
         <div className="feature">
