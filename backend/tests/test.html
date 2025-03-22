@@ -1,0 +1,66 @@
+<script>
+  const API_URL = "http://localhost:5000/api";
+
+  async function register() {
+    const username = document.getElementById("regUsername").value;
+    const email = document.getElementById("regEmail").value;
+    const password = document.getElementById("regPassword").value;
+    const responseDiv = document.getElementById("registerResponse");
+
+    try {
+      const response = await fetch(`${API_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        mode: "cors",
+        body: JSON.stringify({ username, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        responseDiv.innerHTML = `<div class="success">Registration successful! Token: ${data.data.token}</div>`;
+        // Store token for later use
+        localStorage.setItem("token", data.data.token);
+      } else {
+        responseDiv.innerHTML = `<div class="error">Error: ${data.message}</div>`;
+      }
+    } catch (error) {
+      responseDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+      console.error("Registration error:", error);
+    }
+  }
+
+  async function login() {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+    const responseDiv = document.getElementById("loginResponse");
+
+    try {
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        mode: "cors",
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        responseDiv.innerHTML = `<div class="success">Login successful! Token: ${data.data.token}</div>`;
+        // Store token for later use
+        localStorage.setItem("token", data.data.token);
+      } else {
+        responseDiv.innerHTML = `<div class="error">Error: ${data.message}</div>`;
+      }
+    } catch (error) {
+      responseDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+      console.error("Login error:", error);
+    }
+  }
+</script>
