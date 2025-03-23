@@ -32,7 +32,7 @@ const goals = [
 
 const OurGoal: React.FC = () => {
   return (
-    <Box sx={{ py: 8, position: "relative" }}>
+    <Box sx={{ py: 8, position: "relative" }} data-section="about">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -45,9 +45,10 @@ const OurGoal: React.FC = () => {
             textAlign: "center",
             mb: 6,
             fontWeight: 700,
-            background: "linear-gradient(135deg, #6366f1 0%, #ec4899 100%)",
+            background: "linear-gradient(45deg, #C680E3, #9333EA)",
+            backgroundClip: "text",
             WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
+            color: "transparent",
           }}
         >
           Our Mission
@@ -60,6 +61,7 @@ const OurGoal: React.FC = () => {
             color: "text.secondary",
             maxWidth: "800px",
             mx: "auto",
+            px: 2,
           }}
         >
           We're building the ultimate platform for sports communities to
@@ -85,16 +87,18 @@ const OurGoal: React.FC = () => {
                   height: "100%",
                   background: "rgba(30, 41, 59, 0.7)",
                   backdropFilter: "blur(10px)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
-                  transition: "transform 0.2s ease-in-out",
+                  border: "1px solid rgba(198, 128, 227, 0.2)",
+                  transition: "all 0.3s ease-in-out",
                   "&:hover": {
                     transform: "translateY(-5px)",
+                    border: "1px solid rgba(198, 128, 227, 0.4)",
+                    boxShadow: "0 4px 20px rgba(198, 128, 227, 0.15)",
                   },
                 }}
               >
                 <Box
                   sx={{
-                    color: "primary.main",
+                    color: "#C680E3",
                     mb: 2,
                     display: "flex",
                     alignItems: "center",

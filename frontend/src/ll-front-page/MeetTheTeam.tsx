@@ -21,7 +21,7 @@ const teamMembers = [
 
 const MeetTheTeam: React.FC = () => {
   return (
-    <Box sx={{ py: 8, position: "relative" }}>
+    <Box sx={{ py: 8, position: "relative" }} data-section="contact">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
