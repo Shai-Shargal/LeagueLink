@@ -9,30 +9,60 @@ import {
   useMediaQuery,
 } from "@mui/material";
 import { Menu as MenuIcon } from "@mui/icons-material";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink, useLocation } from "react-router-dom";
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const location = useLocation();
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.querySelector(`[data-section="${sectionId}"]`);
+    if (element) {
+      const offset = 80; // Height of the navbar
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
+    setMobileOpen(false);
+  };
 
   const navItems = [
     { label: "Home", path: "/" },
-    { label: "About", path: "/about" },
+    { label: "About", path: "#about", action: () => scrollToSection("about") },
     { label: "Features", path: "/features" },
-    { label: "Contact", path: "/contact" },
+    {
+      label: "Contact",
+      path: "#contact",
+      action: () => scrollToSection("contact"),
+    },
   ];
 
-  const NavButton = ({ label, path }: { label: string; path: string }) => (
+  const NavButton = ({
+    label,
+    path,
+    action,
+  }: {
+    label: string;
+    path: string;
+    action?: () => void;
+  }) => (
     <Button
-      component={RouterLink}
-      to={path}
+      component={action ? "button" : RouterLink}
+      to={!action ? path : undefined}
+      onClick={action}
       sx={{
         color: "text.primary",
         mx: 1,
         "&:hover": {
-          color: "primary.main",
+          color: "#C680E3",
         },
       }}
     >
@@ -55,7 +85,7 @@ const Navbar: React.FC = () => {
             right: 0,
             background: "rgba(30, 41, 59, 0.95)",
             backdropFilter: "blur(10px)",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+            borderBottom: "1px solid rgba(198, 128, 227, 0.2)",
             padding: "1rem",
             zIndex: 1000,
           }}
@@ -64,16 +94,17 @@ const Navbar: React.FC = () => {
             {navItems.map((item) => (
               <Button
                 key={item.path}
-                component={RouterLink}
-                to={item.path}
+                component={item.action ? "button" : RouterLink}
+                to={!item.action ? item.path : undefined}
+                onClick={item.action}
                 fullWidth
                 sx={{
                   color: "text.primary",
                   "&:hover": {
-                    color: "primary.main",
+                    color: "#C680E3",
+                    backgroundColor: "rgba(198, 128, 227, 0.1)",
                   },
                 }}
-                onClick={() => setMobileOpen(false)}
               >
                 {item.label}
               </Button>
@@ -90,25 +121,39 @@ const Navbar: React.FC = () => {
       sx={{
         background: "rgba(15, 23, 42, 0.8)",
         backdropFilter: "blur(10px)",
-        borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+        borderBottom: "1px solid rgba(198, 128, 227, 0.2)",
       }}
     >
       <Toolbar>
         <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
           <RouterLink
             to="/"
-            style={{ textDecoration: "none", color: "inherit" }}
+            style={{
+              textDecoration: "none",
+              color: "inherit",
+              display: "flex",
+              alignItems: "center",
+            }}
           >
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               style={{
-                fontSize: "1.5rem",
-                fontWeight: "bold",
-                color: theme.palette.primary.main,
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
               }}
             >
-              LeagueLink
+              <EmojiEventsIcon sx={{ color: "#C680E3", fontSize: "2rem" }} />
+              <span
+                style={{
+                  fontSize: "1.5rem",
+                  fontWeight: "bold",
+                  color: "#C680E3",
+                }}
+              >
+                LeagueLink
+              </span>
             </motion.div>
           </RouterLink>
         </Box>
@@ -119,7 +164,12 @@ const Navbar: React.FC = () => {
               color="inherit"
               edge="end"
               onClick={() => setMobileOpen(!mobileOpen)}
-              sx={{ ml: 2 }}
+              sx={{
+                ml: 2,
+                "&:hover": {
+                  color: "#C680E3",
+                },
+              }}
             >
               <MenuIcon />
             </IconButton>
@@ -128,7 +178,12 @@ const Navbar: React.FC = () => {
         ) : (
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {navItems.map((item) => (
-              <NavButton key={item.path} label={item.label} path={item.path} />
+              <NavButton
+                key={item.path}
+                label={item.label}
+                path={item.path}
+                action={item.action}
+              />
             ))}
           </Box>
         )}
