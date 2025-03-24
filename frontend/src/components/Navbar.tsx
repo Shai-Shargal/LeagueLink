@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -11,18 +11,32 @@ import {
 import { Menu as MenuIcon } from "@mui/icons-material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link as RouterLink, useLocation } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
+import { authService } from "../services/api";
 
 const Navbar: React.FC = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    setIsAuthenticated(!!token);
+  }, [location]);
+
+  const handleLogout = () => {
+    authService.logout();
+    setIsAuthenticated(false);
+    navigate("/login");
+  };
 
   const scrollToSection = (sectionId: string) => {
     const element = document.querySelector(`[data-section="${sectionId}"]`);
     if (element) {
-      const offset = 80; // Height of the navbar
+      const offset = 80;
       const elementPosition = element.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - offset;
 
@@ -34,7 +48,15 @@ const Navbar: React.FC = () => {
     setMobileOpen(false);
   };
 
-  const navItems = [
+  const handleLogoClick = () => {
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    } else {
+      navigate("/");
+    }
+  };
+
+  const publicNavItems = [
     { label: "Home", path: "/" },
     { label: "About", path: "#about", action: () => scrollToSection("about") },
     { label: "Features", path: "/features" },
@@ -45,13 +67,20 @@ const Navbar: React.FC = () => {
     },
   ];
 
+  const authenticatedNavItems = [
+    { label: "Dashboard", path: "/dashboard" },
+    { label: "Logout", action: handleLogout },
+  ];
+
+  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
+
   const NavButton = ({
     label,
     path,
     action,
   }: {
     label: string;
-    path: string;
+    path?: string;
     action?: () => void;
   }) => (
     <Button
@@ -93,7 +122,7 @@ const Navbar: React.FC = () => {
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
             {navItems.map((item) => (
               <Button
-                key={item.path}
+                key={item.path || item.label}
                 component={item.action ? "button" : RouterLink}
                 to={!item.action ? item.path : undefined}
                 onClick={item.action}
@@ -126,11 +155,10 @@ const Navbar: React.FC = () => {
     >
       <Toolbar>
         <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
-          <RouterLink
-            to="/"
-            style={{
-              textDecoration: "none",
-              color: "inherit",
+          <Box
+            onClick={handleLogoClick}
+            sx={{
+              cursor: "pointer",
               display: "flex",
               alignItems: "center",
             }}
@@ -155,7 +183,7 @@ const Navbar: React.FC = () => {
                 LeagueLink
               </span>
             </motion.div>
-          </RouterLink>
+          </Box>
         </Box>
 
         {isMobile ? (
@@ -179,7 +207,7 @@ const Navbar: React.FC = () => {
           <Box sx={{ display: "flex", alignItems: "center" }}>
             {navItems.map((item) => (
               <NavButton
-                key={item.path}
+                key={item.path || item.label}
                 label={item.label}
                 path={item.path}
                 action={item.action}
