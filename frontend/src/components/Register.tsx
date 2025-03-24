@@ -7,27 +7,85 @@ import {
   Button,
   Link,
   Container,
+  Alert,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services/api";
 
 const Register: React.FC = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const validateForm = () => {
+    if (
+      !formData.username ||
+      !formData.email ||
+      !formData.password ||
+      !formData.confirmPassword
+    ) {
+      setError("All fields are required");
+      return false;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError("Please enter a valid email address");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add registration logic here
-    console.log("Register:", { username, password, confirmPassword });
+    setError("");
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await authService.register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
+      navigate("/dashboard"); // Redirect to dashboard after successful registration
+    } catch (err: any) {
+      setError(
+        err.response?.data?.message || "Registration failed. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Container maxWidth="sm">
       <Box
         sx={{
-          minHeight: "calc(100vh - 64px)", // Account for navbar height
+          minHeight: "calc(100vh - 64px)",
           display: "flex",
           alignItems: "center",
           py: 8,
@@ -66,14 +124,49 @@ const Register: React.FC = () => {
               Create Account
             </Typography>
 
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit}>
               <TextField
                 fullWidth
                 label="Username"
+                name="username"
                 variant="outlined"
                 margin="normal"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={formData.username}
+                onChange={handleChange}
+                disabled={loading}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    "& fieldset": {
+                      borderColor: "rgba(198, 128, 227, 0.2)",
+                    },
+                    "&:hover fieldset": {
+                      borderColor: "rgba(198, 128, 227, 0.4)",
+                    },
+                    "&.Mui-focused fieldset": {
+                      borderColor: "#C680E3",
+                    },
+                  },
+                  "& .MuiInputLabel-root.Mui-focused": {
+                    color: "#C680E3",
+                  },
+                }}
+              />
+              <TextField
+                fullWidth
+                label="Email"
+                name="email"
+                type="email"
+                variant="outlined"
+                margin="normal"
+                value={formData.email}
+                onChange={handleChange}
+                disabled={loading}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
@@ -94,11 +187,13 @@ const Register: React.FC = () => {
               <TextField
                 fullWidth
                 label="Password"
+                name="password"
                 type="password"
                 variant="outlined"
                 margin="normal"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleChange}
+                disabled={loading}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
@@ -119,11 +214,13 @@ const Register: React.FC = () => {
               <TextField
                 fullWidth
                 label="Confirm Password"
+                name="confirmPassword"
                 type="password"
                 variant="outlined"
                 margin="normal"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                disabled={loading}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
@@ -145,6 +242,7 @@ const Register: React.FC = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
+                disabled={loading}
                 sx={{
                   mt: 3,
                   mb: 2,
@@ -154,7 +252,7 @@ const Register: React.FC = () => {
                   },
                 }}
               >
-                Register
+                {loading ? "Creating Account..." : "Register"}
               </Button>
             </form>
 

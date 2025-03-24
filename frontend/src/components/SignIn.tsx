@@ -7,19 +7,58 @@ import {
   Button,
   Link,
   Container,
+  Alert,
 } from "@mui/material";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../services/api";
 
 const SignIn: React.FC = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Add sign-in logic here
-    console.log("Sign in:", { username, password });
+    setError("");
+
+    if (!formData.email || !formData.password) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log("Attempting login with:", { email: formData.email });
+      const response = await authService.login({
+        email: formData.email,
+        password: formData.password,
+      });
+      console.log("Login response:", response);
+      console.log("Token stored:", localStorage.getItem("token"));
+      console.log("Navigating to dashboard...");
+      navigate("/dashboard");
+    } catch (err: any) {
+      console.error("Login error:", err);
+      console.error("Error response:", err.response?.data);
+      setError(
+        err.response?.data?.message ||
+          "Login failed. Please check your credentials and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -65,14 +104,23 @@ const SignIn: React.FC = () => {
               Sign In
             </Typography>
 
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
+
             <form onSubmit={handleSubmit}>
               <TextField
                 fullWidth
-                label="Username"
+                label="Email"
+                name="email"
+                type="email"
                 variant="outlined"
                 margin="normal"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                value={formData.email}
+                onChange={handleChange}
+                disabled={loading}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
@@ -93,11 +141,13 @@ const SignIn: React.FC = () => {
               <TextField
                 fullWidth
                 label="Password"
+                name="password"
                 type="password"
                 variant="outlined"
                 margin="normal"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={formData.password}
+                onChange={handleChange}
+                disabled={loading}
                 sx={{
                   "& .MuiOutlinedInput-root": {
                     "& fieldset": {
@@ -119,6 +169,7 @@ const SignIn: React.FC = () => {
                 type="submit"
                 fullWidth
                 variant="contained"
+                disabled={loading}
                 sx={{
                   mt: 3,
                   mb: 2,
@@ -128,7 +179,7 @@ const SignIn: React.FC = () => {
                   },
                 }}
               >
-                Sign In
+                {loading ? "Signing in..." : "Sign In"}
               </Button>
             </form>
 
