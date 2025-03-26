@@ -20,6 +20,11 @@ export interface LoginData {
   password: string;
 }
 
+export interface UpdateProfileData {
+  bio?: string;
+  favoriteSports?: string[];
+}
+
 export const authService = {
   register: async (data: RegisterData) => {
     const response = await api.post("/users/register", data);
@@ -66,6 +71,18 @@ export const authService = {
       console.error("Error getting current user:", error);
       return null;
     }
+  },
+
+  updateProfile: async (data: UpdateProfileData) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await api.put("/users/profile", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
   },
 };
 

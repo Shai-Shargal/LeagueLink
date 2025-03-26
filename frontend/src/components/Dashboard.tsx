@@ -1,37 +1,36 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Button, Container } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Box, Typography, Container } from "@mui/material";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../services/api";
+import ProfileEditor from "./ProfileEditor";
 
 const Dashboard: React.FC = () => {
-  const [user, setUser] = useState<{ username: string } | null>(null);
+  const [user, setUser] = useState<{
+    username: string;
+    profilePicture: string;
+  } | null>(null);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        console.log("Fetching user data...");
-        const userData = await authService.getCurrentUser();
-        console.log("User data received:", userData);
-        if (userData) {
-          setUser(userData);
-        } else {
-          console.log("No user data, redirecting to login");
-          navigate("/login");
-        }
-      } catch (error) {
-        console.error("Error fetching user:", error);
+    fetchUser();
+  }, []);
+
+  const fetchUser = async () => {
+    try {
+      console.log("Fetching user data...");
+      const userData = await authService.getCurrentUser();
+      console.log("User data received:", userData);
+      if (userData) {
+        setUser(userData);
+      } else {
+        console.log("No user data, redirecting to login");
         navigate("/login");
       }
-    };
-
-    fetchUser();
-  }, [navigate]);
-
-  const handleLogout = () => {
-    console.log("Logging out...");
-    authService.logout();
-    navigate("/login");
+    } catch (error) {
+      console.error("Error fetching user:", error);
+      navigate("/login");
+    }
   };
 
   if (!user) {
@@ -42,44 +41,42 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  return (
-    <Container maxWidth="lg">
-      <Box
-        sx={{
-          mt: 4,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-        }}
-      >
-        <Typography
-          variant="h4"
-          sx={{
-            mb: 4,
-            fontWeight: 700,
-            background: "linear-gradient(45deg, #C680E3, #9333EA)",
-            backgroundClip: "text",
-            WebkitBackgroundClip: "text",
-            color: "transparent",
-          }}
-        >
-          Hello {user.username}, welcome to LeagueLink!
-        </Typography>
+  const isEditing = searchParams.get("edit") === "true";
 
-        <Button
-          variant="contained"
-          onClick={handleLogout}
+  return (
+    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <Container maxWidth="lg" sx={{ flex: 1, py: 4 }}>
+        <Box
           sx={{
-            background: "linear-gradient(45deg, #C680E3, #9333EA)",
-            "&:hover": {
-              background: "linear-gradient(45deg, #9333EA, #7928CA)",
-            },
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 4,
           }}
         >
-          Logout
-        </Button>
-      </Box>
-    </Container>
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 700,
+              background: "linear-gradient(45deg, #C680E3, #9333EA)",
+              backgroundClip: "text",
+              WebkitBackgroundClip: "text",
+              color: "transparent",
+            }}
+          >
+            Hello {user.username}, welcome to LeagueLink!
+          </Typography>
+
+          {isEditing ? (
+            <ProfileEditor />
+          ) : (
+            <Typography variant="body1" sx={{ textAlign: "center" }}>
+              Use the navigation bar above to edit your profile or log out.
+            </Typography>
+          )}
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

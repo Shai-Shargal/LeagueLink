@@ -8,6 +8,7 @@ export interface IUser extends Document {
   isAdmin: boolean;
   profilePicture?: string;
   bio?: string;
+  favoriteSports?: string[];
   channels: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
@@ -47,7 +48,14 @@ const userSchema = new Schema<IUser>(
     bio: {
       type: String,
       maxlength: [500, "Bio cannot be more than 500 characters"],
+      default: "",
     },
+    favoriteSports: [
+      {
+        type: String,
+        default: [],
+      },
+    ],
     channels: [
       {
         type: Schema.Types.ObjectId,
