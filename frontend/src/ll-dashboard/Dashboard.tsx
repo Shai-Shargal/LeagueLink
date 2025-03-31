@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Container, Drawer } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Container,
+  Drawer,
+  Grid,
+  Paper,
+  Stack,
+} from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../services/api";
 import ProfileEditor from "./ProfileEditor";
 import Channels from "./Channels";
+import { EmojiEvents, People, SportsScore } from "@mui/icons-material";
 
 const DRAWER_WIDTH = 240;
 
@@ -47,7 +56,13 @@ const Dashboard: React.FC = () => {
   const isEditing = searchParams.get("edit") === "true";
 
   return (
-    <Box sx={{ display: "flex", height: "100vh" }}>
+    <Box
+      sx={{
+        display: "flex",
+        height: "100vh",
+        background: "linear-gradient(135deg, #1a1b1e 0%, #2d2f35 100%)",
+      }}
+    >
       {/* Sidebar */}
       <Drawer
         variant="permanent"
@@ -70,37 +85,180 @@ const Dashboard: React.FC = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          bgcolor: "#313338",
-          minHeight: "100vh",
-          p: 3,
+          height: "100vh",
+          p: 0,
+          mt: 8,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          overflow: "auto",
+          "&::-webkit-scrollbar": {
+            width: "8px",
+            display: "none",
+          },
         }}
       >
         <Box
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 4,
+            maxWidth: 1200,
+            width: "100%",
+            p: 3,
+            pb: 6,
           }}
         >
-          <Typography
-            variant="h4"
-            sx={{
-              fontWeight: 700,
-              background: "linear-gradient(45deg, #C680E3, #9333EA)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              color: "transparent",
-            }}
-          >
-            Hello {user.username}, welcome to LeagueLink!
-          </Typography>
+          {/* Welcome Section */}
+          <Box sx={{ mb: isEditing ? 4 : 6, textAlign: "center" }}>
+            <Typography
+              variant="h3"
+              sx={{
+                fontWeight: 700,
+                background: "linear-gradient(45deg, #C680E3, #9333EA)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                color: "transparent",
+                mb: 2,
+                fontSize: { xs: "2rem", md: "3rem" },
+              }}
+            >
+              Hello {user.username}, welcome to LeagueLink!
+            </Typography>
+            {!isEditing && (
+              <Typography
+                variant="h6"
+                sx={{
+                  color: "#dcddde",
+                  maxWidth: 800,
+                  margin: "0 auto",
+                  opacity: 0.9,
+                  fontSize: { xs: "1rem", md: "1.25rem" },
+                }}
+              >
+                Your ultimate platform for connecting gamers, organizing
+                tournaments, and building competitive communities.
+              </Typography>
+            )}
+          </Box>
 
           {isEditing ? (
-            <ProfileEditor />
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: 800,
+                margin: "0 auto",
+                p: 3,
+                background: "rgba(30, 41, 59, 0.7)",
+                backdropFilter: "blur(10px)",
+                borderRadius: 2,
+                border: "1px solid rgba(198, 128, 227, 0.2)",
+              }}
+            >
+              <ProfileEditor />
+            </Box>
           ) : (
-            <Typography variant="body1" sx={{ color: "#dcddde" }}>
-              Select a channel from the sidebar to start chatting!
-            </Typography>
+            <>
+              {/* Quick Stats */}
+              <Grid container spacing={3} sx={{ mb: 6 }}>
+                <Grid item xs={12} md={4}>
+                  <Paper
+                    sx={{
+                      p: 3,
+                      background: "rgba(30, 41, 59, 0.7)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(198, 128, 227, 0.2)",
+                      "&:hover": {
+                        border: "1px solid rgba(198, 128, 227, 0.4)",
+                      },
+                      minHeight: "200px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Stack
+                      spacing={2}
+                      alignItems="center"
+                      sx={{ width: "100%" }}
+                    >
+                      <EmojiEvents sx={{ fontSize: 40, color: "#C680E3" }} />
+                      <Typography variant="h6" sx={{ color: "#fff" }}>
+                        Active Tournaments
+                      </Typography>
+                      <Typography
+                        variant="h4"
+                        sx={{ color: "#C680E3", fontWeight: "bold" }}
+                      >
+                        0
+                      </Typography>
+                    </Stack>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Paper
+                    sx={{
+                      p: 3,
+                      background: "rgba(30, 41, 59, 0.7)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(198, 128, 227, 0.2)",
+                      "&:hover": {
+                        border: "1px solid rgba(198, 128, 227, 0.4)",
+                      },
+                      minHeight: "200px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Stack
+                      spacing={2}
+                      alignItems="center"
+                      sx={{ width: "100%" }}
+                    >
+                      <People sx={{ fontSize: 40, color: "#C680E3" }} />
+                      <Typography variant="h6" sx={{ color: "#fff" }}>
+                        Team Members
+                      </Typography>
+                      <Typography
+                        variant="h4"
+                        sx={{ color: "#C680E3", fontWeight: "bold" }}
+                      >
+                        0
+                      </Typography>
+                    </Stack>
+                  </Paper>
+                </Grid>
+                <Grid item xs={12} md={4}>
+                  <Paper
+                    sx={{
+                      p: 3,
+                      background: "rgba(30, 41, 59, 0.7)",
+                      backdropFilter: "blur(10px)",
+                      border: "1px solid rgba(198, 128, 227, 0.2)",
+                      "&:hover": {
+                        border: "1px solid rgba(198, 128, 227, 0.4)",
+                      },
+                      minHeight: "200px",
+                      display: "flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Stack
+                      spacing={2}
+                      alignItems="center"
+                      sx={{ width: "100%" }}
+                    >
+                      <SportsScore sx={{ fontSize: 40, color: "#C680E3" }} />
+                      <Typography variant="h6" sx={{ color: "#fff" }}>
+                        Win Rate
+                      </Typography>
+                      <Typography
+                        variant="h4"
+                        sx={{ color: "#C680E3", fontWeight: "bold" }}
+                      >
+                        0%
+                      </Typography>
+                    </Stack>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </>
           )}
         </Box>
       </Box>

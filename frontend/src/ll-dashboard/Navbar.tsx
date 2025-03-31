@@ -72,7 +72,11 @@ const Navbar: React.FC = () => {
     { label: "Logout", action: handleLogout },
   ];
 
-  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
+  // Only show nav items if we're not on the login or register pages
+  const currentPath = location.pathname;
+  const isAuthPage = currentPath === "/login" || currentPath === "/register";
+  const navItems =
+    isAuthenticated && !isAuthPage ? authenticatedNavItems : publicNavItems;
 
   const NavButton = ({
     label,
@@ -146,11 +150,12 @@ const Navbar: React.FC = () => {
 
   return (
     <AppBar
-      position="sticky"
+      position="fixed"
       sx={{
-        background: "rgba(15, 23, 42, 0.8)",
+        background: "rgba(15, 23, 42, 0.95)",
         backdropFilter: "blur(10px)",
         borderBottom: "1px solid rgba(198, 128, 227, 0.2)",
+        zIndex: (theme) => theme.zIndex.drawer + 1,
       }}
     >
       <Toolbar>
@@ -186,35 +191,36 @@ const Navbar: React.FC = () => {
           </Box>
         </Box>
 
-        {isMobile ? (
-          <>
-            <IconButton
-              color="inherit"
-              edge="end"
-              onClick={() => setMobileOpen(!mobileOpen)}
-              sx={{
-                ml: 2,
-                "&:hover": {
-                  color: "#C680E3",
-                },
-              }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <MobileMenu />
-          </>
-        ) : (
-          <Box sx={{ display: "flex", alignItems: "center" }}>
-            {navItems.map((item) => (
-              <NavButton
-                key={item.path || item.label}
-                label={item.label}
-                path={item.path}
-                action={item.action}
-              />
-            ))}
-          </Box>
-        )}
+        {!isAuthPage &&
+          (isMobile ? (
+            <>
+              <IconButton
+                color="inherit"
+                edge="end"
+                onClick={() => setMobileOpen(!mobileOpen)}
+                sx={{
+                  ml: 2,
+                  "&:hover": {
+                    color: "#C680E3",
+                  },
+                }}
+              >
+                <MenuIcon />
+              </IconButton>
+              <MobileMenu />
+            </>
+          ) : (
+            <Box sx={{ display: "flex", alignItems: "center" }}>
+              {navItems.map((item) => (
+                <NavButton
+                  key={item.path || item.label}
+                  label={item.label}
+                  path={item.path}
+                  action={item.action}
+                />
+              ))}
+            </Box>
+          ))}
       </Toolbar>
     </AppBar>
   );

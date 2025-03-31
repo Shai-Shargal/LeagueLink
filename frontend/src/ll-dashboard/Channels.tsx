@@ -198,22 +198,38 @@ const Channels: React.FC = () => {
         ))}
       </List>
 
-      {/* Create Channel Button */}
+      {/* Create/Join Channel Buttons */}
       <Box sx={{ p: 2, borderTop: "1px solid rgba(198, 128, 227, 0.2)" }}>
-        <Button
-          fullWidth
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setOpenCreate(true)}
-          sx={{
-            background: "linear-gradient(45deg, #C680E3, #9333EA)",
-            "&:hover": {
-              background: "linear-gradient(45deg, #9333EA, #7928CA)",
-            },
-          }}
-        >
-          Create Channel
-        </Button>
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenCreate(true)}
+            sx={{
+              background: "linear-gradient(45deg, #C680E3, #9333EA)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #9333EA, #7928CA)",
+              },
+            }}
+          >
+            Create
+          </Button>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenJoin(true)}
+            sx={{
+              background: "linear-gradient(45deg, #C680E3, #9333EA)",
+              "&:hover": {
+                background: "linear-gradient(45deg, #9333EA, #7928CA)",
+              },
+            }}
+          >
+            Join
+          </Button>
+        </Box>
       </Box>
 
       {/* Create Channel Dialog */}
