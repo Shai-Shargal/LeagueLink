@@ -25,6 +25,18 @@ export interface UpdateProfileData {
   favoriteSports?: string[];
 }
 
+interface ChannelData {
+  name: string;
+  description: string;
+  passcode: string;
+  image?: string;
+}
+
+interface JoinChannelData {
+  channelId: string;
+  passcode: string;
+}
+
 export const authService = {
   register: async (data: RegisterData) => {
     const response = await api.post("/users/register", data);
@@ -81,6 +93,34 @@ export const authService = {
 
     const response = await api.put("/users/profile", data, {
       headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  // Channel methods
+  getMyChannels: async () => {
+    const response = await axios.get(`${API_URL}/channels/my-channels`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  },
+
+  createChannel: async (data: ChannelData) => {
+    const response = await axios.post(`${API_URL}/channels`, data, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    return response.data;
+  },
+
+  joinChannel: async (data: JoinChannelData) => {
+    const response = await axios.post(`${API_URL}/channels/join`, data, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
     });
     return response.data;
   },

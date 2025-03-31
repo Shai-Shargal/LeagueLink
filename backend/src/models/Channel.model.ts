@@ -4,60 +4,54 @@ import { IUser } from "./User.model.js";
 export interface IChannel extends Document {
   name: string;
   description: string;
-  sport: string;
-  isPrivate: boolean;
+  passcode: string;
+  image?: string;
   owner: IUser["_id"];
-  admins: IUser["_id"][];
   members: IUser["_id"][];
-  tournaments: mongoose.Types.ObjectId[];
+  admins: IUser["_id"][];
   createdAt: Date;
   updatedAt: Date;
 }
 
-const channelSchema = new Schema(
+const channelSchema = new Schema<IChannel>(
   {
     name: {
       type: String,
-      required: true,
+      required: [true, "Channel name is required"],
       trim: true,
-      minlength: 3,
+      minlength: [3, "Channel name must be at least 3 characters long"],
     },
     description: {
       type: String,
-      required: true,
+      required: [true, "Channel description is required"],
       trim: true,
-      minlength: 10,
+      minlength: [10, "Description must be at least 10 characters long"],
     },
-    sport: {
+    passcode: {
       type: String,
-      required: true,
+      required: [true, "Channel passcode is required"],
       trim: true,
+      minlength: [6, "Passcode must be at least 6 characters long"],
     },
-    isPrivate: {
-      type: Boolean,
-      default: false,
+    image: {
+      type: String,
+      default: "",
     },
     owner: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    admins: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
     members: [
       {
         type: Schema.Types.ObjectId,
         ref: "User",
       },
     ],
-    tournaments: [
+    admins: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Tournament",
+        ref: "User",
       },
     ],
   },
@@ -68,8 +62,7 @@ const channelSchema = new Schema(
 
 // Indexes for better query performance
 channelSchema.index({ name: 1 });
-channelSchema.index({ sport: 1 });
 channelSchema.index({ owner: 1 });
+channelSchema.index({ members: 1 });
 
-const Channel = mongoose.model<IChannel>("Channel", channelSchema);
-export { Channel };
+export const Channel = mongoose.model<IChannel>("Channel", channelSchema);

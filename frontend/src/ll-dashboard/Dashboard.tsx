@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Container } from "@mui/material";
+import { Box, Typography, Container, Drawer } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../services/api";
 import ProfileEditor from "./ProfileEditor";
+import Channels from "./Channels";
+
+const DRAWER_WIDTH = 240;
 
 const Dashboard: React.FC = () => {
   const [user, setUser] = useState<{
@@ -44,13 +47,38 @@ const Dashboard: React.FC = () => {
   const isEditing = searchParams.get("edit") === "true";
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
-      <Container maxWidth="lg" sx={{ flex: 1, py: 4 }}>
+    <Box sx={{ display: "flex", height: "100vh" }}>
+      {/* Sidebar */}
+      <Drawer
+        variant="permanent"
+        sx={{
+          width: DRAWER_WIDTH,
+          flexShrink: 0,
+          "& .MuiDrawer-paper": {
+            width: DRAWER_WIDTH,
+            boxSizing: "border-box",
+            background: "#1e1f22",
+            borderRight: "1px solid rgba(198, 128, 227, 0.2)",
+          },
+        }}
+      >
+        <Channels />
+      </Drawer>
+
+      {/* Main content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          bgcolor: "#313338",
+          minHeight: "100vh",
+          p: 3,
+        }}
+      >
         <Box
           sx={{
             display: "flex",
             flexDirection: "column",
-            alignItems: "center",
             gap: 4,
           }}
         >
@@ -70,12 +98,12 @@ const Dashboard: React.FC = () => {
           {isEditing ? (
             <ProfileEditor />
           ) : (
-            <Typography variant="body1" sx={{ textAlign: "center" }}>
-              Use the navigation bar above to edit your profile or log out.
+            <Typography variant="body1" sx={{ color: "#dcddde" }}>
+              Select a channel from the sidebar to start chatting!
             </Typography>
           )}
         </Box>
-      </Container>
+      </Box>
     </Box>
   );
 };
