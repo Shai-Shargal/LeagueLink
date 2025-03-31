@@ -142,10 +142,12 @@ router.put(
   [
     body("username").optional().trim().isLength({ min: 3 }),
     body("email").optional().isEmail(),
+    body("bio").optional().trim().isLength({ max: 500 }),
+    body("favoriteSports").optional().isArray(),
   ],
   async (req: Request, res: Response) => {
     try {
-      const { username, email } = req.body;
+      const { username, email, bio, favoriteSports } = req.body;
       const user = await User.findById(req.user.id);
 
       if (!user) {
@@ -157,6 +159,8 @@ router.put(
 
       if (username) user.username = username;
       if (email) user.email = email;
+      if (bio !== undefined) user.bio = bio;
+      if (favoriteSports !== undefined) user.favoriteSports = favoriteSports;
 
       const updatedUser = await user.save();
 
@@ -166,6 +170,9 @@ router.put(
           _id: updatedUser._id,
           username: updatedUser.username,
           email: updatedUser.email,
+          bio: updatedUser.bio,
+          favoriteSports: updatedUser.favoriteSports,
+          profilePicture: updatedUser.profilePicture,
         },
       });
     } catch (error) {
@@ -173,6 +180,37 @@ router.put(
       res.status(500).json({
         success: false,
         message: "Error updating profile",
+      });
+    }
+  }
+);
+
+// Get user profile by username
+router.get(
+  "/profile/:username",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const user = await User.findOne({ username: req.params.username })
+        .select("-password -email")
+        .populate("channels", "name description sport");
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        data: user,
+      });
+    } catch (error) {
+      logger.error("Get User Profile Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching user profile",
       });
     }
   }

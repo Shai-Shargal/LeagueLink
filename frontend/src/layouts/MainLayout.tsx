@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Container, CssBaseline, ThemeProvider } from "@mui/material";
 import { motion } from "framer-motion";
 import { theme } from "../themes/theme";
-import Navbar from "../components/Navbar";
+import Navbar from "../ll-dashboard/Navbar";
 
 interface MainLayoutProps {
   children: React.ReactNode;

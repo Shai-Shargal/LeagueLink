@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { Box } from "@mui/material";
 import OurGoal from "./OurGoal";
 import MeetTheTeam from "./MeetTheTeam";
-import HeroSection from "../components/HeroSection";
+import HeroSection from "../ll-dashboard/HeroSection";
 
 const FrontPage: React.FC = () => {
   const aboutRef = useRef<HTMLDivElement>(null);

@@ -6,9 +6,9 @@ import {
 } from "react-router-dom";
 import MainLayout from "./layouts/MainLayout";
 import FrontPage from "./ll-front-page/FrontPage";
-import SignIn from "./components/SignIn";
-import Register from "./components/Register";
-import Dashboard from "./components/Dashboard";
+import SignIn from "./ll-dashboard/SignIn";
+import Register from "./ll-dashboard/Register";
+import Dashboard from "./ll-dashboard/Dashboard";
 import { authService } from "./services/api";
 import "./App.css";
 
