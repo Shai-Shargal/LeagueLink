@@ -13,7 +13,7 @@ export const firebaseStorage = {
     folder: "users" | "channels"
   ): Promise<string> => {
     try {
-      console.log("Starting Firebase upload for folder:", folder);
+      console.log("Starting Firebase cloud upload for folder:", folder);
 
       // Generate unique filename
       const fileExtension = file.name.split(".").pop();
@@ -24,7 +24,7 @@ export const firebaseStorage = {
       const storageRef = ref(storage, fileName);
       console.log("Storage reference created");
 
-      // Set metadata
+      // Set metadata with CORS headers
       const metadata = {
         contentType: file.type,
         customMetadata: {
@@ -33,18 +33,16 @@ export const firebaseStorage = {
         },
       };
 
-      // Upload file with resumable upload
-      console.log("Starting upload...");
-      const uploadTask = uploadBytesResumable(storageRef, file, metadata);
-
-      // Return a promise that resolves with the download URL
+      // Upload file with progress tracking
       return new Promise((resolve, reject) => {
+        const uploadTask = uploadBytesResumable(storageRef, file, metadata);
+
         uploadTask.on(
           "state_changed",
           (snapshot) => {
             const progress =
               (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            console.log("Upload progress:", progress);
+            console.log("Upload progress:", progress + "%");
           },
           (error) => {
             console.error("Upload error:", error);
@@ -53,7 +51,7 @@ export const firebaseStorage = {
           async () => {
             try {
               const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-              console.log("Upload completed. Download URL:", downloadURL);
+              console.log("Upload completed successfully. URL:", downloadURL);
               resolve(downloadURL);
             } catch (error) {
               console.error("Error getting download URL:", error);
@@ -89,9 +87,7 @@ export const firebaseStorage = {
       console.log("Image deleted successfully");
     } catch (error: any) {
       console.error("Error deleting image from Firebase:", error);
-      if (error.code === "storage/unauthorized") {
-        throw new Error("Unauthorized: Please check Firebase Storage rules");
-      } else if (error.code === "storage/object-not-found") {
+      if (error.code === "storage/object-not-found") {
         console.log("Image already deleted or doesn't exist");
       } else {
         throw new Error(`Failed to delete image: ${error.message}`);
