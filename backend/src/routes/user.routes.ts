@@ -185,6 +185,75 @@ router.put(
   }
 );
 
+// Update profile picture
+router.patch(
+  "/profile-picture",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const { profilePicture } = req.body;
+      const user = await User.findById(req.user.id);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      user.profilePicture = profilePicture;
+      await user.save();
+
+      res.json({
+        success: true,
+        data: {
+          profilePicture: user.profilePicture,
+        },
+      });
+    } catch (error) {
+      logger.error("Update Profile Picture Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating profile picture",
+      });
+    }
+  }
+);
+
+// Delete profile picture
+router.delete(
+  "/profile-picture",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const user = await User.findById(req.user.id);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      user.profilePicture = "";
+      await user.save();
+
+      res.json({
+        success: true,
+        data: {
+          profilePicture: "",
+        },
+      });
+    } catch (error) {
+      logger.error("Delete Profile Picture Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error deleting profile picture",
+      });
+    }
+  }
+);
+
 // Get user profile by username
 router.get(
   "/profile/:username",

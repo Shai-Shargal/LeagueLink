@@ -1,4 +1,5 @@
 import axios from "axios";
+import { firebaseStorage } from "./firebase.service";
 
 const API_URL = "http://localhost:5000/api"; // Updated to match backend port
 
@@ -123,6 +124,114 @@ export const authService = {
       },
     });
     return response.data;
+  },
+};
+
+export const uploadService = {
+  uploadProfilePicture: async (file: File): Promise<string> => {
+    try {
+      // Upload to Firebase
+      const imageUrl = await firebaseStorage.uploadImage(file, "users");
+
+      // Update user profile in your backend
+      const response = await fetch(`${API_URL}/users/profile-picture`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ profilePicture: imageUrl }),
+      });
+
+      if (!response.ok) {
+        // If backend update fails, delete the uploaded image
+        await firebaseStorage.deleteImage(imageUrl);
+        throw new Error("Failed to update profile picture");
+      }
+
+      return imageUrl;
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      throw error;
+    }
+  },
+
+  uploadChannelPicture: async (
+    channelId: string,
+    file: File
+  ): Promise<string> => {
+    try {
+      // Upload to Firebase
+      const imageUrl = await firebaseStorage.uploadImage(file, "channels");
+
+      // Update channel in your backend
+      const response = await fetch(`/api/channels/${channelId}/picture`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ image: imageUrl }),
+      });
+
+      if (!response.ok) {
+        // If backend update fails, delete the uploaded image
+        await firebaseStorage.deleteImage(imageUrl);
+        throw new Error("Failed to update channel picture");
+      }
+
+      return imageUrl;
+    } catch (error) {
+      console.error("Error uploading channel picture:", error);
+      throw error;
+    }
+  },
+
+  deleteProfilePicture: async (imageUrl: string): Promise<void> => {
+    try {
+      // Delete from Firebase
+      await firebaseStorage.deleteImage(imageUrl);
+
+      // Update user profile in your backend
+      const response = await fetch("/api/users/profile-picture", {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete profile picture");
+      }
+    } catch (error) {
+      console.error("Error deleting profile picture:", error);
+      throw error;
+    }
+  },
+
+  deleteChannelPicture: async (
+    channelId: string,
+    imageUrl: string
+  ): Promise<void> => {
+    try {
+      // Delete from Firebase
+      await firebaseStorage.deleteImage(imageUrl);
+
+      // Update channel in your backend
+      const response = await fetch(`/api/channels/${channelId}/picture`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete channel picture");
+      }
+    } catch (error) {
+      console.error("Error deleting channel picture:", error);
+      throw error;
+    }
   },
 };
 

@@ -7,6 +7,7 @@ import {
   Grid,
   Paper,
   Stack,
+  useTheme,
 } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../services/api";
@@ -23,6 +24,7 @@ const Dashboard: React.FC = () => {
   } | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const theme = useTheme();
 
   useEffect(() => {
     fetchUser();
@@ -60,7 +62,19 @@ const Dashboard: React.FC = () => {
       sx={{
         display: "flex",
         height: "100vh",
-        background: "linear-gradient(135deg, #1a1b1e 0%, #2d2f35 100%)",
+        background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+        position: "relative",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background:
+            "radial-gradient(circle at 50% 50%, rgba(198, 128, 227, 0.1) 0%, transparent 50%)",
+          pointerEvents: "none",
+        },
       }}
     >
       {/* Sidebar */}
@@ -72,7 +86,8 @@ const Dashboard: React.FC = () => {
           "& .MuiDrawer-paper": {
             width: DRAWER_WIDTH,
             boxSizing: "border-box",
-            background: "#1e1f22",
+            background: "rgba(15, 23, 42, 0.95)",
+            backdropFilter: "blur(10px)",
             borderRight: "1px solid rgba(198, 128, 227, 0.2)",
           },
         }}
@@ -107,7 +122,25 @@ const Dashboard: React.FC = () => {
           }}
         >
           {/* Welcome Section */}
-          <Box sx={{ mb: isEditing ? 4 : 6, textAlign: "center" }}>
+          <Box
+            sx={{
+              mb: isEditing ? 4 : 6,
+              textAlign: "center",
+              position: "relative",
+              "&::after": {
+                content: '""',
+                position: "absolute",
+                bottom: -20,
+                left: "50%",
+                transform: "translateX(-50%)",
+                width: "100px",
+                height: "3px",
+                background:
+                  "linear-gradient(90deg, transparent, #C680E3, transparent)",
+                borderRadius: "2px",
+              },
+            }}
+          >
             <Typography
               variant="h3"
               sx={{
@@ -118,6 +151,7 @@ const Dashboard: React.FC = () => {
                 color: "transparent",
                 mb: 2,
                 fontSize: { xs: "2rem", md: "3rem" },
+                textShadow: "0 2px 4px rgba(0,0,0,0.1)",
               }}
             >
               Hello {user.username}, welcome to LeagueLink!
@@ -131,6 +165,7 @@ const Dashboard: React.FC = () => {
                   margin: "0 auto",
                   opacity: 0.9,
                   fontSize: { xs: "1rem", md: "1.25rem" },
+                  textShadow: "0 1px 2px rgba(0,0,0,0.1)",
                 }}
               >
                 Your ultimate platform for connecting gamers, organizing
@@ -145,11 +180,12 @@ const Dashboard: React.FC = () => {
                 width: "100%",
                 maxWidth: 800,
                 margin: "0 auto",
-                p: 3,
-                background: "rgba(30, 41, 59, 0.7)",
+                p: 4,
+                background: "rgba(15, 23, 42, 0.7)",
                 backdropFilter: "blur(10px)",
-                borderRadius: 2,
+                borderRadius: 3,
                 border: "1px solid rgba(198, 128, 227, 0.2)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
               }}
             >
               <ProfileEditor />
@@ -158,105 +194,86 @@ const Dashboard: React.FC = () => {
             <>
               {/* Quick Stats */}
               <Grid container spacing={3} sx={{ mb: 6 }}>
-                <Grid item xs={12} md={4}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      background: "rgba(30, 41, 59, 0.7)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(198, 128, 227, 0.2)",
-                      "&:hover": {
-                        border: "1px solid rgba(198, 128, 227, 0.4)",
-                      },
-                      minHeight: "200px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Stack
-                      spacing={2}
-                      alignItems="center"
-                      sx={{ width: "100%" }}
-                    >
+                {[
+                  {
+                    icon: (
                       <EmojiEvents sx={{ fontSize: 40, color: "#C680E3" }} />
-                      <Typography variant="h6" sx={{ color: "#fff" }}>
-                        Active Tournaments
-                      </Typography>
-                      <Typography
-                        variant="h4"
-                        sx={{ color: "#C680E3", fontWeight: "bold" }}
-                      >
-                        0
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      background: "rgba(30, 41, 59, 0.7)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(198, 128, 227, 0.2)",
-                      "&:hover": {
-                        border: "1px solid rgba(198, 128, 227, 0.4)",
-                      },
-                      minHeight: "200px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Stack
-                      spacing={2}
-                      alignItems="center"
-                      sx={{ width: "100%" }}
-                    >
-                      <People sx={{ fontSize: 40, color: "#C680E3" }} />
-                      <Typography variant="h6" sx={{ color: "#fff" }}>
-                        Team Members
-                      </Typography>
-                      <Typography
-                        variant="h4"
-                        sx={{ color: "#C680E3", fontWeight: "bold" }}
-                      >
-                        0
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                </Grid>
-                <Grid item xs={12} md={4}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      background: "rgba(30, 41, 59, 0.7)",
-                      backdropFilter: "blur(10px)",
-                      border: "1px solid rgba(198, 128, 227, 0.2)",
-                      "&:hover": {
-                        border: "1px solid rgba(198, 128, 227, 0.4)",
-                      },
-                      minHeight: "200px",
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Stack
-                      spacing={2}
-                      alignItems="center"
-                      sx={{ width: "100%" }}
-                    >
+                    ),
+                    title: "Active Tournaments",
+                    value: "0",
+                  },
+                  {
+                    icon: <People sx={{ fontSize: 40, color: "#C680E3" }} />,
+                    title: "Team Members",
+                    value: "0",
+                  },
+                  {
+                    icon: (
                       <SportsScore sx={{ fontSize: 40, color: "#C680E3" }} />
-                      <Typography variant="h6" sx={{ color: "#fff" }}>
-                        Win Rate
-                      </Typography>
-                      <Typography
-                        variant="h4"
-                        sx={{ color: "#C680E3", fontWeight: "bold" }}
+                    ),
+                    title: "Win Rate",
+                    value: "0%",
+                  },
+                ].map((stat, index) => (
+                  <Grid item xs={12} md={4} key={index}>
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 4,
+                        background: "rgba(15, 23, 42, 0.7)",
+                        backdropFilter: "blur(10px)",
+                        border: "1px solid rgba(198, 128, 227, 0.2)",
+                        borderRadius: 3,
+                        transition: "all 0.3s ease",
+                        "&:hover": {
+                          transform: "translateY(-5px)",
+                          border: "1px solid rgba(198, 128, 227, 0.4)",
+                          boxShadow: "0 8px 30px rgba(198, 128, 227, 0.1)",
+                        },
+                        minHeight: "200px",
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
+                      <Stack
+                        spacing={3}
+                        alignItems="center"
+                        sx={{ width: "100%" }}
                       >
-                        0%
-                      </Typography>
-                    </Stack>
-                  </Paper>
-                </Grid>
+                        <Box
+                          sx={{
+                            p: 2,
+                            borderRadius: "50%",
+                            background: "rgba(198, 128, 227, 0.1)",
+                            transition: "all 0.3s ease",
+                          }}
+                        >
+                          {stat.icon}
+                        </Box>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: "#fff",
+                            fontWeight: 500,
+                            textAlign: "center",
+                          }}
+                        >
+                          {stat.title}
+                        </Typography>
+                        <Typography
+                          variant="h3"
+                          sx={{
+                            color: "#C680E3",
+                            fontWeight: "bold",
+                            textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                          }}
+                        >
+                          {stat.value}
+                        </Typography>
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                ))}
               </Grid>
             </>
           )}

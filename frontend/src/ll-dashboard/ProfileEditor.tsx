@@ -9,8 +9,13 @@ import {
   Chip,
   Stack,
   Alert,
+  IconButton,
 } from "@mui/material";
+import { Delete as DeleteIcon } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import { authService } from "../services/api";
+import { uploadService } from "../services/api";
+import ImageUpload from "../components/ImageUpload";
 
 const SPORTS_EMOJIS = [
   "⚽", // Soccer
@@ -38,185 +43,302 @@ interface ProfileData {
 }
 
 const ProfileEditor: React.FC = () => {
-  const [profile, setProfile] = useState<ProfileData>({
-    username: "",
-    bio: "",
-    favoriteSports: [],
-    profilePicture: "",
-  });
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [user, setUser] = useState<{
+    username: string;
+    email: string;
+    bio: string;
+    favoriteSports: string[];
+    profilePicture: string;
+  } | null>(null);
+  const [newSport, setNewSport] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    fetchProfile();
+    fetchUser();
   }, []);
 
-  const fetchProfile = async () => {
+  const fetchUser = async () => {
     try {
       const userData = await authService.getCurrentUser();
       if (userData) {
-        setProfile({
-          username: userData.username,
-          bio: userData.bio || "",
-          favoriteSports: userData.favoriteSports || [],
-          profilePicture: userData.profilePicture || "",
-        });
+        setUser(userData);
       }
     } catch (error) {
-      console.error("Error fetching profile:", error);
-      setError("Failed to load profile data");
-    }
-  };
-
-  const handleBioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProfile({ ...profile, bio: e.target.value });
-  };
-
-  const toggleSport = (sport: string) => {
-    setProfile((prev) => ({
-      ...prev,
-      favoriteSports: prev.favoriteSports.includes(sport)
-        ? prev.favoriteSports.filter((s) => s !== sport)
-        : [...prev.favoriteSports, sport],
-    }));
-  };
-
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
-      setError("");
-      setSuccess("");
-
-      await authService.updateProfile({
-        bio: profile.bio,
-        favoriteSports: profile.favoriteSports,
-      });
-
-      setSuccess("Profile updated successfully!");
-    } catch (error: any) {
-      setError(error.response?.data?.message || "Failed to update profile");
+      console.error("Error fetching user:", error);
     } finally {
       setLoading(false);
     }
   };
 
+  const handleSave = async () => {
+    if (!user) return;
+    try {
+      setSaving(true);
+      await authService.updateProfile({
+        bio: user.bio,
+        favoriteSports: user.favoriteSports,
+      });
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Error updating profile:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAddSport = () => {
+    if (newSport && user) {
+      setUser({
+        ...user,
+        favoriteSports: [...user.favoriteSports, newSport],
+      });
+      setNewSport("");
+    }
+  };
+
+  const handleRemoveSport = (sport: string) => {
+    if (user) {
+      setUser({
+        ...user,
+        favoriteSports: user.favoriteSports.filter((s) => s !== sport),
+      });
+    }
+  };
+
+  const handleProfilePictureUpload = async (file: File) => {
+    try {
+      console.log("Starting profile picture upload...");
+      const imageUrl = await uploadService.uploadProfilePicture(file);
+      console.log("Upload successful, URL:", imageUrl);
+
+      // Refresh user data to get the updated profile picture
+      await fetchUser();
+
+      console.log("User data refreshed");
+    } catch (error) {
+      console.error("Error uploading profile picture:", error);
+      alert("Failed to upload profile picture. Please try again.");
+    }
+  };
+
+  const handleProfilePictureDelete = async () => {
+    if (!user?.profilePicture) return;
+    try {
+      console.log("Deleting profile picture...");
+      await uploadService.deleteProfilePicture(user.profilePicture);
+
+      // Refresh user data to get the updated state
+      await fetchUser();
+
+      console.log("Profile picture deleted and user data refreshed");
+    } catch (error) {
+      console.error("Error deleting profile picture:", error);
+      alert("Failed to delete profile picture. Please try again.");
+    }
+  };
+
+  if (loading) {
+    return <Typography>Loading...</Typography>;
+  }
+
+  if (!user) {
+    return <Typography>User not found</Typography>;
+  }
+
   return (
     <Paper
-      elevation={0}
       sx={{
         p: 4,
-        background: "rgba(30, 41, 59, 0.7)",
+        background: "rgba(15, 23, 42, 0.7)",
         backdropFilter: "blur(10px)",
+        borderRadius: 3,
         border: "1px solid rgba(198, 128, 227, 0.2)",
-        "&:hover": {
-          border: "1px solid rgba(198, 128, 227, 0.4)",
-        },
       }}
     >
-      <Typography
-        variant="h5"
-        sx={{
-          mb: 3,
-          fontWeight: 700,
-          background: "linear-gradient(45deg, #C680E3, #9333EA)",
-          backgroundClip: "text",
-          WebkitBackgroundClip: "text",
-          color: "transparent",
-        }}
-      >
-        Edit Profile
-      </Typography>
-
-      {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-      )}
-
-      {success && (
-        <Alert severity="success" sx={{ mb: 2 }}>
-          {success}
-        </Alert>
-      )}
-
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Avatar
-            src={profile.profilePicture}
-            sx={{
-              width: 100,
-              height: 100,
-              border: "2px solid #C680E3",
-            }}
+      <Stack spacing={4}>
+        <Box sx={{ textAlign: "center", mb: 4 }}>
+          <ImageUpload
+            currentImage={user.profilePicture}
+            onUpload={handleProfilePictureUpload}
+            onDelete={handleProfilePictureDelete}
+            size={200}
           />
-          <Typography variant="h6" sx={{ color: "#C680E3" }}>
-            {profile.username}
-          </Typography>
         </Box>
 
         <TextField
-          label="Bio"
-          multiline
-          rows={4}
-          value={profile.bio}
-          onChange={handleBioChange}
-          disabled={loading}
+          label="Username"
+          value={user.username}
+          onChange={(e) => setUser({ ...user, username: e.target.value })}
+          fullWidth
           sx={{
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
-                borderColor: "rgba(198, 128, 227, 0.2)",
+                borderColor: "rgba(198, 128, 227, 0.4)",
               },
               "&:hover fieldset": {
-                borderColor: "rgba(198, 128, 227, 0.4)",
+                borderColor: "rgba(198, 128, 227, 0.6)",
               },
               "&.Mui-focused fieldset": {
                 borderColor: "#C680E3",
               },
+              color: "#fff",
             },
-            "& .MuiInputLabel-root.Mui-focused": {
-              color: "#C680E3",
+            "& .MuiInputLabel-root": {
+              color: "rgba(198, 128, 227, 0.7)",
+              "&.Mui-focused": {
+                color: "#C680E3",
+              },
+            },
+          }}
+        />
+
+        <TextField
+          label="Email"
+          value={user.email}
+          disabled
+          fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "rgba(198, 128, 227, 0.4)",
+              },
+              color: "#fff",
+            },
+            "& .MuiInputLabel-root": {
+              color: "rgba(198, 128, 227, 0.7)",
+            },
+          }}
+        />
+
+        <TextField
+          label="Bio"
+          value={user.bio}
+          onChange={(e) => setUser({ ...user, bio: e.target.value })}
+          multiline
+          rows={4}
+          fullWidth
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                borderColor: "rgba(198, 128, 227, 0.4)",
+              },
+              "&:hover fieldset": {
+                borderColor: "rgba(198, 128, 227, 0.6)",
+              },
+              "&.Mui-focused fieldset": {
+                borderColor: "#C680E3",
+              },
+              color: "#fff",
+            },
+            "& .MuiInputLabel-root": {
+              color: "rgba(198, 128, 227, 0.7)",
+              "&.Mui-focused": {
+                color: "#C680E3",
+              },
             },
           }}
         />
 
         <Box>
-          <Typography variant="subtitle1" sx={{ mb: 1, color: "#C680E3" }}>
+          <Typography variant="h6" sx={{ color: "#fff", mb: 2 }}>
             Favorite Sports
           </Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-            {SPORTS_EMOJIS.map((sport) => (
+          <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+            <TextField
+              value={newSport}
+              onChange={(e) => setNewSport(e.target.value)}
+              placeholder="Add a sport"
+              size="small"
+              sx={{
+                flexGrow: 1,
+                "& .MuiOutlinedInput-root": {
+                  "& fieldset": {
+                    borderColor: "rgba(198, 128, 227, 0.4)",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "rgba(198, 128, 227, 0.6)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#C680E3",
+                  },
+                  color: "#fff",
+                },
+                "& .MuiInputLabel-root": {
+                  color: "rgba(198, 128, 227, 0.7)",
+                  "&.Mui-focused": {
+                    color: "#C680E3",
+                  },
+                },
+              }}
+            />
+            <Button
+              variant="outlined"
+              onClick={handleAddSport}
+              sx={{
+                color: "#C680E3",
+                borderColor: "rgba(198, 128, 227, 0.4)",
+                "&:hover": {
+                  borderColor: "#C680E3",
+                  backgroundColor: "rgba(198, 128, 227, 0.1)",
+                },
+              }}
+            >
+              Add
+            </Button>
+          </Box>
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {user.favoriteSports.map((sport) => (
               <Chip
                 key={sport}
                 label={sport}
-                onClick={() => toggleSport(sport)}
+                onDelete={() => handleRemoveSport(sport)}
                 sx={{
-                  backgroundColor: profile.favoriteSports.includes(sport)
-                    ? "rgba(198, 128, 227, 0.2)"
-                    : "rgba(30, 41, 59, 0.5)",
-                  "&:hover": {
-                    backgroundColor: "rgba(198, 128, 227, 0.3)",
+                  backgroundColor: "rgba(198, 128, 227, 0.2)",
+                  color: "#C680E3",
+                  "& .MuiChip-deleteIcon": {
+                    color: "#C680E3",
+                    "&:hover": {
+                      color: "#9333EA",
+                    },
                   },
                 }}
               />
             ))}
-          </Stack>
+          </Box>
         </Box>
 
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={loading}
-          sx={{
-            background: "linear-gradient(45deg, #C680E3, #9333EA)",
-            "&:hover": {
-              background: "linear-gradient(45deg, #9333EA, #7928CA)",
-            },
-          }}
-        >
-          {loading ? "Saving..." : "Save Changes"}
-        </Button>
-      </Box>
+        <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+          <Button
+            variant="outlined"
+            onClick={() => navigate("/dashboard")}
+            sx={{
+              color: "#C680E3",
+              borderColor: "rgba(198, 128, 227, 0.4)",
+              "&:hover": {
+                borderColor: "#C680E3",
+                backgroundColor: "rgba(198, 128, 227, 0.1)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={handleSave}
+            disabled={saving}
+            sx={{
+              backgroundColor: "#C680E3",
+              "&:hover": {
+                backgroundColor: "#9333EA",
+              },
+            }}
+          >
+            {saving ? "Saving..." : "Save Changes"}
+          </Button>
+        </Box>
+      </Stack>
     </Paper>
   );
 };
