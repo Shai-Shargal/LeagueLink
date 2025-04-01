@@ -97,3 +97,45 @@ This is a proprietary project. Please refer to the LICENSE file for information 
 ## License
 
 This project is proprietary software. All rights reserved. See the LICENSE file for details.
+
+## Setup Instructions
+
+### Firebase Configuration
+
+1. Copy the Firebase configuration template:
+
+```bash
+cp frontend/src/config/firebase.template.ts frontend/src/config/firebase.ts
+```
+
+2. Update `frontend/src/config/firebase.ts` with your Firebase credentials:
+
+- Replace `YOUR_API_KEY` with your Firebase API key
+- Replace `your-project-id` with your Firebase project ID
+- Replace other placeholder values with your actual Firebase configuration
+
+Note: Never commit `firebase.ts` to version control as it contains sensitive information.
+
+### Development
+
+To start the development server with Firebase emulator:
+
+```bash
+cd frontend
+npm run dev:firebase
+```
+
+This will start both:
+
+- Frontend development server
+- Firebase Storage emulator
+
+Or run them separately:
+
+```bash
+# Terminal 1: Frontend
+npm run dev
+
+# Terminal 2: Firebase Emulator
+npm run emulator
+```
