@@ -12,7 +12,7 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { authService } from "../services/api";
 import ProfileEditor from "./ProfileEditor";
-import Channels from "./Channels";
+import Channels from "../ll-channels/Channels";
 import { EmojiEvents, People, SportsScore } from "@mui/icons-material";
 
 const DRAWER_WIDTH = 240;
@@ -113,171 +113,174 @@ const Dashboard: React.FC = () => {
           },
         }}
       >
-        <Box
-          sx={{
-            maxWidth: 1200,
-            width: "100%",
-            p: 3,
-            pb: 6,
-          }}
-        >
-          {/* Welcome Section */}
+        {/* Only show the welcome section and stats when no channel is selected */}
+        {!searchParams.get("channel") && (
           <Box
             sx={{
-              mb: isEditing ? 4 : 6,
-              textAlign: "center",
-              position: "relative",
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                bottom: -20,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: "100px",
-                height: "3px",
-                background:
-                  "linear-gradient(90deg, transparent, #C680E3, transparent)",
-                borderRadius: "2px",
-              },
+              maxWidth: 1200,
+              width: "100%",
+              p: 3,
+              pb: 6,
             }}
           >
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 700,
-                background: "linear-gradient(45deg, #C680E3, #9333EA)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                color: "transparent",
-                mb: 2,
-                fontSize: { xs: "2rem", md: "3rem" },
-                textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              }}
-            >
-              Hello {user.username}, welcome to LeagueLink!
-            </Typography>
-            {!isEditing && (
-              <Typography
-                variant="h6"
-                sx={{
-                  color: "#dcddde",
-                  maxWidth: 800,
-                  margin: "0 auto",
-                  opacity: 0.9,
-                  fontSize: { xs: "1rem", md: "1.25rem" },
-                  textShadow: "0 1px 2px rgba(0,0,0,0.1)",
-                }}
-              >
-                Your ultimate platform for connecting gamers, organizing
-                tournaments, and building competitive communities.
-              </Typography>
-            )}
-          </Box>
-
-          {isEditing ? (
+            {/* Welcome Section */}
             <Box
               sx={{
-                width: "100%",
-                maxWidth: 800,
-                margin: "0 auto",
-                p: 4,
-                background: "rgba(15, 23, 42, 0.7)",
-                backdropFilter: "blur(10px)",
-                borderRadius: 3,
-                border: "1px solid rgba(198, 128, 227, 0.2)",
-                boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                mb: isEditing ? 4 : 6,
+                textAlign: "center",
+                position: "relative",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  bottom: -20,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  width: "100px",
+                  height: "3px",
+                  background:
+                    "linear-gradient(90deg, transparent, #C680E3, transparent)",
+                  borderRadius: "2px",
+                },
               }}
             >
-              <ProfileEditor />
+              <Typography
+                variant="h3"
+                sx={{
+                  fontWeight: 700,
+                  background: "linear-gradient(45deg, #C680E3, #9333EA)",
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  color: "transparent",
+                  mb: 2,
+                  fontSize: { xs: "2rem", md: "3rem" },
+                  textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                }}
+              >
+                Hello {user.username}, welcome to LeagueLink!
+              </Typography>
+              {!isEditing && (
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: "#dcddde",
+                    maxWidth: 800,
+                    margin: "0 auto",
+                    opacity: 0.9,
+                    fontSize: { xs: "1rem", md: "1.25rem" },
+                    textShadow: "0 1px 2px rgba(0,0,0,0.1)",
+                  }}
+                >
+                  Your ultimate platform for connecting gamers, organizing
+                  tournaments, and building competitive communities.
+                </Typography>
+              )}
             </Box>
-          ) : (
-            <>
-              {/* Quick Stats */}
-              <Grid container spacing={3} sx={{ mb: 6 }}>
-                {[
-                  {
-                    icon: (
-                      <EmojiEvents sx={{ fontSize: 40, color: "#C680E3" }} />
-                    ),
-                    title: "Active Tournaments",
-                    value: "0",
-                  },
-                  {
-                    icon: <People sx={{ fontSize: 40, color: "#C680E3" }} />,
-                    title: "Team Members",
-                    value: "0",
-                  },
-                  {
-                    icon: (
-                      <SportsScore sx={{ fontSize: 40, color: "#C680E3" }} />
-                    ),
-                    title: "Win Rate",
-                    value: "0%",
-                  },
-                ].map((stat, index) => (
-                  <Grid item xs={12} md={4} key={index}>
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        p: 4,
-                        background: "rgba(15, 23, 42, 0.7)",
-                        backdropFilter: "blur(10px)",
-                        border: "1px solid rgba(198, 128, 227, 0.2)",
-                        borderRadius: 3,
-                        transition: "all 0.3s ease",
-                        "&:hover": {
-                          transform: "translateY(-5px)",
-                          border: "1px solid rgba(198, 128, 227, 0.4)",
-                          boxShadow: "0 8px 30px rgba(198, 128, 227, 0.1)",
-                        },
-                        minHeight: "200px",
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Stack
-                        spacing={3}
-                        alignItems="center"
-                        sx={{ width: "100%" }}
+
+            {isEditing ? (
+              <Box
+                sx={{
+                  width: "100%",
+                  maxWidth: 800,
+                  margin: "0 auto",
+                  p: 4,
+                  background: "rgba(15, 23, 42, 0.7)",
+                  backdropFilter: "blur(10px)",
+                  borderRadius: 3,
+                  border: "1px solid rgba(198, 128, 227, 0.2)",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                }}
+              >
+                <ProfileEditor />
+              </Box>
+            ) : (
+              <>
+                {/* Quick Stats */}
+                <Grid container spacing={3} sx={{ mb: 6 }}>
+                  {[
+                    {
+                      icon: (
+                        <EmojiEvents sx={{ fontSize: 40, color: "#C680E3" }} />
+                      ),
+                      title: "Active Tournaments",
+                      value: "0",
+                    },
+                    {
+                      icon: <People sx={{ fontSize: 40, color: "#C680E3" }} />,
+                      title: "Team Members",
+                      value: "0",
+                    },
+                    {
+                      icon: (
+                        <SportsScore sx={{ fontSize: 40, color: "#C680E3" }} />
+                      ),
+                      title: "Win Rate",
+                      value: "0%",
+                    },
+                  ].map((stat, index) => (
+                    <Grid item xs={12} md={4} key={index}>
+                      <Paper
+                        elevation={0}
+                        sx={{
+                          p: 4,
+                          background: "rgba(15, 23, 42, 0.7)",
+                          backdropFilter: "blur(10px)",
+                          border: "1px solid rgba(198, 128, 227, 0.2)",
+                          borderRadius: 3,
+                          transition: "all 0.3s ease",
+                          "&:hover": {
+                            transform: "translateY(-5px)",
+                            border: "1px solid rgba(198, 128, 227, 0.4)",
+                            boxShadow: "0 8px 30px rgba(198, 128, 227, 0.1)",
+                          },
+                          minHeight: "200px",
+                          display: "flex",
+                          alignItems: "center",
+                        }}
                       >
-                        <Box
-                          sx={{
-                            p: 2,
-                            borderRadius: "50%",
-                            background: "rgba(198, 128, 227, 0.1)",
-                            transition: "all 0.3s ease",
-                          }}
+                        <Stack
+                          spacing={3}
+                          alignItems="center"
+                          sx={{ width: "100%" }}
                         >
-                          {stat.icon}
-                        </Box>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            color: "#fff",
-                            fontWeight: 500,
-                            textAlign: "center",
-                          }}
-                        >
-                          {stat.title}
-                        </Typography>
-                        <Typography
-                          variant="h3"
-                          sx={{
-                            color: "#C680E3",
-                            fontWeight: "bold",
-                            textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                          }}
-                        >
-                          {stat.value}
-                        </Typography>
-                      </Stack>
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
-            </>
-          )}
-        </Box>
+                          <Box
+                            sx={{
+                              p: 2,
+                              borderRadius: "50%",
+                              background: "rgba(198, 128, 227, 0.1)",
+                              transition: "all 0.3s ease",
+                            }}
+                          >
+                            {stat.icon}
+                          </Box>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              color: "#fff",
+                              fontWeight: 500,
+                              textAlign: "center",
+                            }}
+                          >
+                            {stat.title}
+                          </Typography>
+                          <Typography
+                            variant="h3"
+                            sx={{
+                              color: "#C680E3",
+                              fontWeight: "bold",
+                              textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            }}
+                          >
+                            {stat.value}
+                          </Typography>
+                        </Stack>
+                      </Paper>
+                    </Grid>
+                  ))}
+                </Grid>
+              </>
+            )}
+          </Box>
+        )}
       </Box>
     </Box>
   );

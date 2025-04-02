@@ -34,8 +34,12 @@ interface ChannelData {
 }
 
 interface JoinChannelData {
-  channelId: string;
+  channelName: string;
   passcode: string;
+}
+
+interface UpdateChannelData {
+  description: string;
 }
 
 export const authService = {
@@ -51,12 +55,11 @@ export const authService = {
   login: async (data: LoginData) => {
     const response = await api.post("/users/login", data);
     if (response.data.success && response.data.data.token) {
-      localStorage.setItem("token", response.data.data.token);
-      console.log("Token stored after login:", response.data.data.token);
+      const token = response.data.data.token;
+      localStorage.setItem("token", token);
+      console.log("Token stored after login:", token);
       // Add the token to axios default headers
-      api.defaults.headers.common[
-        "Authorization"
-      ] = `Bearer ${response.data.data.token}`;
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     }
     return response.data;
   },
@@ -78,8 +81,11 @@ export const authService = {
       const response = await api.get("/users/profile", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log("Current user data:", response.data);
-      return response.data.data; // Extract the user data from the nested structure
+      console.log("Raw response from getCurrentUser:", response);
+      if (response.data && response.data.success && response.data.data) {
+        return response.data.data; // This should contain the user object with _id
+      }
+      return null;
     } catch (error) {
       console.error("Error getting current user:", error);
       return null;
@@ -100,12 +106,18 @@ export const authService = {
 
   // Channel methods
   getMyChannels: async () => {
-    const response = await axios.get(`${API_URL}/channels/my-channels`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    return response.data;
+    try {
+      const response = await api.get("/channels/my-channels", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      console.log("Raw getMyChannels response:", response.data);
+      return response.data;
+    } catch (error) {
+      console.error("Error in getMyChannels:", error);
+      throw error;
+    }
   },
 
   createChannel: async (data: ChannelData) => {
@@ -118,11 +130,40 @@ export const authService = {
   },
 
   joinChannel: async (data: JoinChannelData) => {
-    const response = await axios.post(`${API_URL}/channels/join`, data, {
+    const response = await api.post("/channels/join", data, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
     });
+    return response.data;
+  },
+
+  updateChannel: async (channelId: string, data: UpdateChannelData) => {
+    const response = await axios.put(
+      `${API_URL}/api/channels/${channelId}`,
+      data,
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    return response.data;
+  },
+
+  deleteChannel: async (channelId: string) => {
+    const response = await api.delete(`/channels/${channelId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    return response.data;
+  },
+
+  leaveChannel: async (channelId: string) => {
+    const response = await api.post(
+      `/channels/${channelId}/leave`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
     return response.data;
   },
 };
