@@ -29,15 +29,11 @@ router.post(
         });
       }
 
-      // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-
-      // Create user
+      // Create user (password will be hashed by the User model's pre-save hook)
       const user = await User.create({
         username,
         email,
-        password: hashedPassword,
+        password,
       });
 
       // Generate JWT
@@ -77,6 +73,7 @@ router.post(
       // Check user exists
       const user = await User.findOne({ email });
       if (!user) {
+        logger.error("Login Error: User not found for email:", email);
         return res.status(401).json({
           success: false,
           message: "Invalid credentials",
@@ -84,8 +81,11 @@ router.post(
       }
 
       // Check password
-      const isMatch = await bcrypt.compare(password, user.password);
+      logger.info("Attempting password comparison for user:", user.email);
+      const isMatch = await user.comparePassword(password);
+      logger.info("Password match result:", isMatch);
       if (!isMatch) {
+        logger.error("Login Error: Invalid password for user:", user.email);
         return res.status(401).json({
           success: false,
           message: "Invalid credentials",
