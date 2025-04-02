@@ -10,6 +10,8 @@ import {
   Stack,
   Alert,
   IconButton,
+  Tooltip,
+  Grid,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -18,21 +20,21 @@ import { uploadService } from "../services/api";
 import ImageUpload from "../components/ImageUpload";
 
 const SPORTS_EMOJIS = [
-  "⚽", // Soccer
-  "🏀", // Basketball
-  "🏈", // Football
-  "⚾", // Baseball
-  "🏒", // Hockey
-  "🎾", // Tennis
-  "🏐", // Volleyball
-  "🏓", // Table Tennis
-  "🏸", // Badminton
-  "🏊", // Swimming
-  "🏃", // Running
-  "🚴", // Cycling
-  "🏋️", // Weightlifting
-  "🥊", // Boxing
-  "🥋", // Martial Arts
+  { emoji: "⚽", name: "Soccer" },
+  { emoji: "🏀", name: "Basketball" },
+  { emoji: "🏈", name: "Football" },
+  { emoji: "⚾", name: "Baseball" },
+  { emoji: "🏒", name: "Hockey" },
+  { emoji: "🎾", name: "Tennis" },
+  { emoji: "🏐", name: "Volleyball" },
+  { emoji: "🏓", name: "Table Tennis" },
+  { emoji: "🏸", name: "Badminton" },
+  { emoji: "🏊", name: "Swimming" },
+  { emoji: "🏃", name: "Running" },
+  { emoji: "🚴", name: "Cycling" },
+  { emoji: "🏋️", name: "Weightlifting" },
+  { emoji: "🥊", name: "Boxing" },
+  { emoji: "🥋", name: "Martial Arts" },
 ];
 
 interface ProfileData {
@@ -136,6 +138,15 @@ const ProfileEditor: React.FC = () => {
     } catch (error) {
       console.error("Error deleting profile picture:", error);
       alert("Failed to delete profile picture. Please try again.");
+    }
+  };
+
+  const handleEmojiClick = (sport: { emoji: string; name: string }) => {
+    if (user && !user.favoriteSports.includes(sport.emoji)) {
+      setUser({
+        ...user,
+        favoriteSports: [...user.favoriteSports, sport.emoji],
+      });
     }
   };
 
@@ -245,67 +256,73 @@ const ProfileEditor: React.FC = () => {
           <Typography variant="h6" sx={{ color: "#fff", mb: 2 }}>
             Favorite Sports
           </Typography>
-          <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-            <TextField
-              value={newSport}
-              onChange={(e) => setNewSport(e.target.value)}
-              placeholder="Add a sport"
-              size="small"
-              sx={{
-                flexGrow: 1,
-                "& .MuiOutlinedInput-root": {
-                  "& fieldset": {
-                    borderColor: "rgba(198, 128, 227, 0.4)",
-                  },
-                  "&:hover fieldset": {
-                    borderColor: "rgba(198, 128, 227, 0.6)",
-                  },
-                  "&.Mui-focused fieldset": {
-                    borderColor: "#C680E3",
-                  },
-                  color: "#fff",
-                },
-                "& .MuiInputLabel-root": {
-                  color: "rgba(198, 128, 227, 0.7)",
-                  "&.Mui-focused": {
-                    color: "#C680E3",
-                  },
-                },
-              }}
-            />
-            <Button
-              variant="outlined"
-              onClick={handleAddSport}
-              sx={{
-                color: "#C680E3",
-                borderColor: "rgba(198, 128, 227, 0.4)",
-                "&:hover": {
-                  borderColor: "#C680E3",
-                  backgroundColor: "rgba(198, 128, 227, 0.1)",
-                },
-              }}
-            >
-              Add
-            </Button>
-          </Box>
+
+          {/* Emoji Picker Grid */}
+          <Paper
+            sx={{
+              p: 2,
+              mb: 2,
+              background: "rgba(15, 23, 42, 0.5)",
+              border: "1px solid rgba(198, 128, 227, 0.2)",
+            }}
+          >
+            <Grid container spacing={1}>
+              {SPORTS_EMOJIS.map((sport) => (
+                <Grid item key={sport.emoji}>
+                  <Tooltip title={sport.name} arrow>
+                    <IconButton
+                      onClick={() => handleEmojiClick(sport)}
+                      sx={{
+                        fontSize: "1.8rem",
+                        color: "#fff",
+                        transition: "all 0.2s ease",
+                        backgroundColor: user?.favoriteSports.includes(
+                          sport.emoji
+                        )
+                          ? "rgba(15, 23, 42, 0.8)"
+                          : "transparent",
+                        boxShadow: user?.favoriteSports.includes(sport.emoji)
+                          ? "0 0 10px rgba(198, 128, 227, 0.3)"
+                          : "none",
+                        "&:hover": {
+                          backgroundColor: user?.favoriteSports.includes(
+                            sport.emoji
+                          )
+                            ? "rgba(15, 23, 42, 0.8)"
+                            : "rgba(198, 128, 227, 0.1)",
+                        },
+                      }}
+                    >
+                      {sport.emoji}
+                    </IconButton>
+                  </Tooltip>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+
+          {/* Selected Sports Chips */}
           <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {user.favoriteSports.map((sport) => (
-              <Chip
-                key={sport}
-                label={sport}
-                onDelete={() => handleRemoveSport(sport)}
-                sx={{
-                  backgroundColor: "rgba(198, 128, 227, 0.2)",
-                  color: "#C680E3",
-                  "& .MuiChip-deleteIcon": {
+            {user.favoriteSports.map((sport) => {
+              const sportInfo = SPORTS_EMOJIS.find((s) => s.emoji === sport);
+              return (
+                <Chip
+                  key={sport}
+                  label={`${sport} ${sportInfo?.name || ""}`}
+                  onDelete={() => handleRemoveSport(sport)}
+                  sx={{
+                    backgroundColor: "rgba(198, 128, 227, 0.2)",
                     color: "#C680E3",
-                    "&:hover": {
-                      color: "#9333EA",
+                    "& .MuiChip-deleteIcon": {
+                      color: "#C680E3",
+                      "&:hover": {
+                        color: "#9333EA",
+                      },
                     },
-                  },
-                }}
-              />
-            ))}
+                  }}
+                />
+              );
+            })}
           </Box>
         </Box>
 
