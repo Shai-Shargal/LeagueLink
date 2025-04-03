@@ -166,6 +166,20 @@ export const authService = {
     );
     return response.data;
   },
+
+  getChannel: async (channelId: string) => {
+    try {
+      const response = await api.get(`/channels/${channelId}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error in getChannel:", error);
+      throw error;
+    }
+  },
 };
 
 export const uploadService = {
