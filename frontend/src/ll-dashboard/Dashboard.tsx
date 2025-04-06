@@ -22,10 +22,13 @@ const Dashboard: React.FC = () => {
 
   const fetchUser = async () => {
     try {
+      console.log("Fetching current user...");
       const userData = await authService.getCurrentUser();
+      console.log("User data:", userData);
       if (userData) {
         setUser(userData);
       } else {
+        console.log("No user data found, redirecting to login");
         navigate("/login");
       }
     } catch (error) {
@@ -53,8 +56,12 @@ const Dashboard: React.FC = () => {
     <Box
       sx={{
         display: "flex",
-        height: "calc(100vh - 64px)", // Subtract header height
-        marginTop: "64px", // Add margin for header
+        height: "100vh",
+        width: "100%",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        paddingTop: "64px",
         background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
       }}
     >
@@ -66,6 +73,10 @@ const Dashboard: React.FC = () => {
           background: "#0f172a",
           borderRight: "1px solid rgba(198, 128, 227, 0.2)",
           overflow: "hidden",
+          position: "fixed",
+          top: "64px",
+          left: 0,
+          zIndex: 1,
         }}
       >
         <Channels />
@@ -76,10 +87,11 @@ const Dashboard: React.FC = () => {
         component="main"
         sx={{
           flexGrow: 1,
-          height: "100%",
+          height: "calc(100vh - 64px)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
+          marginLeft: `${DRAWER_WIDTH}px`,
           background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
         }}
       >

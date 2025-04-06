@@ -224,7 +224,10 @@ const Channels: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchChannels();
+    console.log("Current user ID:", currentUserId);
+    if (currentUserId) {
+      fetchChannels();
+    }
   }, [currentUserId]);
 
   const fetchChannels = async () => {
@@ -233,15 +236,7 @@ const Channels: React.FC = () => {
       const response = (await authService.getMyChannels()) as ChannelsResponse;
       console.log("Channels response:", response);
       if (response.data) {
-        console.log(
-          "Channel owners:",
-          response.data.map((c) => ({
-            name: c.name,
-            owner: c.owner?._id,
-            currentUser: currentUserId,
-            isOwner: c.owner?._id === currentUserId,
-          }))
-        );
+        console.log("Setting channels:", response.data);
         setChannels(response.data);
       }
     } catch (error) {
@@ -419,9 +414,37 @@ const Channels: React.FC = () => {
   };
 
   return (
-    <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+        position: "relative",
+      }}
+    >
       {/* Channels List */}
-      <List sx={{ flex: 1, overflowY: "auto", pt: 0 }}>
+      <List
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          pt: 0,
+          height: "calc(100% - 64px)", // Leave space for create/join buttons
+          "&::-webkit-scrollbar": {
+            width: "4px",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "rgba(15, 23, 42, 0.3)",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background: "rgba(198, 128, 227, 0.3)",
+            borderRadius: "2px",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            background: "rgba(198, 128, 227, 0.5)",
+          },
+        }}
+      >
         <ListItem
           sx={{
             px: 2,
@@ -515,7 +538,17 @@ const Channels: React.FC = () => {
       </List>
 
       {/* Create/Join Channel Buttons */}
-      <Box sx={{ p: 2, borderTop: "1px solid rgba(198, 128, 227, 0.2)" }}>
+      <Box
+        sx={{
+          p: 2,
+          borderTop: "1px solid rgba(198, 128, 227, 0.2)",
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "#0f172a",
+        }}
+      >
         <Box sx={{ display: "flex", gap: 1 }}>
           <Button
             fullWidth

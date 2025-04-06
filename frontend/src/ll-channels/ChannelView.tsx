@@ -108,6 +108,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         height: "100%",
         width: "100%",
         position: "relative",
+        overflow: "hidden",
       }}
     >
       {/* Main Chat Area */}
@@ -119,6 +120,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
           height: "100%",
           maxWidth: "calc(100% - 240px)", // Subtract members sidebar width
           borderRight: "1px solid rgba(198, 128, 227, 0.2)",
+          overflow: "hidden",
         }}
       >
         {/* Channel Header */}

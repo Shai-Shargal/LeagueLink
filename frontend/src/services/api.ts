@@ -107,15 +107,22 @@ export const authService = {
   // Channel methods
   getMyChannels: async () => {
     try {
+      const token = localStorage.getItem("token");
+      console.log("Token exists:", !!token);
+
       const response = await api.get("/channels/my-channels", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       console.log("Raw getMyChannels response:", response.data);
       return response.data;
     } catch (error) {
       console.error("Error in getMyChannels:", error);
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+        console.error("Error status:", error.response.status);
+      }
       throw error;
     }
   },
