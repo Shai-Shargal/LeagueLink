@@ -157,7 +157,6 @@ router.put(
         });
       }
 
-      if (username) user.username = username;
       if (email) user.email = email;
       if (bio !== undefined) user.bio = bio;
       if (favoriteSports !== undefined) user.favoriteSports = favoriteSports;

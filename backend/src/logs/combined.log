@@ -124,3 +124,31 @@
 {"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-02T18:07:47.670Z"}
 {"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-02T18:08:13.775Z"}
 {"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-02T18:08:13.863Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-04-05T22:49:29.973Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-04-05T22:49:29.980Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-05T22:50:02.388Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-05T22:50:02.547Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-05T23:10:14.115Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-05T23:10:14.203Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-05T23:30:12.843Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-05T23:30:12.921Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-05T23:36:20.122Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-05T23:36:20.215Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-05T23:51:44.791Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-05T23:51:44.878Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-05T23:52:35.721Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-05T23:52:35.813Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:09.162Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:09.241Z"}
+{"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:09.242Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:16.862Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:16.942Z"}
+{"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:16.943Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:25.150Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:25.230Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:13:22.949Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-06T00:13:23.067Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-04-06T00:23:24.600Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-04-06T00:23:24.604Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:27:00.925Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-06T00:27:01.013Z"}

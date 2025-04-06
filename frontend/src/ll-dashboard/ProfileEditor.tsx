@@ -181,26 +181,17 @@ const ProfileEditor: React.FC = () => {
         <TextField
           label="Username"
           value={user.username}
-          onChange={(e) => setUser({ ...user, username: e.target.value })}
+          disabled
           fullWidth
           sx={{
             "& .MuiOutlinedInput-root": {
               "& fieldset": {
                 borderColor: "rgba(198, 128, 227, 0.4)",
               },
-              "&:hover fieldset": {
-                borderColor: "rgba(198, 128, 227, 0.6)",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "#C680E3",
-              },
               color: "#fff",
             },
             "& .MuiInputLabel-root": {
               color: "rgba(198, 128, 227, 0.7)",
-              "&.Mui-focused": {
-                color: "#C680E3",
-              },
             },
           }}
         />

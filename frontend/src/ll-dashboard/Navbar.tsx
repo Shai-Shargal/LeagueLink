@@ -68,7 +68,7 @@ const Navbar: React.FC = () => {
   ];
 
   const authenticatedNavItems = [
-    { label: "Edit Profile", path: "/dashboard?edit=true" },
+    { label: "Edit Profile", path: "/dashboard/editprofile" },
     { label: "Logout", action: handleLogout },
   ];
 
