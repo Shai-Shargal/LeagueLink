@@ -12,8 +12,13 @@ import {
   TextField,
   InputAdornment,
   IconButton,
+  Button,
 } from "@mui/material";
-import { Send as SendIcon } from "@mui/icons-material";
+import {
+  Send as SendIcon,
+  EmojiEvents as TournamentIcon,
+  BarChart as StatsIcon,
+} from "@mui/icons-material";
 import { authService } from "../services/api";
 
 interface Member {
@@ -256,6 +261,8 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
           backgroundColor: "rgba(15, 23, 42, 0.95)",
           borderLeft: "1px solid rgba(198, 128, 227, 0.2)",
           overflowY: "auto",
+          display: "flex",
+          flexDirection: "column",
           "&::-webkit-scrollbar": {
             width: "4px",
           },
@@ -316,7 +323,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         <Divider sx={{ borderColor: "rgba(198, 128, 227, 0.2)", my: 1 }} />
 
         {/* Members Section */}
-        <Box sx={{ p: 2, pt: 1, flex: 1 }}>
+        <Box sx={{ p: 2, pt: 1, flex: 1, overflowY: "auto" }}>
           <Typography
             variant="subtitle2"
             sx={{
@@ -355,6 +362,28 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
               </ListItem>
             ))}
           </List>
+        </Box>
+
+        {/* Tournament and Stats Button */}
+        <Box sx={{ p: 2, borderTop: "1px solid rgba(198, 128, 227, 0.2)" }}>
+          <Button
+            variant="contained"
+            startIcon={<TournamentIcon />}
+            endIcon={<StatsIcon />}
+            sx={{
+              width: "100%",
+              backgroundColor: "rgba(198, 128, 227, 0.2)",
+              color: "#fff",
+              "&:hover": {
+                backgroundColor: "rgba(198, 128, 227, 0.3)",
+              },
+              textTransform: "none",
+              fontSize: "0.875rem",
+              fontWeight: 500,
+            }}
+          >
+            Tournament Stats
+          </Button>
         </Box>
       </Box>
     </Box>
