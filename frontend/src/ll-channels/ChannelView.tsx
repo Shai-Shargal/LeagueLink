@@ -20,6 +20,7 @@ import {
   BarChart as StatsIcon,
 } from "@mui/icons-material";
 import { authService } from "../services/api";
+import TournamentView from "../ll-tournament/TournamentView";
 
 interface Member {
   _id: string;
@@ -49,6 +50,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [channel, setChannel] = useState<Channel | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [showTournament, setShowTournament] = useState(false);
 
   useEffect(() => {
     const fetchChannel = async () => {
@@ -91,6 +93,10 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         <Typography sx={{ color: "#fff" }}>Loading channel...</Typography>
       </Box>
     );
+  }
+
+  if (showTournament) {
+    return <TournamentView onBack={() => setShowTournament(false)} />;
   }
 
   const handleSendMessage = () => {
@@ -370,6 +376,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             variant="contained"
             startIcon={<TournamentIcon />}
             endIcon={<StatsIcon />}
+            onClick={() => setShowTournament(true)}
             sx={{
               width: "100%",
               backgroundColor: "rgba(198, 128, 227, 0.2)",
