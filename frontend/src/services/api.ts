@@ -64,10 +64,40 @@ export const authService = {
     return response.data;
   },
 
-  logout: () => {
-    localStorage.removeItem("token");
-    delete api.defaults.headers.common["Authorization"];
-    console.log("Token removed after logout");
+  logout: async () => {
+    try {
+      // Get the current token
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.log("No token found during logout");
+        return;
+      }
+
+      // Make API call to logout endpoint
+      await api.post(
+        "/auth/logout",
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // Clear all auth-related data
+      localStorage.removeItem("token");
+      delete api.defaults.headers.common["Authorization"];
+
+      // Reset axios instance to its initial state
+      api.defaults.headers.common = {
+        "Content-Type": "application/json",
+      };
+
+      console.log("Successfully logged out and cleared all auth data");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Still remove the token even if there's an error
+      localStorage.removeItem("token");
+      delete api.defaults.headers.common["Authorization"];
+    }
   },
 
   getCurrentUser: async () => {

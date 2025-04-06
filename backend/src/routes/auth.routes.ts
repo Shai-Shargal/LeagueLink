@@ -3,6 +3,7 @@ import { body } from "express-validator";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.model.js";
 import { logger } from "../utils/logger.js";
+import { protect } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
@@ -109,6 +110,25 @@ router.post("/login", loginValidation, async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: "Error logging in",
+    });
+  }
+});
+
+// Logout user
+router.post("/logout", protect, async (req: Request, res: Response) => {
+  try {
+    // In a more complete implementation, you might want to add the token to a blacklist
+    // or implement a token revocation mechanism
+
+    res.json({
+      success: true,
+      message: "Successfully logged out",
+    });
+  } catch (error) {
+    logger.error("Logout Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error during logout",
     });
   }
 });

@@ -27,10 +27,17 @@ const Navbar: React.FC = () => {
     setIsAuthenticated(!!token);
   }, [location]);
 
-  const handleLogout = () => {
-    authService.logout();
-    setIsAuthenticated(false);
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+      setIsAuthenticated(false);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error during logout:", error);
+      // Still proceed with navigation even if there's an error
+      setIsAuthenticated(false);
+      navigate("/login");
+    }
   };
 
   const scrollToSection = (sectionId: string) => {
