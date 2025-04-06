@@ -159,195 +159,209 @@ const ProfileEditor: React.FC = () => {
   }
 
   return (
-    <Paper
+    <Box
       sx={{
-        p: 4,
-        background: "rgba(15, 23, 42, 0.7)",
-        backdropFilter: "blur(10px)",
-        borderRadius: 3,
-        border: "1px solid rgba(198, 128, 227, 0.2)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        minHeight: "100vh",
+        pt: 4,
+        px: 2,
+        pb: 4,
       }}
     >
-      <Stack spacing={4}>
-        <Box sx={{ textAlign: "center", mb: 4 }}>
-          <ImageUpload
-            currentImage={user.profilePicture}
-            onUpload={handleProfilePictureUpload}
-            onDelete={handleProfilePictureDelete}
-            size={200}
-          />
-        </Box>
+      <Paper
+        sx={{
+          p: 4,
+          background: "rgba(15, 23, 42, 0.7)",
+          backdropFilter: "blur(10px)",
+          borderRadius: 3,
+          border: "1px solid rgba(198, 128, 227, 0.2)",
+          maxWidth: "800px",
+          width: "100%",
+        }}
+      >
+        <Stack spacing={4}>
+          <Box sx={{ textAlign: "center", mb: 4 }}>
+            <ImageUpload
+              currentImage={user.profilePicture}
+              onUpload={handleProfilePictureUpload}
+              onDelete={handleProfilePictureDelete}
+              size={200}
+            />
+          </Box>
 
-        <TextField
-          label="Username"
-          value={user.username}
-          disabled
-          fullWidth
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "rgba(198, 128, 227, 0.4)",
-              },
-              color: "#fff",
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(198, 128, 227, 0.7)",
-            },
-          }}
-        />
-
-        <TextField
-          label="Email"
-          value={user.email}
-          disabled
-          fullWidth
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "rgba(198, 128, 227, 0.4)",
-              },
-              color: "#fff",
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(198, 128, 227, 0.7)",
-            },
-          }}
-        />
-
-        <TextField
-          label="Bio"
-          value={user.bio}
-          onChange={(e) => setUser({ ...user, bio: e.target.value })}
-          multiline
-          rows={4}
-          fullWidth
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                borderColor: "rgba(198, 128, 227, 0.4)",
-              },
-              "&:hover fieldset": {
-                borderColor: "rgba(198, 128, 227, 0.6)",
-              },
-              "&.Mui-focused fieldset": {
-                borderColor: "#C680E3",
-              },
-              color: "#fff",
-            },
-            "& .MuiInputLabel-root": {
-              color: "rgba(198, 128, 227, 0.7)",
-              "&.Mui-focused": {
-                color: "#C680E3",
-              },
-            },
-          }}
-        />
-
-        <Box>
-          <Typography variant="h6" sx={{ color: "#fff", mb: 2 }}>
-            Favorite Sports
-          </Typography>
-
-          {/* Emoji Picker Grid */}
-          <Paper
+          <TextField
+            label="Username"
+            value={user.username}
+            disabled
+            fullWidth
             sx={{
-              p: 2,
-              mb: 2,
-              background: "rgba(15, 23, 42, 0.5)",
-              border: "1px solid rgba(198, 128, 227, 0.2)",
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "rgba(198, 128, 227, 0.4)",
+                },
+                color: "#fff",
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(198, 128, 227, 0.7)",
+              },
             }}
-          >
-            <Grid container spacing={1}>
-              {SPORTS_EMOJIS.map((sport) => (
-                <Grid item key={sport.emoji}>
-                  <Tooltip title={sport.name} arrow>
-                    <IconButton
-                      onClick={() => handleEmojiClick(sport)}
-                      sx={{
-                        fontSize: "1.8rem",
-                        color: "#fff",
-                        transition: "all 0.2s ease",
-                        backgroundColor: user?.favoriteSports.includes(
-                          sport.emoji
-                        )
-                          ? "rgba(15, 23, 42, 0.8)"
-                          : "transparent",
-                        boxShadow: user?.favoriteSports.includes(sport.emoji)
-                          ? "0 0 10px rgba(198, 128, 227, 0.3)"
-                          : "none",
-                        "&:hover": {
+          />
+
+          <TextField
+            label="Email"
+            value={user.email}
+            disabled
+            fullWidth
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "rgba(198, 128, 227, 0.4)",
+                },
+                color: "#fff",
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(198, 128, 227, 0.7)",
+              },
+            }}
+          />
+
+          <TextField
+            label="Bio"
+            value={user.bio}
+            onChange={(e) => setUser({ ...user, bio: e.target.value })}
+            multiline
+            rows={4}
+            fullWidth
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "rgba(198, 128, 227, 0.4)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(198, 128, 227, 0.6)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#C680E3",
+                },
+                color: "#fff",
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(198, 128, 227, 0.7)",
+                "&.Mui-focused": {
+                  color: "#C680E3",
+                },
+              },
+            }}
+          />
+
+          <Box>
+            <Typography variant="h6" sx={{ color: "#fff", mb: 2 }}>
+              Favorite Sports
+            </Typography>
+
+            {/* Emoji Picker Grid */}
+            <Paper
+              sx={{
+                p: 2,
+                mb: 2,
+                background: "rgba(15, 23, 42, 0.5)",
+                border: "1px solid rgba(198, 128, 227, 0.2)",
+              }}
+            >
+              <Grid container spacing={1}>
+                {SPORTS_EMOJIS.map((sport) => (
+                  <Grid item key={sport.emoji}>
+                    <Tooltip title={sport.name} arrow>
+                      <IconButton
+                        onClick={() => handleEmojiClick(sport)}
+                        sx={{
+                          fontSize: "1.8rem",
+                          color: "#fff",
+                          transition: "all 0.2s ease",
                           backgroundColor: user?.favoriteSports.includes(
                             sport.emoji
                           )
                             ? "rgba(15, 23, 42, 0.8)"
-                            : "rgba(198, 128, 227, 0.1)",
-                        },
-                      }}
-                    >
-                      {sport.emoji}
-                    </IconButton>
-                  </Tooltip>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
+                            : "transparent",
+                          boxShadow: user?.favoriteSports.includes(sport.emoji)
+                            ? "0 0 10px rgba(198, 128, 227, 0.3)"
+                            : "none",
+                          "&:hover": {
+                            backgroundColor: user?.favoriteSports.includes(
+                              sport.emoji
+                            )
+                              ? "rgba(15, 23, 42, 0.8)"
+                              : "rgba(198, 128, 227, 0.1)",
+                          },
+                        }}
+                      >
+                        {sport.emoji}
+                      </IconButton>
+                    </Tooltip>
+                  </Grid>
+                ))}
+              </Grid>
+            </Paper>
 
-          {/* Selected Sports Chips */}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {user.favoriteSports.map((sport) => {
-              const sportInfo = SPORTS_EMOJIS.find((s) => s.emoji === sport);
-              return (
-                <Chip
-                  key={sport}
-                  label={`${sport} ${sportInfo?.name || ""}`}
-                  onDelete={() => handleRemoveSport(sport)}
-                  sx={{
-                    backgroundColor: "rgba(198, 128, 227, 0.2)",
-                    color: "#C680E3",
-                    "& .MuiChip-deleteIcon": {
+            {/* Selected Sports Chips */}
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {user.favoriteSports.map((sport) => {
+                const sportInfo = SPORTS_EMOJIS.find((s) => s.emoji === sport);
+                return (
+                  <Chip
+                    key={sport}
+                    label={`${sport} ${sportInfo?.name || ""}`}
+                    onDelete={() => handleRemoveSport(sport)}
+                    sx={{
+                      backgroundColor: "rgba(198, 128, 227, 0.2)",
                       color: "#C680E3",
-                      "&:hover": {
-                        color: "#9333EA",
+                      "& .MuiChip-deleteIcon": {
+                        color: "#C680E3",
+                        "&:hover": {
+                          color: "#9333EA",
+                        },
                       },
-                    },
-                  }}
-                />
-              );
-            })}
+                    }}
+                  />
+                );
+              })}
+            </Box>
           </Box>
-        </Box>
 
-        <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
-          <Button
-            variant="outlined"
-            onClick={() => navigate("/dashboard")}
-            sx={{
-              color: "#C680E3",
-              borderColor: "rgba(198, 128, 227, 0.4)",
-              "&:hover": {
-                borderColor: "#C680E3",
-                backgroundColor: "rgba(198, 128, 227, 0.1)",
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="contained"
-            onClick={handleSave}
-            disabled={saving}
-            sx={{
-              backgroundColor: "#C680E3",
-              "&:hover": {
-                backgroundColor: "#9333EA",
-              },
-            }}
-          >
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-        </Box>
-      </Stack>
-    </Paper>
+          <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
+            <Button
+              variant="outlined"
+              onClick={() => navigate("/dashboard")}
+              sx={{
+                color: "#C680E3",
+                borderColor: "rgba(198, 128, 227, 0.4)",
+                "&:hover": {
+                  borderColor: "#C680E3",
+                  backgroundColor: "rgba(198, 128, 227, 0.1)",
+                },
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="contained"
+              onClick={handleSave}
+              disabled={saving}
+              sx={{
+                backgroundColor: "#C680E3",
+                "&:hover": {
+                  backgroundColor: "#9333EA",
+                },
+              }}
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </Button>
+          </Box>
+        </Stack>
+      </Paper>
+    </Box>
   );
 };
 

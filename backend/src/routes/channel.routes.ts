@@ -180,7 +180,12 @@ router.put(
       }
 
       // Check if user is channel owner or admin
-      if (!channel.admins.includes(req.user.id)) {
+      const isAdmin = channel.admins.some(
+        (adminId) => adminId.toString() === req.user.id.toString()
+      );
+      const isOwner = channel.owner.toString() === req.user.id.toString();
+
+      if (!isAdmin && !isOwner) {
         return res.status(403).json({
           success: false,
           message: "Not authorized to update channel",
@@ -194,9 +199,15 @@ router.put(
 
       await channel.save();
 
+      // Return the updated channel with populated fields
+      const updatedChannel = await Channel.findById(channel._id)
+        .populate("owner", "_id username profilePicture")
+        .populate("members", "username profilePicture")
+        .populate("admins", "username profilePicture");
+
       res.json({
         success: true,
-        data: channel,
+        data: updatedChannel,
       });
     } catch (error) {
       logger.error("Update Channel Error:", error);

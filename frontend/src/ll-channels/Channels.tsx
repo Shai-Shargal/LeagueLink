@@ -343,41 +343,90 @@ const Channels: React.FC = () => {
 
   const handleSettingsClose = () => {
     setSettingsAnchorEl(null);
-    setSelectedChannelForSettings(null);
   };
 
   const handleEditClick = () => {
     if (selectedChannelForSettings) {
+      console.log(
+        "Opening edit dialog with description:",
+        selectedChannelForSettings.description
+      );
       setEditChannelData({
         description: selectedChannelForSettings.description,
       });
       setOpenEditDialog(true);
+      setSettingsAnchorEl(null);
     }
-    handleSettingsClose();
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
+    setSelectedChannelForSettings(null);
+    setEditChannelData({ description: "" });
+    setError("");
   };
 
   const handleEditChannel = async () => {
     try {
+      if (!selectedChannelForSettings) {
+        console.error("No channel selected for editing");
+        return;
+      }
+
+      if (
+        !editChannelData.description ||
+        editChannelData.description.length < 10
+      ) {
+        setError("Description must be at least 10 characters long");
+        return;
+      }
+
       setLoading(true);
       setError("");
 
-      if (!selectedChannelForSettings) return;
+      console.log("Updating channel:", {
+        channelId: selectedChannelForSettings._id,
+        newDescription: editChannelData.description,
+      });
 
-      await authService.updateChannel(
+      const response = await authService.updateChannel(
         selectedChannelForSettings._id,
         editChannelData
       );
+
+      console.log("Update response:", response);
       setSuccess("Channel updated successfully!");
       setOpenEditDialog(false);
-      fetchChannels();
+      await fetchChannels(); // Refresh the channels list
     } catch (error: any) {
+      console.error("Error updating channel:", error);
+      if (error.response) {
+        console.error("Error details:", error.response.data);
+      }
       setError(error.response?.data?.message || "Failed to update channel");
     } finally {
       setLoading(false);
     }
   };
 
+  // Add a handler for description changes
+  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("Description changed:", e.target.value);
+    setEditChannelData({
+      ...editChannelData,
+      description: e.target.value,
+    });
+  };
+
   const handleDeleteChannel = async () => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this channel? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -388,6 +437,10 @@ const Channels: React.FC = () => {
       setSuccess("Channel deleted successfully!");
       handleSettingsClose();
       fetchChannels();
+      // Clear the channel from URL if it was selected
+      if (searchParams.get("channel") === selectedChannelForSettings._id) {
+        setSearchParams({});
+      }
     } catch (error: any) {
       setError(error.response?.data?.message || "Failed to delete channel");
     } finally {
@@ -768,6 +821,140 @@ const Channels: React.FC = () => {
           },
         }}
       />
+
+      <Menu
+        anchorEl={settingsAnchorEl}
+        open={Boolean(settingsAnchorEl)}
+        onClose={handleSettingsClose}
+        sx={{
+          "& .MuiPaper-root": {
+            backgroundColor: "rgba(15, 23, 42, 0.95)",
+            border: "1px solid rgba(198, 128, 227, 0.2)",
+            backdropFilter: "blur(10px)",
+            borderRadius: "8px",
+            minWidth: "200px",
+          },
+          "& .MuiMenuItem-root": {
+            color: "#fff",
+            fontSize: "14px",
+            "&:hover": {
+              backgroundColor: "rgba(198, 128, 227, 0.1)",
+            },
+          },
+        }}
+      >
+        {selectedChannelForSettings?.owner?._id === currentUserId ? (
+          <Box>
+            <MenuItem onClick={handleEditClick}>
+              <ListItemIcon>
+                <EditIcon sx={{ color: "#C680E3" }} />
+              </ListItemIcon>
+              <ListItemText primary="Edit Description" />
+            </MenuItem>
+            <MenuItem
+              onClick={handleDeleteChannel}
+              sx={{ color: "#ef4444 !important" }}
+            >
+              <ListItemIcon>
+                <DeleteIcon sx={{ color: "#ef4444" }} />
+              </ListItemIcon>
+              <ListItemText primary="Delete Channel" />
+            </MenuItem>
+            <Divider sx={{ borderColor: "rgba(198, 128, 227, 0.2)" }} />
+            <MenuItem onClick={handleLeaveChannel}>
+              <ListItemText primary="Leave Channel" sx={{ color: "#ef4444" }} />
+            </MenuItem>
+          </Box>
+        ) : (
+          <MenuItem onClick={handleLeaveChannel}>
+            <ListItemText primary="Leave Channel" sx={{ color: "#ef4444" }} />
+          </MenuItem>
+        )}
+      </Menu>
+
+      {/* Edit Channel Dialog */}
+      <Dialog
+        open={openEditDialog}
+        onClose={handleCloseEditDialog}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(15, 23, 42, 0.95)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(198, 128, 227, 0.2)",
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "#fff" }}>
+          Edit Channel Description
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Description"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            value={editChannelData.description}
+            onChange={(e) =>
+              setEditChannelData({
+                ...editChannelData,
+                description: e.target.value,
+              })
+            }
+            sx={{
+              mt: 2,
+              "& .MuiOutlinedInput-root": {
+                color: "#fff",
+                "& fieldset": {
+                  borderColor: "rgba(198, 128, 227, 0.4)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "rgba(198, 128, 227, 0.6)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "#C680E3",
+                },
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(198, 128, 227, 0.7)",
+                "&.Mui-focused": {
+                  color: "#C680E3",
+                },
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button
+            onClick={handleCloseEditDialog}
+            sx={{
+              color: "#C680E3",
+              "&:hover": {
+                backgroundColor: "rgba(198, 128, 227, 0.1)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleEditChannel}
+            variant="contained"
+            disabled={loading}
+            sx={{
+              backgroundColor: "#C680E3",
+              "&:hover": {
+                backgroundColor: "#9333EA",
+              },
+            }}
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

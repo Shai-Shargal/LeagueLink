@@ -146,13 +146,9 @@ export const authService = {
   },
 
   updateChannel: async (channelId: string, data: UpdateChannelData) => {
-    const response = await axios.put(
-      `${API_URL}/api/channels/${channelId}`,
-      data,
-      {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      }
-    );
+    const response = await api.put(`/channels/${channelId}`, data, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
     return response.data;
   },
 
