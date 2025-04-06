@@ -9,6 +9,7 @@ import FrontPage from "./ll-front-page/FrontPage";
 import SignIn from "./ll-dashboard/SignIn";
 import Register from "./ll-dashboard/Register";
 import Dashboard from "./ll-dashboard/Dashboard";
+import ProfileEditor from "./ll-dashboard/ProfileEditor";
 import { authService } from "./services/api";
 import "./App.css";
 
@@ -34,6 +35,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/editprofile"
+            element={
+              <ProtectedRoute>
+                <ProfileEditor />
               </ProtectedRoute>
             }
           />
