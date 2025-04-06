@@ -66,14 +66,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                   }
                 : {
                     marginTop: 0,
-                    height: "733px",
-                    width: "1540px",
+                    height: "calc(100vh - 64px)",
                     overflow: "auto",
+                    maxWidth: "100%",
                     padding: "16px",
                     boxSizing: "border-box",
-                    mx: "auto",
-                    display: "flex",
-                    flexDirection: "column",
                   }),
             }}
           >
