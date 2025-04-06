@@ -317,7 +317,15 @@ const Channels: React.FC = () => {
   };
 
   const handleChannelClick = (channel: Channel) => {
-    console.log("Selected channel:", channel);
+    console.log("Selected channel:", {
+      _id: channel._id,
+      name: channel.name,
+      description: channel.description,
+      image: channel.image,
+      members: channel.members,
+      admins: channel.admins,
+      owner: channel.owner,
+    });
     if (!channel.members || !channel.admins) {
       console.error("Channel data is incomplete:", channel);
       setError("Channel data is incomplete. Please try refreshing the page.");
