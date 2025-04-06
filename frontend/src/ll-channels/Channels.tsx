@@ -420,40 +420,8 @@ const Channels: React.FC = () => {
 
   return (
     <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-      {/* Server/App Name */}
-      <Box
-        sx={{
-          p: 2,
-          borderBottom: "1px solid rgba(198, 128, 227, 0.2)",
-        }}
-      >
-        <Typography
-          variant="h6"
-          sx={{
-            color: "#fff",
-            fontWeight: "bold",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          LeagueLink
-          <Box sx={{ display: "flex", gap: 1 }}>
-            <Tooltip title="Join Channel">
-              <IconButton
-                size="small"
-                onClick={() => setOpenJoin(true)}
-                sx={{ color: "#dcddde" }}
-              >
-                <AddIcon />
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </Typography>
-      </Box>
-
       {/* Channels List */}
-      <List sx={{ flex: 1, p: 0 }}>
+      <List sx={{ flex: 1, overflowY: "auto", pt: 0 }}>
         <ListItem
           sx={{
             px: 2,
@@ -493,9 +461,6 @@ const Channels: React.FC = () => {
           >
             <ListItemIcon sx={{ minWidth: 32, color: "inherit" }}>
               {(() => {
-                console.log(
-                  `Channel ${channel.name} - owner: ${channel.owner?._id}, currentUserId: ${currentUserId}`
-                );
                 return (
                   <Tooltip
                     title={

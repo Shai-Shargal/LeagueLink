@@ -107,9 +107,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         display: "flex",
         height: "100%",
         width: "100%",
-        position: "absolute",
-        top: 0,
-        left: 0,
+        position: "relative",
       }}
     >
       {/* Main Chat Area */}
@@ -176,41 +174,32 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         <Box
           sx={{
             flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            alignItems: "center",
-            overflow: "auto",
+            overflowY: "auto",
             p: 2,
             "&::-webkit-scrollbar": {
               width: "8px",
-              background: "transparent",
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "rgba(15, 23, 42, 0.3)",
             },
             "&::-webkit-scrollbar-thumb": {
-              background: "rgba(198, 128, 227, 0.2)",
+              background: "rgba(198, 128, 227, 0.3)",
               borderRadius: "4px",
             },
             "&::-webkit-scrollbar-thumb:hover": {
-              background: "rgba(198, 128, 227, 0.4)",
+              background: "rgba(198, 128, 227, 0.5)",
             },
           }}
         >
-          <Typography
-            sx={{
-              color: "rgba(255, 255, 255, 0.7)",
-              fontSize: "0.9rem",
-            }}
-          >
-            Chat messages will appear here
-          </Typography>
+          {/* Messages will be added here */}
         </Box>
 
         {/* Message Input */}
         <Box
           sx={{
             p: 2,
-            backgroundColor: "rgba(15, 23, 42, 0.98)",
             borderTop: "1px solid rgba(198, 128, 227, 0.2)",
+            backgroundColor: "rgba(15, 23, 42, 0.98)",
           }}
         >
           <TextField
@@ -221,28 +210,18 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Type a message..."
-            variant="outlined"
             sx={{
               "& .MuiOutlinedInput-root": {
                 color: "#fff",
-                backgroundColor: "rgba(15, 23, 42, 0.7)",
-                borderRadius: 2,
-                "& fieldset": {
+                backgroundColor: "rgba(15, 23, 42, 0.6)",
+                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "#C680E3",
+                },
+                "& .MuiOutlinedInput-notchedOutline": {
                   borderColor: "rgba(198, 128, 227, 0.2)",
                 },
-                "&:hover fieldset": {
+                "&:hover .MuiOutlinedInput-notchedOutline": {
                   borderColor: "rgba(198, 128, 227, 0.4)",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "rgba(198, 128, 227, 0.6)",
-                },
-              },
-              "& .MuiOutlinedInput-input": {
-                padding: "12px 14px",
-                fontSize: "0.9rem",
-                "&::placeholder": {
-                  color: "rgba(255, 255, 255, 0.5)",
-                  opacity: 1,
                 },
               },
             }}
@@ -251,11 +230,8 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
                 <InputAdornment position="end">
                   <IconButton
                     onClick={handleSendMessage}
-                    disabled={!message.trim()}
                     sx={{
-                      color: message.trim()
-                        ? "#C680E3"
-                        : "rgba(255, 255, 255, 0.3)",
+                      color: "#C680E3",
                       "&:hover": {
                         backgroundColor: "rgba(198, 128, 227, 0.1)",
                       },
@@ -275,20 +251,21 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         sx={{
           width: 240,
           height: "100%",
-          backgroundColor: "rgba(15, 23, 42, 0.98)",
+          backgroundColor: "rgba(15, 23, 42, 0.95)",
+          borderLeft: "1px solid rgba(198, 128, 227, 0.2)",
           overflowY: "auto",
-          display: "flex",
-          flexDirection: "column",
           "&::-webkit-scrollbar": {
             width: "4px",
-            background: "transparent",
+          },
+          "&::-webkit-scrollbar-track": {
+            background: "rgba(15, 23, 42, 0.3)",
           },
           "&::-webkit-scrollbar-thumb": {
-            background: "rgba(198, 128, 227, 0.2)",
+            background: "rgba(198, 128, 227, 0.3)",
             borderRadius: "2px",
           },
           "&::-webkit-scrollbar-thumb:hover": {
-            background: "rgba(198, 128, 227, 0.4)",
+            background: "rgba(198, 128, 227, 0.5)",
           },
         }}
       >

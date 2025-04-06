@@ -3,12 +3,16 @@ import { Box, Container, CssBaseline, ThemeProvider } from "@mui/material";
 import { motion } from "framer-motion";
 import { theme } from "../themes/theme";
 import Navbar from "../ll-dashboard/Navbar";
+import { useLocation } from "react-router-dom";
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
+  const location = useLocation();
+  const isEditProfile = location.pathname.includes("/editprofile");
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -17,7 +21,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           minHeight: "100vh",
           background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
           position: "relative",
-          overflow: "hidden",
+          overflow: isEditProfile ? "visible" : "hidden",
+          display: "flex",
+          flexDirection: "column",
+          paddingTop: isEditProfile ? "0" : "64px",
         }}
       >
         {/* Background gradient overlay */}
@@ -39,14 +46,35 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
+          style={{ flex: 1, position: "relative" }}
         >
           <Navbar />
           <Container
-            maxWidth="lg"
+            maxWidth={false}
             sx={{
               position: "relative",
               zIndex: 1,
-              py: 4,
+              width: "100%",
+              maxWidth: "100%",
+              margin: 0,
+              ...(isEditProfile
+                ? {
+                    marginTop: "80px",
+                    height: "auto",
+                    overflow: "visible",
+                    padding: "24px",
+                  }
+                : {
+                    marginTop: 0,
+                    height: "733px",
+                    width: "1540px",
+                    overflow: "auto",
+                    padding: "16px",
+                    boxSizing: "border-box",
+                    mx: "auto",
+                    display: "flex",
+                    flexDirection: "column",
+                  }),
             }}
           >
             {children}
