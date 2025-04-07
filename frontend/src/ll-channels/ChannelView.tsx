@@ -135,16 +135,19 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const handleSendMessage = async () => {
     if (!message.trim() || !currentUser || !channelId) return;
 
+    const messageText = message;
+    setMessage("");
+
     try {
       await sendMessage({
-        text: message,
+        text: messageText,
         senderId: currentUser._id,
         senderName: currentUser.username,
         channelId: channelId,
       });
-      setMessage("");
     } catch (error) {
       console.error("Failed to send message:", error);
+      setMessage(messageText);
     }
   };
 
