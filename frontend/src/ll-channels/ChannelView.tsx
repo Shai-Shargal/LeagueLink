@@ -371,7 +371,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
                     borderRadius: 2,
                     backgroundColor: isCurrentUser
                       ? "rgba(198, 128, 227, 0.2)"
-                      : "rgba(15, 23, 42, 0.6)",
+                      : "rgba(30, 41, 59, 0.8)",
                     position: "relative",
                     ...(isCurrentUser
                       ? {
@@ -395,8 +395,9 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
                     sx={{
                       color: "#fff",
                       wordBreak: "break-word",
-                      fontSize: "0.9rem",
-                      lineHeight: 1.4,
+                      fontSize: "0.95rem",
+                      lineHeight: 1.5,
+                      fontWeight: 400,
                     }}
                   >
                     {message.text}
@@ -404,11 +405,11 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
                   <Typography
                     variant="caption"
                     sx={{
-                      color: "rgba(255, 255, 255, 0.5)",
+                      color: "rgba(255, 255, 255, 0.7)",
                       display: "block",
                       mt: 0.5,
                       textAlign: "right",
-                      fontSize: "0.7rem",
+                      fontSize: "0.75rem",
                       lineHeight: 1,
                     }}
                   >
