@@ -135,6 +135,18 @@ export const authService = {
     return response.data;
   },
 
+  getUserProfile: async (username: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await api.get(`/users/profile/${username}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
   // Channel methods
   getMyChannels: async () => {
     try {

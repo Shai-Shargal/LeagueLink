@@ -157,7 +157,23 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   }
 
   if (showTournament) {
-    return <TournamentView onBack={() => setShowTournament(false)} />;
+    return (
+      <TournamentView
+        onBack={() => setShowTournament(false)}
+        channelId={channelId}
+        isAdmin={
+          channel?.admins.some((admin) => admin._id === currentUser?._id) ||
+          false
+        }
+        channelUsers={
+          channel?.members.map((member) => ({
+            id: member._id,
+            username: member.username,
+            profilePicture: member.profilePicture,
+          })) || []
+        }
+      />
+    );
   }
 
   const handleSendMessage = async () => {
@@ -194,6 +210,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         width: "100%",
         position: "relative",
         overflow: "hidden",
+        backgroundColor: "rgba(15, 23, 42, 0.95)",
       }}
     >
       {/* Main Chat Area */}
