@@ -21,3 +21,5 @@
 {"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-02T18:00:49.004Z"}
 {"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:09.242Z"}
 {"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:16.943Z"}
+{"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-07T16:49:11.778Z"}
+{"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-07T16:52:03.313Z"}

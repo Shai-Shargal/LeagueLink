@@ -382,7 +382,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
                   }}
                 >
                   <Box
-                    sx={{
+          sx={{
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -420,7 +420,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
                   <Box sx={{ mt: 2 }}>
                     <Typography variant="subtitle2">
                       Enabled Statistics:
-                    </Typography>
+        </Typography>
                     <Box
                       sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}
                     >
