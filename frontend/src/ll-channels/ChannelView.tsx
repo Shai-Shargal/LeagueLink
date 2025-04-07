@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
   Box,
   Typography,
@@ -18,6 +18,8 @@ import {
   Send as SendIcon,
   EmojiEvents as TournamentIcon,
   BarChart as StatsIcon,
+  PhotoCamera,
+  Add as AddIcon,
 } from "@mui/icons-material";
 import { authService } from "../services/api";
 import TournamentView from "../ll-tournament/TournamentView";
@@ -26,6 +28,7 @@ import {
   subscribeToChannelMessages,
   Message,
 } from "../services/chat.service";
+import { uploadChannelImage } from "../services/channel.service";
 
 interface Member {
   _id: string;
@@ -40,6 +43,7 @@ interface Channel {
   image: string;
   members: Member[];
   admins: Member[];
+  owner: Member;
 }
 
 interface ApiResponse {
@@ -58,6 +62,8 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [showTournament, setShowTournament] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -111,6 +117,28 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
     const adminIds = new Set(channel.admins?.map((admin) => admin._id));
     return channel.members?.filter((member) => !adminIds.has(member._id)) || [];
   }, [channel?.members, channel?.admins]);
+
+  const handleImageUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file || !channelId) return;
+
+    try {
+      setUploadingImage(true);
+      const imageUrl = await uploadChannelImage(channelId, file);
+      if (channel) {
+        setChannel({ ...channel, image: imageUrl });
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   if (loading || !channel) {
     return (
@@ -194,16 +222,55 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             backdropFilter: "blur(10px)",
           }}
         >
-          <Avatar
-            src={channel.image}
-            sx={{
-              width: 24,
-              height: 24,
-              fontSize: "14px",
-            }}
-          >
-            {channel.name?.charAt(0)?.toUpperCase() || "#"}
-          </Avatar>
+          <Box sx={{ position: "relative" }}>
+            <Avatar
+              src={channel.image}
+              sx={{
+                width: 40,
+                height: 40,
+                fontSize: "20px",
+                cursor: "pointer",
+                "&:hover": {
+                  opacity: 0.8,
+                },
+              }}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {channel.name?.charAt(0)?.toUpperCase() || "#"}
+            </Avatar>
+            {channel.owner?._id === currentUser?._id && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: -4,
+                  right: -4,
+                  backgroundColor: "rgba(15, 23, 42, 0.8)",
+                  borderRadius: "50%",
+                  width: 20,
+                  height: 20,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: 0,
+                  transition: "opacity 0.2s",
+                  "&:hover": {
+                    opacity: 1,
+                    backgroundColor: "rgba(15, 23, 42, 0.9)",
+                  },
+                }}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <AddIcon sx={{ fontSize: 16, color: "#C680E3" }} />
+              </Box>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              style={{ display: "none" }}
+            />
+          </Box>
           <Box>
             <Typography
               variant="subtitle1"

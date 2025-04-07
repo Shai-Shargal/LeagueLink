@@ -39,7 +39,8 @@ interface JoinChannelData {
 }
 
 interface UpdateChannelData {
-  description: string;
+  description?: string;
+  image?: string;
 }
 
 export const authService = {
