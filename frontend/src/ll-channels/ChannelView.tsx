@@ -21,6 +21,11 @@ import {
 } from "@mui/icons-material";
 import { authService } from "../services/api";
 import TournamentView from "../ll-tournament/TournamentView";
+import {
+  sendMessage,
+  subscribeToChannelMessages,
+  Message,
+} from "../services/chat.service";
 
 interface Member {
   _id: string;
@@ -51,6 +56,21 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [showTournament, setShowTournament] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const response = await authService.getCurrentUser();
+        setCurrentUser(response);
+      } catch (error) {
+        console.error("Error fetching current user:", error);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
 
   useEffect(() => {
     const fetchChannel = async () => {
@@ -71,6 +91,19 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
 
     fetchChannel();
   }, [channelId]);
+
+  useEffect(() => {
+    if (!channelId || !currentUser) return;
+
+    const unsubscribe = subscribeToChannelMessages(
+      channelId,
+      (updatedMessages) => {
+        setMessages(updatedMessages);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [channelId, currentUser]);
 
   // Filter out admins from the members list to avoid duplicates
   const regularMembers = useMemo(() => {
@@ -99,10 +132,20 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
     return <TournamentView onBack={() => setShowTournament(false)} />;
   }
 
-  const handleSendMessage = () => {
-    // TODO: Implement send message functionality
-    console.log("Sending message:", message);
-    setMessage("");
+  const handleSendMessage = async () => {
+    if (!message.trim() || !currentUser || !channelId) return;
+
+    try {
+      await sendMessage({
+        text: message,
+        senderId: currentUser._id,
+        senderName: currentUser.username,
+        channelId: channelId,
+      });
+      setMessage("");
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
   };
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
@@ -204,7 +247,93 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             },
           }}
         >
-          {/* Messages will be added here */}
+          {messages.map((message, index) => {
+            const isCurrentUser =
+              currentUser && message.senderId === currentUser._id;
+            const showSenderName =
+              index === 0 || messages[index - 1].senderId !== message.senderId;
+
+            return (
+              <Box
+                key={message.id}
+                sx={{
+                  mb: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: isCurrentUser ? "flex-end" : "flex-start",
+                }}
+              >
+                {showSenderName && !isCurrentUser && (
+                  <Typography
+                    variant="caption"
+                    component="div"
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.7)",
+                      mb: 0.5,
+                      ml: 1,
+                      fontSize: "0.8rem",
+                    }}
+                  >
+                    {message.senderName}
+                  </Typography>
+                )}
+                <Box
+                  sx={{
+                    maxWidth: "70%",
+                    p: 1.5,
+                    borderRadius: 2,
+                    backgroundColor: isCurrentUser
+                      ? "rgba(198, 128, 227, 0.2)"
+                      : "rgba(15, 23, 42, 0.6)",
+                    position: "relative",
+                    ...(isCurrentUser
+                      ? {
+                          borderTopRightRadius: showSenderName ? 8 : 4,
+                          borderBottomRightRadius: 4,
+                          borderTopLeftRadius: 8,
+                          borderBottomLeftRadius: 8,
+                          mr: 1,
+                        }
+                      : {
+                          borderTopLeftRadius: showSenderName ? 8 : 4,
+                          borderBottomLeftRadius: 4,
+                          borderTopRightRadius: 8,
+                          borderBottomRightRadius: 8,
+                          ml: 1,
+                        }),
+                  }}
+                >
+                  <Typography
+                    variant="body1"
+                    sx={{
+                      color: "#fff",
+                      wordBreak: "break-word",
+                      fontSize: "0.9rem",
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    {message.text}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "rgba(255, 255, 255, 0.5)",
+                      display: "block",
+                      mt: 0.5,
+                      textAlign: "right",
+                      fontSize: "0.7rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {new Date(message.timestamp).toLocaleTimeString("he-IL", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </Typography>
+                </Box>
+              </Box>
+            );
+          })}
         </Box>
 
         {/* Message Input */}
@@ -288,6 +417,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         <Box sx={{ p: 2, pb: 0 }}>
           <Typography
             variant="subtitle2"
+            component="div"
             sx={{
               color: "rgba(255, 255, 255, 0.7)",
               fontSize: "0.75rem",
@@ -297,10 +427,10 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
               letterSpacing: "0.05em",
             }}
           >
-            Admins — {channel.admins?.length || 0}
+            Admins — {channel?.admins?.length || 0}
           </Typography>
           <List disablePadding>
-            {channel.admins?.map((admin) => (
+            {channel?.admins?.map((admin) => (
               <ListItem key={`admin-${admin._id}`} sx={{ px: 0, py: 0.5 }}>
                 <ListItemAvatar sx={{ minWidth: 32 }}>
                   <Avatar
