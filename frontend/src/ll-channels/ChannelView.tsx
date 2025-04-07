@@ -64,6 +64,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -139,6 +140,11 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
       }
     }
   };
+
+  // Add scroll to bottom effect
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   if (loading || !channel) {
     return (
@@ -422,6 +428,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
               </Box>
             );
           })}
+          <div ref={messagesEndRef} />
         </Box>
 
         {/* Message Input */}
