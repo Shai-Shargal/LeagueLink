@@ -1,21 +1,22 @@
 # LeagueLink
 
-LeagueLink is a modern web application designed to connect gamers and facilitate team formation for competitive gaming. This platform helps gamers find teammates, create teams, and participate in tournaments with a seamless user experience.
+LeagueLink is a modern web application designed to connect participants and facilitate team formation for any type of tournament or sports event. This platform helps organizers and participants manage tournaments, create teams, and coordinate events with a seamless user experience.
 
 ## 🚀 Features
 
 ### User Management
 
 - Secure user authentication and authorization
-- Profile customization with avatars and game preferences
+- Profile customization with avatars and preferences
 - User statistics and achievements tracking
+- Role-based access control (Organizer, Admin, Participant)
 
 ### Team Management
 
-- Create and manage gaming teams
+- Create and manage teams
 - Team chat and communication
 - Team statistics and performance tracking
-- Role-based team management (Owner, Admin, Member)
+- Flexible team roles and permissions
 
 ### Communication
 
@@ -23,20 +24,26 @@ LeagueLink is a modern web application designed to connect gamers and facilitate
 - Direct messaging between users
 - Tournament announcements and updates
 - Team coordination tools
+- Event notifications and reminders
 
 ### Tournament Features
 
-- Create and join tournaments
-- Tournament bracket management
+- Create and manage tournaments of any type
+- Customizable tournament brackets
 - Match scheduling and results tracking
-- Prize pool management
+- Prize pool and rewards management
+- Multiple tournament formats support
+- Automated bracket generation
+- Score tracking and statistics
 
-### Game Integration
+### Event Management
 
-- Support for multiple games
-- Game-specific team matching
-- Player skill level matching
-- Game statistics integration
+- Event registration and check-in
+- Schedule management
+- Venue information and maps
+- Weather updates and alerts
+- Equipment and resource management
+- Volunteer coordination
 
 ## 🛠️ Tech Stack
 
