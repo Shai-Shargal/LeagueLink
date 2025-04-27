@@ -59,8 +59,8 @@ interface ChannelsResponse {
 }
 
 // Custom Crown Icon component
-const CrownIcon = (props: any) => (
-  <SvgIcon {...props} viewBox="0 0 511.993 511.993">
+const CrownIcon = React.forwardRef<SVGSVGElement, any>((props, ref) => (
+  <SvgIcon {...props} ref={ref} viewBox="0 0 511.993 511.993">
     <g>
       <polygon
         style={{ fill: "#C680E3" }}
@@ -137,7 +137,7 @@ const CrownIcon = (props: any) => (
       />
     </g>
   </SvgIcon>
-);
+));
 
 // Custom Football Icon component
 const FootballIcon = (props: any) => (

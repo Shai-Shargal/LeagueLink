@@ -96,7 +96,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       ]);
 
       const initializedStats = channelUsers.map((user) => {
-        const existingStats = (stats as ChannelUserStats[] | undefined)?.find(
+        const existingStats = stats.find(
           (stat: ChannelUserStats) => stat.userId === user.id
         );
         return (
@@ -114,9 +114,10 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       });
 
       setUserStats(initializedStats);
-      setTournaments(tournaments || []);
+      setTournaments(tournaments);
     } catch (error) {
       console.error("Failed to load data:", error);
+      // Initialize stats for all users even if the API call fails
       const defaultStats = channelUsers.map((user) => ({
         userId: user.id,
         username: user.username,
@@ -128,6 +129,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         customStats: {},
       }));
       setUserStats(defaultStats);
+      setTournaments([]);
     }
   };
 
