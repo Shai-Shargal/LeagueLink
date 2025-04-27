@@ -1,39 +1,9 @@
 import React, { useState, useEffect } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  Paper,
-  Tabs,
-  Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  DialogActions,
-  Stack,
-  FormControlLabel,
-  Checkbox,
-  Chip,
-  IconButton,
-  Tooltip,
-  CircularProgress,
-  Avatar,
-} from "@mui/material";
+import { Box, Typography, Button, Tabs, Tab } from "@mui/material";
 import {
   EmojiEvents as TournamentIcon,
   BarChart as StatsIcon,
   Add as AddIcon,
-  CalendarMonth as CalendarIcon,
-  LocationOn as LocationIcon,
-  AccessTime as TimeIcon,
-  Settings as SettingsIcon,
 } from "@mui/icons-material";
 import {
   Tournament,
@@ -44,6 +14,11 @@ import {
 } from "./types";
 import { tournamentService } from "./services/tournamentService";
 import { authService } from "../services/api";
+import TournamentStatsTable from "./components/TournamentStatsTable";
+import TournamentList from "./components/TournamentList";
+import CreateTournamentDialog from "./components/CreateTournamentDialog";
+import StatsConfigDialog from "./components/StatsConfigDialog";
+import UserProfileDialog from "./components/UserProfileDialog";
 
 interface TournamentViewProps {
   onBack: () => void;
@@ -120,7 +95,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         tournamentService.getChannelTournaments(channelId),
       ]);
 
-      // Initialize stats for all channel users if they don't have stats yet
       const initializedStats = channelUsers.map((user) => {
         const existingStats = (stats as ChannelUserStats[] | undefined)?.find(
           (stat: ChannelUserStats) => stat.userId === user.id
@@ -143,7 +117,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       setTournaments(tournaments || []);
     } catch (error) {
       console.error("Failed to load data:", error);
-      // Initialize stats for all users even if the API call fails
       const defaultStats = channelUsers.map((user) => ({
         userId: user.id,
         username: user.username,
@@ -161,7 +134,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const handleCreateTournament = async () => {
     setIsCreating(true);
     try {
-      // Create initial participants array with all channel users
       const initialParticipants = channelUsers.map((user) => ({
         userId: user.id,
         username: user.username,
@@ -173,7 +145,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         },
       }));
 
-      // Create the tournament with all channel users as participants
       const tournamentData = {
         ...newTournament,
         participants: initialParticipants,
@@ -213,7 +184,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const fetchUserProfile = async (userId: string) => {
     setLoadingProfile(true);
     try {
-      // First find the user's username from channelUsers
       const user = channelUsers.find((user) => user.id === userId);
       if (!user) {
         console.error("User not found in channel users");
@@ -276,86 +246,10 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         </Box>
 
         {activeTab === 0 && (
-          <TableContainer
-            component={Paper}
-            sx={{ backgroundColor: "rgba(255, 255, 255, 0.05)" }}
-          >
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ color: "white", width: "40%" }}>
-                    Player
-                  </TableCell>
-                  <TableCell align="right" sx={{ color: "white" }}>
-                    Total Tournaments
-                  </TableCell>
-                  <TableCell align="right" sx={{ color: "white" }}>
-                    Wins
-                  </TableCell>
-                  <TableCell align="right" sx={{ color: "white" }}>
-                    Losses
-                  </TableCell>
-                  <TableCell align="right" sx={{ color: "white" }}>
-                    Win Rate
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {userStats.map((player) => (
-                  <TableRow key={player.userId}>
-                    <TableCell
-                      sx={{
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 2,
-                        py: 1.5,
-                      }}
-                    >
-                      <Avatar
-                        src={player.profilePicture}
-                        alt={player.username}
-                        onClick={() => handleUserClick(player.userId)}
-                        sx={{
-                          width: 40,
-                          height: 40,
-                          bgcolor: "rgba(198, 128, 227, 0.2)",
-                          color: "white",
-                          fontSize: "1rem",
-                          border: "2px solid rgba(198, 128, 227, 0.3)",
-                          boxShadow: "0 0 10px rgba(198, 128, 227, 0.1)",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease-in-out",
-                          "&:hover": {
-                            transform: "scale(1.1)",
-                            boxShadow: "0 0 15px rgba(198, 128, 227, 0.3)",
-                            border: "2px solid rgba(198, 128, 227, 0.6)",
-                          },
-                        }}
-                      >
-                        {player.username.charAt(0).toUpperCase()}
-                      </Avatar>
-                      <Typography sx={{ fontWeight: 500 }}>
-                        {player.username}
-                      </Typography>
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: "white" }}>
-                      {player.totalTournaments}
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: "white" }}>
-                      {player.wins}
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: "white" }}>
-                      {player.losses}
-                    </TableCell>
-                    <TableCell align="right" sx={{ color: "white" }}>
-                      {player.winRate}%
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <TournamentStatsTable
+            userStats={userStats}
+            onUserClick={handleUserClick}
+          />
         )}
 
         {activeTab === 1 && (
@@ -371,72 +265,14 @@ const TournamentView: React.FC<TournamentViewProps> = ({
               </Button>
             )}
 
-            <Stack spacing={2}>
-              {tournaments.map((tournament) => (
-                <Paper
-                  key={tournament.id}
-                  sx={{
-                    p: 2,
-                    backgroundColor: "rgba(255, 255, 255, 0.05)",
-                    color: "white",
-                  }}
-                >
-                  <Box
-          sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Typography variant="h6">{tournament.name}</Typography>
-                    {isAdmin && (
-                      <Tooltip title="Configure Statistics">
-                        <IconButton
-                          onClick={() => {
-                            setSelectedTournament(tournament);
-                            setStatsConfigDialogOpen(true);
-                          }}
-                          sx={{ color: "white" }}
-                        >
-                          <SettingsIcon />
-                        </IconButton>
-                      </Tooltip>
-                    )}
-                  </Box>
-                  <Box sx={{ display: "flex", gap: 2, mt: 1 }}>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <CalendarIcon />
-                      <Typography>{tournament.date}</Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <TimeIcon />
-                      <Typography>{tournament.time}</Typography>
-                    </Box>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <LocationIcon />
-                      <Typography>{tournament.location}</Typography>
-                    </Box>
-                  </Box>
-                  <Box sx={{ mt: 2 }}>
-                    <Typography variant="subtitle2">
-                      Enabled Statistics:
-        </Typography>
-                    <Box
-                      sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}
-                    >
-                      {tournament.statsConfig.enabledStats.map((stat) => (
-                        <Chip
-                          key={stat}
-                          label={stat}
-                          size="small"
-                          sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-                </Paper>
-              ))}
-            </Stack>
+            <TournamentList
+              tournaments={tournaments}
+              isAdmin={isAdmin}
+              onStatsConfigClick={(tournament: Tournament) => {
+                setSelectedTournament(tournament);
+                setStatsConfigDialogOpen(true);
+              }}
+            />
           </Box>
         )}
 
@@ -458,245 +294,31 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         </Button>
       </Box>
 
-      {/* Tournament Creation Dialog */}
-      <Dialog
+      <CreateTournamentDialog
         open={createDialogOpen}
-        onClose={() => !isCreating && setCreateDialogOpen(false)}
-      >
-        <DialogTitle>Create New Tournament</DialogTitle>
-        <DialogContent>
-          <Stack spacing={3} sx={{ mt: 2, minWidth: 300 }}>
-            <TextField
-              label="Tournament Name"
-              value={newTournament.name}
-              onChange={(e) =>
-                setNewTournament({ ...newTournament, name: e.target.value })
-              }
-              fullWidth
-              disabled={isCreating}
-            />
-            <TextField
-              label="Date"
-              type="date"
-              value={newTournament.date}
-              onChange={(e) =>
-                setNewTournament({ ...newTournament, date: e.target.value })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-              disabled={isCreating}
-            />
-            <TextField
-              label="Time"
-              type="time"
-              value={newTournament.time}
-              onChange={(e) =>
-                setNewTournament({ ...newTournament, time: e.target.value })
-              }
-              InputLabelProps={{ shrink: true }}
-              fullWidth
-              disabled={isCreating}
-            />
-            <TextField
-              label="Location"
-              value={newTournament.location}
-              onChange={(e) =>
-                setNewTournament({ ...newTournament, location: e.target.value })
-              }
-              fullWidth
-              disabled={isCreating}
-            />
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Participants ({channelUsers.length} users will be automatically
-                added)
-              </Typography>
-              <Box sx={{ maxHeight: 200, overflow: "auto" }}>
-                {channelUsers.map((user) => (
-                  <Chip
-                    key={user.id}
-                    label={user.username}
-                    sx={{ m: 0.5 }}
-                    color="primary"
-                  />
-                ))}
-              </Box>
-            </Box>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => setCreateDialogOpen(false)}
-            disabled={isCreating}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleCreateTournament}
-            variant="contained"
-            color="primary"
-            disabled={isCreating}
-            startIcon={isCreating ? <CircularProgress size={20} /> : null}
-          >
-            {isCreating ? "Creating..." : "Create Tournament"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onClose={() => setCreateDialogOpen(false)}
+        onSubmit={handleCreateTournament}
+        newTournament={newTournament}
+        onTournamentChange={(field: keyof Tournament, value: string) =>
+          setNewTournament({ ...newTournament, [field]: value })
+        }
+        channelUsers={channelUsers}
+        isCreating={isCreating}
+      />
 
-      {/* Statistics Configuration Dialog */}
-      <Dialog
+      <StatsConfigDialog
         open={statsConfigDialogOpen}
         onClose={() => setStatsConfigDialogOpen(false)}
-      >
-        <DialogTitle>Configure Tournament Statistics</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 2, minWidth: 300 }}>
-            <Typography variant="subtitle1">Default Statistics</Typography>
-            {["wins", "losses", "winRate"].map((stat) => (
-              <FormControlLabel
-                key={stat}
-                control={
-                  <Checkbox
-                    checked={selectedTournament?.statsConfig.enabledStats.includes(
-                      stat
-                    )}
-                    onChange={(e) => {
-                      if (selectedTournament) {
-                        const newConfig = {
-                          ...selectedTournament.statsConfig,
-                          enabledStats: e.target.checked
-                            ? [
-                                ...selectedTournament.statsConfig.enabledStats,
-                                stat,
-                              ]
-                            : selectedTournament.statsConfig.enabledStats.filter(
-                                (s) => s !== stat
-                              ),
-                        };
-                        handleUpdateStatsConfig(
-                          selectedTournament.id,
-                          newConfig
-                        );
-                      }
-                    }}
-                  />
-                }
-                label={stat}
-              />
-            ))}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setStatsConfigDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
+        tournament={selectedTournament}
+        onUpdateConfig={handleUpdateStatsConfig}
+      />
 
-      {/* Add the User Profile Dialog */}
-      <Dialog
+      <UserProfileDialog
         open={userProfileOpen}
         onClose={() => setUserProfileOpen(false)}
-        PaperProps={{
-          sx: {
-            backgroundColor: "rgba(15, 23, 42, 0.95)",
-            color: "white",
-            minWidth: 300,
-            maxWidth: 400,
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{ borderBottom: "1px solid rgba(198, 128, 227, 0.2)" }}
-        >
-          {loadingProfile ? (
-            <CircularProgress size={20} sx={{ color: "#C680E3" }} />
-          ) : (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Avatar
-                src={selectedUser?.profilePicture}
-                sx={{
-                  width: 50,
-                  height: 50,
-                  bgcolor: "rgba(198, 128, 227, 0.2)",
-                  border: "2px solid rgba(198, 128, 227, 0.3)",
-                }}
-              >
-                {selectedUser?.username.charAt(0).toUpperCase()}
-              </Avatar>
-              <Typography variant="h6">{selectedUser?.username}</Typography>
-            </Box>
-          )}
-        </DialogTitle>
-        <DialogContent sx={{ mt: 2 }}>
-          {loadingProfile ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 3 }}>
-              <CircularProgress sx={{ color: "#C680E3" }} />
-            </Box>
-          ) : (
-            <Stack spacing={2}>
-              <Box>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: "rgba(255, 255, 255, 0.7)", mb: 1 }}
-                >
-                  Bio
-                </Typography>
-                <Typography>
-                  {selectedUser?.bio || "No bio available"}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography
-                  variant="subtitle2"
-                  sx={{ color: "rgba(255, 255, 255, 0.7)", mb: 1 }}
-                >
-                  Favorite Sports
-                </Typography>
-                <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                  {selectedUser?.favoriteSports?.map((sport) => {
-                    const sportInfo = SPORTS_EMOJIS.find(
-                      (s) => s.emoji === sport
-                    );
-                    return sportInfo ? (
-                      <Tooltip key={sport} title={sportInfo.name} arrow>
-                        <Chip
-                          label={`${sport} ${sportInfo.name}`}
-                          sx={{
-                            backgroundColor: "rgba(198, 128, 227, 0.2)",
-                            color: "#C680E3",
-                            border: "1px solid rgba(198, 128, 227, 0.3)",
-                          }}
-                        />
-                      </Tooltip>
-                    ) : null;
-                  })}
-                  {(!selectedUser?.favoriteSports ||
-                    selectedUser.favoriteSports.length === 0) && (
-                    <Typography
-                      variant="body2"
-                      sx={{ color: "rgba(255, 255, 255, 0.5)" }}
-                    >
-                      No favorite sports added
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-            </Stack>
-          )}
-        </DialogContent>
-        <DialogActions sx={{ borderTop: "1px solid rgba(198, 128, 227, 0.2)" }}>
-          <Button
-            onClick={() => setUserProfileOpen(false)}
-            sx={{
-              color: "#C680E3",
-              "&:hover": {
-                backgroundColor: "rgba(198, 128, 227, 0.1)",
-              },
-            }}
-          >
-            Close
-          </Button>
-        </DialogActions>
-      </Dialog>
+        user={selectedUser}
+        loading={loadingProfile}
+      />
     </Box>
   );
 };
