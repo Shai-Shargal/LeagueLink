@@ -23,7 +23,6 @@ import { Tournament } from "../types";
 interface TournamentListProps {
   tournaments: Tournament[];
   isAdmin: boolean;
-  onStatsConfigClick: (tournament: Tournament) => void;
   onTournamentClick?: (tournament: Tournament) => void;
   onEditTournament?: (tournament: Tournament) => void;
   onDeleteTournament?: (tournament: Tournament) => void;
@@ -32,7 +31,6 @@ interface TournamentListProps {
 const TournamentList: React.FC<TournamentListProps> = ({
   tournaments,
   isAdmin,
-  onStatsConfigClick,
   onTournamentClick,
   onEditTournament,
   onDeleteTournament,
@@ -55,23 +53,18 @@ const TournamentList: React.FC<TournamentListProps> = ({
     setSelectedTournament(null);
   };
 
-  const handleEdit = () => {
-    if (selectedTournament && onEditTournament) {
+  const handleEdit = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (selectedTournament?.id && onEditTournament) {
       onEditTournament(selectedTournament);
     }
     handleMenuClose();
   };
 
-  const handleDelete = () => {
-    if (selectedTournament && onDeleteTournament) {
+  const handleDelete = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (selectedTournament?.id && onDeleteTournament) {
       onDeleteTournament(selectedTournament);
-    }
-    handleMenuClose();
-  };
-
-  const handleStatsConfig = () => {
-    if (selectedTournament) {
-      onStatsConfigClick(selectedTournament);
     }
     handleMenuClose();
   };
@@ -130,7 +123,7 @@ const TournamentList: React.FC<TournamentListProps> = ({
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
                 {tournament.statsConfig.enabledStats.map((stat) => (
                   <Chip
-                    key={stat}
+                    key={`${tournament.id}-${stat}`}
                     label={stat}
                     size="small"
                     sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
@@ -142,21 +135,22 @@ const TournamentList: React.FC<TournamentListProps> = ({
         </Paper>
       ))}
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={handleEdit}>
-          <EditIcon sx={{ mr: 1 }} /> Edit Tournament
-        </MenuItem>
-        <MenuItem onClick={handleStatsConfig}>
-          <SettingsIcon sx={{ mr: 1 }} /> Configure Statistics
-        </MenuItem>
-        <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
-          <DeleteIcon sx={{ mr: 1 }} /> Delete Tournament
-        </MenuItem>
-      </Menu>
+      {selectedTournament && (
+        <Menu
+          key={`menu-${selectedTournament.id}`}
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleMenuClose}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <MenuItem onClick={handleEdit}>
+            <EditIcon sx={{ mr: 1 }} /> Edit Tournament
+          </MenuItem>
+          <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
+            <DeleteIcon sx={{ mr: 1 }} /> Delete Tournament
+          </MenuItem>
+        </Menu>
+      )}
     </Stack>
   );
 };

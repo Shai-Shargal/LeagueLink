@@ -251,4 +251,54 @@ router.get(
   }
 );
 
+// Delete tournament
+router.delete("/:id", protect, async (req: Request, res: Response) => {
+  try {
+    const tournament = await Tournament.findById(req.params.id);
+
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: "Tournament not found",
+      });
+    }
+
+    // Check if user has permission to delete tournament
+    const channel = await Channel.findById(tournament.channel);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        message: "Channel not found",
+      });
+    }
+
+    if (!channel.admins.includes(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this tournament",
+      });
+    }
+
+    // Remove tournament from channel
+    channel.tournaments = channel.tournaments.filter(
+      (t: mongoose.Types.ObjectId) => t.toString() !== tournament._id.toString()
+    );
+    await channel.save();
+
+    // Delete tournament
+    await tournament.deleteOne();
+
+    res.json({
+      success: true,
+      message: "Tournament deleted successfully",
+    });
+  } catch (error) {
+    logger.error("Delete Tournament Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting tournament",
+    });
+  }
+});
+
 export default router;

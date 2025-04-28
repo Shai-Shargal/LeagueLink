@@ -1,4 +1,9 @@
-import { Tournament, ChannelUserStats, TournamentStatsConfig } from "../types";
+import {
+  Tournament,
+  ChannelUserStats,
+  TournamentStatsConfig,
+  ParticipantStatus,
+} from "../types";
 
 const API_BASE_URL = "http://localhost:5000/api/tournaments";
 
@@ -60,7 +65,23 @@ export const tournamentService = {
       headers: getAuthHeaders(),
     });
     const data = await handleResponse(response);
-    return data.data || [];
+    const tournaments = data.data || [];
+    return tournaments.map((tournament: any) => ({
+      ...tournament,
+      id: tournament._id,
+      channelId: tournament.channel,
+      date: new Date(tournament.startDate).toLocaleDateString(),
+      time: new Date(tournament.startDate).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      participants: tournament.participants.map((p: any) => ({
+        userId: p._id || p,
+        username: p.username || "Unknown",
+        status: ParticipantStatus.PENDING,
+        stats: {},
+      })),
+    }));
   },
 
   async getTournament(tournamentId: string) {

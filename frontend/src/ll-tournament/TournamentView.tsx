@@ -9,6 +9,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  TextField,
+  Chip,
 } from "@mui/material";
 import {
   EmojiEvents as TournamentIcon,
@@ -99,6 +101,11 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentDetailsOpen, setTournamentDetailsOpen] = useState(false);
+  const [editingTournament, setEditingTournament] = useState<
+    Partial<Tournament>
+  >({});
+  const [tournamentToDelete, setTournamentToDelete] =
+    useState<Tournament | null>(null);
 
   useEffect(() => {
     loadData();
@@ -246,39 +253,60 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
   const handleEditTournament = (tournament: Tournament) => {
     setSelectedTournament(tournament);
+    setEditingTournament({
+      name: tournament.name,
+      date: tournament.date,
+      time: tournament.time,
+      location: tournament.location,
+    });
     setEditDialogOpen(true);
   };
 
   const handleDeleteTournament = (tournament: Tournament) => {
-    setSelectedTournament(tournament);
+    console.log("Deleting tournament:", tournament);
+    if (!tournament.id) {
+      console.error("Cannot delete tournament: No ID provided");
+      return;
+    }
+    setTournamentToDelete(tournament);
     setDeleteDialogOpen(true);
   };
 
   const handleConfirmDelete = async () => {
-    if (!selectedTournament) return;
+    console.log("Confirming delete for tournament:", tournamentToDelete);
+    if (!tournamentToDelete?.id) {
+      console.error("Cannot delete tournament: No ID provided");
+      return;
+    }
     try {
-      await tournamentService.deleteTournament(selectedTournament.id);
+      const response = await tournamentService.deleteTournament(
+        tournamentToDelete.id
+      );
+      console.log("Delete response:", response);
       setDeleteDialogOpen(false);
-      setSelectedTournament(null);
-      loadData();
+      setTournamentToDelete(null);
+      await loadData(); // Wait for data to reload
     } catch (error) {
       console.error("Failed to delete tournament:", error);
     }
   };
 
   const handleTournamentClick = (tournament: Tournament) => {
+    console.log("Tournament clicked:", tournament);
     setSelectedTournament(tournament);
     setTournamentDetailsOpen(true);
   };
 
-  const handleUpdateTournament = async (updatedTournament: Tournament) => {
+  const handleUpdateTournament = async () => {
+    if (!selectedTournament) return;
     try {
       await tournamentService.updateTournament(
-        updatedTournament.id,
-        updatedTournament
+        selectedTournament.id,
+        editingTournament
       );
       setEditDialogOpen(false);
       setSelectedTournament(null);
+      setEditingTournament({});
       loadData();
     } catch (error) {
       console.error("Failed to update tournament:", error);
@@ -333,10 +361,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
             <TournamentList
               tournaments={tournaments}
               isAdmin={isAdmin}
-              onStatsConfigClick={(tournament) => {
-                setSelectedTournament(tournament);
-                setStatsConfigDialogOpen(true);
-              }}
               onTournamentClick={handleTournamentClick}
               onEditTournament={handleEditTournament}
               onDeleteTournament={handleDeleteTournament}
@@ -402,59 +426,191 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       <Dialog
         open={tournamentDetailsOpen}
         onClose={() => setTournamentDetailsOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(15, 23, 42, 0.95)",
+            color: "white",
+            "& .MuiDialogContent-root": {
+              padding: "24px",
+              backgroundColor: "rgba(15, 23, 42, 0.95)",
+              color: "white",
+              "& .MuiTypography-root": {
+                color: "white",
+              },
+            },
+          },
+        }}
       >
-        <DialogTitle>Tournament Details</DialogTitle>
+        <DialogTitle sx={{ color: "white" }}>Tournament Details</DialogTitle>
         <DialogContent>
           {selectedTournament && (
             <Box sx={{ mt: 2 }}>
-              <Typography variant="h6">{selectedTournament.name}</Typography>
-              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+              <Typography variant="h6" gutterBottom sx={{ color: "white" }}>
+                {selectedTournament.name}
+              </Typography>
+              <Box
+                sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+              >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <CalendarIcon />
-                  <Typography>{selectedTournament.date}</Typography>
+                  <CalendarIcon sx={{ color: "white" }} />
+                  <Typography sx={{ color: "white" }}>
+                    {selectedTournament.date}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <TimeIcon />
-                  <Typography>{selectedTournament.time}</Typography>
+                  <TimeIcon sx={{ color: "white" }} />
+                  <Typography sx={{ color: "white" }}>
+                    {selectedTournament.time}
+                  </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <LocationIcon />
-                  <Typography>{selectedTournament.location}</Typography>
+                  <LocationIcon sx={{ color: "white" }} />
+                  <Typography sx={{ color: "white" }}>
+                    {selectedTournament.location}
+                  </Typography>
                 </Box>
               </Box>
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="subtitle1">Participants</Typography>
-                {selectedTournament.participants.map((participant) => (
-                  <Box key={participant.userId} sx={{ mt: 1 }}>
-                    <Typography>{participant.username}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Status: {participant.status}
-                    </Typography>
-                  </Box>
-                ))}
+              <Box sx={{ mt: 3 }}>
+                <Typography
+                  variant="subtitle1"
+                  gutterBottom
+                  sx={{ color: "white" }}
+                >
+                  Participants
+                </Typography>
+                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                  {selectedTournament.participants.map((participant) => (
+                    <Box
+                      key={participant.userId}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        p: 1,
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                        borderRadius: 1,
+                      }}
+                    >
+                      <Typography sx={{ color: "white" }}>
+                        {participant.username}
+                      </Typography>
+                      <Chip
+                        label={participant.status}
+                        size="small"
+                        color={
+                          participant.status === ParticipantStatus.CONFIRMED
+                            ? "success"
+                            : participant.status === ParticipantStatus.DECLINED
+                            ? "error"
+                            : "default"
+                        }
+                      />
+                    </Box>
+                  ))}
+                </Box>
               </Box>
             </Box>
           )}
         </DialogContent>
+        <DialogActions sx={{ backgroundColor: "rgba(15, 23, 42, 0.95)" }}>
+          <Button
+            onClick={() => setTournamentDetailsOpen(false)}
+            sx={{ color: "white" }}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Tournament Dialog */}
+      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
+        <DialogTitle>Edit Tournament</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
+            <TextField
+              label="Tournament Name"
+              value={editingTournament.name || ""}
+              onChange={(e) =>
+                setEditingTournament({
+                  ...editingTournament,
+                  name: e.target.value,
+                })
+              }
+              fullWidth
+            />
+            <TextField
+              label="Date"
+              type="date"
+              value={editingTournament.date || ""}
+              onChange={(e) =>
+                setEditingTournament({
+                  ...editingTournament,
+                  date: e.target.value,
+                })
+              }
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="Time"
+              type="time"
+              value={editingTournament.time || ""}
+              onChange={(e) =>
+                setEditingTournament({
+                  ...editingTournament,
+                  time: e.target.value,
+                })
+              }
+              fullWidth
+              InputLabelProps={{ shrink: true }}
+            />
+            <TextField
+              label="Location"
+              value={editingTournament.location || ""}
+              onChange={(e) =>
+                setEditingTournament({
+                  ...editingTournament,
+                  location: e.target.value,
+                })
+              }
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
         <DialogActions>
-          <Button onClick={() => setTournamentDetailsOpen(false)}>Close</Button>
+          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleUpdateTournament} variant="contained">
+            Save Changes
+          </Button>
         </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setTournamentToDelete(null);
+        }}
       >
         <DialogTitle>Delete Tournament</DialogTitle>
         <DialogContent>
           <Typography>
             Are you sure you want to delete the tournament "
-            {selectedTournament?.name}"? This action cannot be undone.
+            {tournamentToDelete?.name}"? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setTournamentToDelete(null);
+            }}
+          >
+            Cancel
+          </Button>
           <Button onClick={handleConfirmDelete} color="error">
             Delete
           </Button>

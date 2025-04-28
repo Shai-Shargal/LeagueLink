@@ -9,6 +9,7 @@ export interface IChannel extends Document {
   owner: IUser["_id"];
   members: IUser["_id"][];
   admins: IUser["_id"][];
+  tournaments: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -52,6 +53,12 @@ const channelSchema = new Schema<IChannel>(
       {
         type: Schema.Types.ObjectId,
         ref: "User",
+      },
+    ],
+    tournaments: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Tournament",
       },
     ],
   },
