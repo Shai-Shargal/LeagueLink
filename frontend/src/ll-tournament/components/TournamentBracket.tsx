@@ -98,19 +98,19 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
     }
 
     // Generate knockout stage matches
-    tournament.structure.knockoutRounds.forEach((round) => {
-      const numMatches = Math.pow(
-        2,
-        tournament.structure.knockoutRounds.indexOf(round)
-      );
-      for (let i = 0; i < numMatches; i++) {
-        newMatches.push({
-          id: `${round.toLowerCase()}-${matchNumber}`,
-          round,
-          matchNumber: matchNumber++,
-        });
-      }
-    });
+    if (tournament.structure.knockoutRounds) {
+      const knockoutRounds = tournament.structure.knockoutRounds;
+      knockoutRounds.forEach((round) => {
+        const numMatches = Math.pow(2, knockoutRounds.indexOf(round));
+        for (let i = 0; i < numMatches; i++) {
+          newMatches.push({
+            id: `${round.toLowerCase()}-${matchNumber}`,
+            round,
+            matchNumber: matchNumber++,
+          });
+        }
+      });
+    }
 
     setMatches(newMatches);
   };
