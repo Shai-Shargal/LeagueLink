@@ -256,3 +256,14 @@
 {"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-04-27T15:55:07.992Z"}
 {"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-27T15:56:35.526Z"}
 {"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-27T15:56:35.823Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-04-27T16:08:25.553Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-04-27T16:08:25.564Z"}
+{"level":"error","message":"Login Error: User not found for email:","service":"leaguelink-api","timestamp":"2025-04-27T17:02:49.301Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-04-27T17:05:02.429Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-04-27T17:05:02.441Z"}
+{"level":"error","message":"Login Error: User not found for email:","service":"leaguelink-api","timestamp":"2025-04-27T17:05:18.428Z"}
+{"level":"error","message":"Login Error: User not found for email:","service":"leaguelink-api","timestamp":"2025-04-27T17:10:36.563Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-04-27T23:57:58.405Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-04-27T23:57:58.410Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-04-27T23:58:04.309Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-04-27T23:58:04.418Z"}

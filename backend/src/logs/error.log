@@ -23,3 +23,6 @@
 {"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-06T00:07:16.943Z"}
 {"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-07T16:49:11.778Z"}
 {"level":"error","message":"Login Error: Invalid password for user:","service":"leaguelink-api","timestamp":"2025-04-07T16:52:03.313Z"}
+{"level":"error","message":"Login Error: User not found for email:","service":"leaguelink-api","timestamp":"2025-04-27T17:02:49.301Z"}
+{"level":"error","message":"Login Error: User not found for email:","service":"leaguelink-api","timestamp":"2025-04-27T17:05:18.428Z"}
+{"level":"error","message":"Login Error: User not found for email:","service":"leaguelink-api","timestamp":"2025-04-27T17:10:36.563Z"}
