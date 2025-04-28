@@ -256,17 +256,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
         {activeTab === 1 && (
           <Box>
-            {isAdmin && (
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setCreateDialogOpen(true)}
-                sx={{ mb: 3 }}
-              >
-                Create Tournament
-              </Button>
-            )}
-
             <TournamentList
               tournaments={tournaments}
               isAdmin={isAdmin}
@@ -274,26 +263,37 @@ const TournamentView: React.FC<TournamentViewProps> = ({
                 setSelectedTournament(tournament);
                 setStatsConfigDialogOpen(true);
               }}
+              onTournamentClick={onBack}
             />
           </Box>
         )}
 
-        <Button
-          variant="contained"
-          onClick={onBack}
-          sx={{
-            position: "absolute",
-            bottom: 16,
-            right: 16,
-            backgroundColor: "rgba(198, 128, 227, 0.2)",
-            color: "#fff",
-            "&:hover": {
-              backgroundColor: "rgba(198, 128, 227, 0.3)",
-            },
-          }}
-        >
-          Back to Channel
-        </Button>
+        {/* Floating Create Tournament Button at bottom right */}
+        {activeTab === 1 && isAdmin && (
+          <Box sx={{ position: "fixed", bottom: 32, right: 32, zIndex: 1200 }}>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setCreateDialogOpen(true)}
+              sx={{
+                background: "linear-gradient(45deg, #C680E3, #9333EA)",
+                color: "#fff",
+                fontWeight: 600,
+                boxShadow: 6,
+                borderRadius: 3,
+                px: 3,
+                py: 1.5,
+                minWidth: 0,
+                minHeight: 0,
+                "&:hover": {
+                  background: "linear-gradient(45deg, #9333EA, #7928CA)",
+                },
+              }}
+            >
+              Create Tournament
+            </Button>
+          </Box>
+        )}
       </Box>
 
       <CreateTournamentDialog

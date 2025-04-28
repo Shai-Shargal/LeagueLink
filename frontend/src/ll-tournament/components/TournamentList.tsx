@@ -20,12 +20,14 @@ interface TournamentListProps {
   tournaments: Tournament[];
   isAdmin: boolean;
   onStatsConfigClick: (tournament: Tournament) => void;
+  onTournamentClick?: (tournament: Tournament) => void;
 }
 
 const TournamentList: React.FC<TournamentListProps> = ({
   tournaments,
   isAdmin,
   onStatsConfigClick,
+  onTournamentClick,
 }) => {
   return (
     <Stack spacing={2}>
@@ -36,7 +38,15 @@ const TournamentList: React.FC<TournamentListProps> = ({
             p: 2,
             backgroundColor: "rgba(255, 255, 255, 0.05)",
             color: "white",
+            cursor: onTournamentClick ? "pointer" : "default",
+            transition: "background 0.2s",
+            "&:hover": onTournamentClick
+              ? { backgroundColor: "rgba(255,255,255,0.10)" }
+              : {},
           }}
+          onClick={
+            onTournamentClick ? () => onTournamentClick(tournament) : undefined
+          }
         >
           <Box
             sx={{
@@ -49,7 +59,10 @@ const TournamentList: React.FC<TournamentListProps> = ({
             {isAdmin && (
               <Tooltip title="Configure Statistics">
                 <IconButton
-                  onClick={() => onStatsConfigClick(tournament)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onStatsConfigClick(tournament);
+                  }}
                   sx={{ color: "white" }}
                 >
                   <SettingsIcon />
