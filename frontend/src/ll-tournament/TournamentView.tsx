@@ -1,9 +1,22 @@
 import React, { useState, useEffect } from "react";
-import { Box, Typography, Button, Tabs, Tab } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Button,
+  Tabs,
+  Tab,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 import {
   EmojiEvents as TournamentIcon,
   BarChart as StatsIcon,
   Add as AddIcon,
+  CalendarMonth as CalendarIcon,
+  AccessTime as TimeIcon,
+  LocationOn as LocationIcon,
 } from "@mui/icons-material";
 import {
   Tournament,
@@ -83,6 +96,9 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   );
   const [userProfileOpen, setUserProfileOpen] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [tournamentDetailsOpen, setTournamentDetailsOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -148,9 +164,13 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       }));
 
       const tournamentData = {
-        ...newTournament,
+        name: newTournament.name,
+        date: newTournament.date,
+        time: newTournament.time,
+        location: newTournament.location,
         participants: initialParticipants,
         status: TournamentStatus.UPCOMING,
+        statsConfig: newTournament.statsConfig,
       };
 
       await tournamentService.createTournament(channelId, tournamentData);
@@ -167,6 +187,19 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       console.error("Failed to create tournament:", error);
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleCloseCreateDialog = () => {
+    if (!isCreating) {
+      setCreateDialogOpen(false);
+      setNewTournament({
+        name: "",
+        date: "",
+        time: "",
+        location: "",
+        statsConfig: defaultStatsConfig,
+      });
     }
   };
 
@@ -209,6 +242,47 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const handleUserClick = async (userId: string) => {
     await fetchUserProfile(userId);
     setUserProfileOpen(true);
+  };
+
+  const handleEditTournament = (tournament: Tournament) => {
+    setSelectedTournament(tournament);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteTournament = (tournament: Tournament) => {
+    setSelectedTournament(tournament);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedTournament) return;
+    try {
+      await tournamentService.deleteTournament(selectedTournament.id);
+      setDeleteDialogOpen(false);
+      setSelectedTournament(null);
+      loadData();
+    } catch (error) {
+      console.error("Failed to delete tournament:", error);
+    }
+  };
+
+  const handleTournamentClick = (tournament: Tournament) => {
+    setSelectedTournament(tournament);
+    setTournamentDetailsOpen(true);
+  };
+
+  const handleUpdateTournament = async (updatedTournament: Tournament) => {
+    try {
+      await tournamentService.updateTournament(
+        updatedTournament.id,
+        updatedTournament
+      );
+      setEditDialogOpen(false);
+      setSelectedTournament(null);
+      loadData();
+    } catch (error) {
+      console.error("Failed to update tournament:", error);
+    }
   };
 
   return (
@@ -259,11 +333,13 @@ const TournamentView: React.FC<TournamentViewProps> = ({
             <TournamentList
               tournaments={tournaments}
               isAdmin={isAdmin}
-              onStatsConfigClick={(tournament: Tournament) => {
+              onStatsConfigClick={(tournament) => {
                 setSelectedTournament(tournament);
                 setStatsConfigDialogOpen(true);
               }}
-              onTournamentClick={onBack}
+              onTournamentClick={handleTournamentClick}
+              onEditTournament={handleEditTournament}
+              onDeleteTournament={handleDeleteTournament}
             />
           </Box>
         )}
@@ -298,7 +374,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
       <CreateTournamentDialog
         open={createDialogOpen}
-        onClose={() => setCreateDialogOpen(false)}
+        onClose={handleCloseCreateDialog}
         onSubmit={handleCreateTournament}
         newTournament={newTournament}
         onTournamentChange={(field: keyof Tournament, value: string) =>
@@ -321,6 +397,69 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         user={selectedUser}
         loading={loadingProfile}
       />
+
+      {/* Tournament Details Dialog */}
+      <Dialog
+        open={tournamentDetailsOpen}
+        onClose={() => setTournamentDetailsOpen(false)}
+      >
+        <DialogTitle>Tournament Details</DialogTitle>
+        <DialogContent>
+          {selectedTournament && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6">{selectedTournament.name}</Typography>
+              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <CalendarIcon />
+                  <Typography>{selectedTournament.date}</Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <TimeIcon />
+                  <Typography>{selectedTournament.time}</Typography>
+                </Box>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <LocationIcon />
+                  <Typography>{selectedTournament.location}</Typography>
+                </Box>
+              </Box>
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="subtitle1">Participants</Typography>
+                {selectedTournament.participants.map((participant) => (
+                  <Box key={participant.userId} sx={{ mt: 1 }}>
+                    <Typography>{participant.username}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Status: {participant.status}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTournamentDetailsOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Delete Tournament</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete the tournament "
+            {selectedTournament?.name}"? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleConfirmDelete} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

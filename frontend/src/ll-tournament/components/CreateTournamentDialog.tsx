@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -12,6 +12,7 @@ import {
   CircularProgress,
   Paper,
   Avatar,
+  Alert,
 } from "@mui/material";
 import { Tournament } from "../types";
 
@@ -38,10 +39,45 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   channelUsers,
   isCreating,
 }) => {
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!newTournament.name?.trim()) {
+      newErrors.name = "Tournament name is required";
+    }
+    if (!newTournament.location?.trim()) {
+      newErrors.location = "Location is required";
+    }
+    if (!newTournament.date) {
+      newErrors.date = "Date is required";
+    }
+    if (!newTournament.time) {
+      newErrors.time = "Time is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (validateForm()) {
+      onSubmit();
+    }
+  };
+
+  const handleClose = () => {
+    if (!isCreating) {
+      setErrors({});
+      onClose();
+    }
+  };
+
   return (
     <Dialog
       open={open}
-      onClose={() => !isCreating && onClose()}
+      onClose={handleClose}
       maxWidth={false}
       PaperProps={{
         sx: {
@@ -82,6 +118,11 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
           background: (theme) => theme.palette.background.paper,
         }}
       >
+        {Object.keys(errors).length > 0 && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            Please fill in all required fields
+          </Alert>
+        )}
         <Stack spacing={3} sx={{ width: "100%" }}>
           <TextField
             label="Tournament Name"
@@ -89,6 +130,9 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             onChange={(e) => onTournamentChange("name", e.target.value)}
             fullWidth
             disabled={isCreating}
+            error={!!errors.name}
+            helperText={errors.name}
+            required
             sx={{ mb: 1 }}
           />
           <Box sx={{ display: "flex", gap: 2, width: "100%" }}>
@@ -98,6 +142,9 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               onChange={(e) => onTournamentChange("location", e.target.value)}
               fullWidth
               disabled={isCreating}
+              error={!!errors.location}
+              helperText={errors.location}
+              required
             />
             <TextField
               label="Date"
@@ -107,6 +154,9 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               InputLabelProps={{ shrink: true }}
               fullWidth
               disabled={isCreating}
+              error={!!errors.date}
+              helperText={errors.date}
+              required
             />
             <TextField
               label="Time"
@@ -116,6 +166,9 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               InputLabelProps={{ shrink: true }}
               fullWidth
               disabled={isCreating}
+              error={!!errors.time}
+              helperText={errors.time}
+              required
             />
           </Box>
           <Box
@@ -217,11 +270,11 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
           borderColor: "divider",
         }}
       >
-        <Button onClick={onClose} disabled={isCreating}>
+        <Button onClick={handleClose} disabled={isCreating}>
           Cancel
         </Button>
         <Button
-          onClick={onSubmit}
+          onClick={handleSubmit}
           variant="contained"
           sx={{
             minWidth: 180,

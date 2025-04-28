@@ -19,6 +19,11 @@ interface StatsConfigDialogProps {
   onUpdateConfig: (tournamentId: string, config: TournamentStatsConfig) => void;
 }
 
+const defaultStatsConfig: TournamentStatsConfig = {
+  enabledStats: ["wins", "losses", "winRate"],
+  customStats: [],
+};
+
 const StatsConfigDialog: React.FC<StatsConfigDialogProps> = ({
   open,
   onClose,
@@ -26,6 +31,8 @@ const StatsConfigDialog: React.FC<StatsConfigDialogProps> = ({
   onUpdateConfig,
 }) => {
   if (!tournament) return null;
+
+  const statsConfig = tournament.statsConfig || defaultStatsConfig;
 
   return (
     <Dialog open={open} onClose={onClose}>
@@ -38,15 +45,13 @@ const StatsConfigDialog: React.FC<StatsConfigDialogProps> = ({
               key={stat}
               control={
                 <Checkbox
-                  checked={tournament.statsConfig.enabledStats.includes(stat)}
+                  checked={statsConfig.enabledStats.includes(stat)}
                   onChange={(e) => {
                     const newConfig = {
-                      ...tournament.statsConfig,
+                      ...statsConfig,
                       enabledStats: e.target.checked
-                        ? [...tournament.statsConfig.enabledStats, stat]
-                        : tournament.statsConfig.enabledStats.filter(
-                            (s) => s !== stat
-                          ),
+                        ? [...statsConfig.enabledStats, stat]
+                        : statsConfig.enabledStats.filter((s) => s !== stat),
                     };
                     onUpdateConfig(tournament.id, newConfig);
                   }}

@@ -1,6 +1,11 @@
 import { Tournament, ChannelUserStats, TournamentStatsConfig } from "../types";
 
-const API_BASE_URL = "/api/tournaments";
+const API_BASE_URL = "http://localhost:5000/api/tournaments";
+
+const defaultStatsConfig: TournamentStatsConfig = {
+  enabledStats: ["wins", "losses", "winRate"],
+  customStats: [],
+};
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");
@@ -11,16 +16,13 @@ const getAuthHeaders = () => {
 };
 
 const handleResponse = async (response: Response) => {
-  const contentType = response.headers.get("content-type");
-  if (!contentType || !contentType.includes("application/json")) {
-    throw new Error("Server returned non-JSON response");
-  }
-
-  const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || "An error occurred");
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`
+    );
   }
-  return data;
+  return response.json();
 };
 
 export const tournamentService = {
@@ -29,10 +31,26 @@ export const tournamentService = {
     channelId: string,
     tournamentData: Partial<Tournament>
   ) {
+    // Transform the data to match backend expectations
+    const backendData = {
+      name: tournamentData.name,
+      description: "Tournament created through the LeagueLink platform",
+      channelId: channelId,
+      format: "single_elimination",
+      startDate: new Date(
+        tournamentData.date + "T" + tournamentData.time
+      ).toISOString(),
+      maxParticipants: 8,
+      rules: "Standard tournament rules apply",
+      prizes: "Trophies for winners",
+      participants: tournamentData.participants?.map((p) => p.userId) || [],
+      statsConfig: tournamentData.statsConfig || defaultStatsConfig,
+    };
+
     const response = await fetch(`${API_BASE_URL}`, {
       method: "POST",
       headers: getAuthHeaders(),
-      body: JSON.stringify({ ...tournamentData, channelId }),
+      body: JSON.stringify(backendData),
     });
     return handleResponse(response);
   },
@@ -57,6 +75,14 @@ export const tournamentService = {
       method: "PUT",
       headers: getAuthHeaders(),
       body: JSON.stringify(updates),
+    });
+    return handleResponse(response);
+  },
+
+  async deleteTournament(tournamentId: string) {
+    const response = await fetch(`${API_BASE_URL}/${tournamentId}`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
     });
     return handleResponse(response);
   },

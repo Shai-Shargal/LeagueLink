@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -7,12 +7,16 @@ import {
   IconButton,
   Tooltip,
   Chip,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import {
   CalendarMonth as CalendarIcon,
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
   Settings as SettingsIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { Tournament } from "../types";
 
@@ -21,6 +25,8 @@ interface TournamentListProps {
   isAdmin: boolean;
   onStatsConfigClick: (tournament: Tournament) => void;
   onTournamentClick?: (tournament: Tournament) => void;
+  onEditTournament?: (tournament: Tournament) => void;
+  onDeleteTournament?: (tournament: Tournament) => void;
 }
 
 const TournamentList: React.FC<TournamentListProps> = ({
@@ -28,7 +34,48 @@ const TournamentList: React.FC<TournamentListProps> = ({
   isAdmin,
   onStatsConfigClick,
   onTournamentClick,
+  onEditTournament,
+  onDeleteTournament,
 }) => {
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedTournament, setSelectedTournament] =
+    useState<Tournament | null>(null);
+
+  const handleMenuClick = (
+    event: React.MouseEvent<HTMLElement>,
+    tournament: Tournament
+  ) => {
+    event.stopPropagation();
+    setAnchorEl(event.currentTarget);
+    setSelectedTournament(tournament);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setSelectedTournament(null);
+  };
+
+  const handleEdit = () => {
+    if (selectedTournament && onEditTournament) {
+      onEditTournament(selectedTournament);
+    }
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    if (selectedTournament && onDeleteTournament) {
+      onDeleteTournament(selectedTournament);
+    }
+    handleMenuClose();
+  };
+
+  const handleStatsConfig = () => {
+    if (selectedTournament) {
+      onStatsConfigClick(selectedTournament);
+    }
+    handleMenuClose();
+  };
+
   return (
     <Stack spacing={2}>
       {tournaments.map((tournament) => (
@@ -38,15 +85,11 @@ const TournamentList: React.FC<TournamentListProps> = ({
             p: 2,
             backgroundColor: "rgba(255, 255, 255, 0.05)",
             color: "white",
-            cursor: onTournamentClick ? "pointer" : "default",
+            cursor: "pointer",
             transition: "background 0.2s",
-            "&:hover": onTournamentClick
-              ? { backgroundColor: "rgba(255,255,255,0.10)" }
-              : {},
+            "&:hover": { backgroundColor: "rgba(255,255,255,0.10)" },
           }}
-          onClick={
-            onTournamentClick ? () => onTournamentClick(tournament) : undefined
-          }
+          onClick={() => onTournamentClick?.(tournament)}
         >
           <Box
             sx={{
@@ -57,12 +100,9 @@ const TournamentList: React.FC<TournamentListProps> = ({
           >
             <Typography variant="h6">{tournament.name}</Typography>
             {isAdmin && (
-              <Tooltip title="Configure Statistics">
+              <Tooltip title="Tournament Options">
                 <IconButton
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    onStatsConfigClick(tournament);
-                  }}
+                  onClick={(event) => handleMenuClick(event, tournament)}
                   sx={{ color: "white" }}
                 >
                   <SettingsIcon />
@@ -84,21 +124,39 @@ const TournamentList: React.FC<TournamentListProps> = ({
               <Typography>{tournament.location}</Typography>
             </Box>
           </Box>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2">Enabled Statistics:</Typography>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
-              {tournament.statsConfig.enabledStats.map((stat) => (
-                <Chip
-                  key={stat}
-                  label={stat}
-                  size="small"
-                  sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                />
-              ))}
+          {tournament.statsConfig && (
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="subtitle2">Enabled Statistics:</Typography>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
+                {tournament.statsConfig.enabledStats.map((stat) => (
+                  <Chip
+                    key={stat}
+                    label={stat}
+                    size="small"
+                    sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
+                  />
+                ))}
+              </Box>
             </Box>
-          </Box>
+          )}
         </Paper>
       ))}
+
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleEdit}>
+          <EditIcon sx={{ mr: 1 }} /> Edit Tournament
+        </MenuItem>
+        <MenuItem onClick={handleStatsConfig}>
+          <SettingsIcon sx={{ mr: 1 }} /> Configure Statistics
+        </MenuItem>
+        <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
+          <DeleteIcon sx={{ mr: 1 }} /> Delete Tournament
+        </MenuItem>
+      </Menu>
     </Stack>
   );
 };
