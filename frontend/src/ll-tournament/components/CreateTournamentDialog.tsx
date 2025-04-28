@@ -9,8 +9,9 @@ import {
   Stack,
   Typography,
   Box,
-  Chip,
   CircularProgress,
+  Paper,
+  Avatar,
 } from "@mui/material";
 import { Tournament } from "../types";
 
@@ -24,6 +25,10 @@ interface CreateTournamentDialogProps {
   isCreating: boolean;
 }
 
+const DIALOG_WIDTH = 1200;
+const DIALOG_HEIGHT = 600;
+const GAMES_AREA_HEIGHT = 400;
+
 const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   open,
   onClose,
@@ -34,68 +39,199 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   isCreating,
 }) => {
   return (
-    <Dialog open={open} onClose={() => !isCreating && onClose()}>
-      <DialogTitle>Create New Tournament</DialogTitle>
-      <DialogContent>
-        <Stack spacing={3} sx={{ mt: 2, minWidth: 300 }}>
+    <Dialog
+      open={open}
+      onClose={() => !isCreating && onClose()}
+      maxWidth={false}
+      PaperProps={{
+        sx: {
+          width: DIALOG_WIDTH,
+          height: DIALOG_HEIGHT,
+          borderRadius: 3,
+          boxShadow: 8,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          p: 0,
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          textAlign: "center",
+          fontSize: 28,
+          fontWeight: 600,
+          position: "sticky",
+          top: 0,
+          zIndex: 2,
+          background: (theme) => theme.palette.background.paper,
+          borderBottom: 1,
+          borderColor: "divider",
+        }}
+      >
+        Create New Tournament
+      </DialogTitle>
+      <DialogContent
+        sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-start",
+          p: 4,
+          overflowY: "auto",
+          background: (theme) => theme.palette.background.paper,
+        }}
+      >
+        <Stack spacing={3} sx={{ width: "100%" }}>
           <TextField
             label="Tournament Name"
             value={newTournament.name}
             onChange={(e) => onTournamentChange("name", e.target.value)}
             fullWidth
             disabled={isCreating}
+            sx={{ mb: 1 }}
           />
-          <TextField
-            label="Date"
-            type="date"
-            value={newTournament.date}
-            onChange={(e) => onTournamentChange("date", e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-            disabled={isCreating}
-          />
-          <TextField
-            label="Time"
-            type="time"
-            value={newTournament.time}
-            onChange={(e) => onTournamentChange("time", e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            fullWidth
-            disabled={isCreating}
-          />
-          <TextField
-            label="Location"
-            value={newTournament.location}
-            onChange={(e) => onTournamentChange("location", e.target.value)}
-            fullWidth
-            disabled={isCreating}
-          />
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Participants ({channelUsers.length} users will be automatically
-              added)
-            </Typography>
-            <Box sx={{ maxHeight: 200, overflow: "auto" }}>
+          <Box sx={{ display: "flex", gap: 2, width: "100%" }}>
+            <TextField
+              label="Location"
+              value={newTournament.location}
+              onChange={(e) => onTournamentChange("location", e.target.value)}
+              fullWidth
+              disabled={isCreating}
+            />
+            <TextField
+              label="Date"
+              type="date"
+              value={newTournament.date}
+              onChange={(e) => onTournamentChange("date", e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              disabled={isCreating}
+            />
+            <TextField
+              label="Time"
+              type="time"
+              value={newTournament.time}
+              onChange={(e) => onTournamentChange("time", e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              disabled={isCreating}
+            />
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              flex: 1,
+              gap: 3,
+              minHeight: GAMES_AREA_HEIGHT,
+            }}
+          >
+            <Paper
+              sx={{
+                flex: 7,
+                minWidth: 0,
+                height: GAMES_AREA_HEIGHT,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "2px dashed",
+                borderColor: "divider",
+                background: "transparent",
+                color: "text.secondary",
+                mr: 2,
+                overflowY: "auto",
+              }}
+              elevation={0}
+            >
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{ textAlign: "center" }}
+              >
+                Games Area (Future Use)
+              </Typography>
+            </Paper>
+            <Paper
+              sx={{
+                flex: 3,
+                minWidth: 220,
+                height: GAMES_AREA_HEIGHT,
+                background: "background.paper",
+                borderRadius: 2,
+                p: 2,
+                display: "flex",
+                flexDirection: "column",
+                overflowY: "auto",
+                alignItems: "center",
+                border: "2px solid",
+                borderColor: "divider",
+                boxSizing: "border-box",
+                justifyContent: "flex-start",
+              }}
+              elevation={0}
+            >
+              <Typography
+                variant="subtitle1"
+                sx={{
+                  mb: 2,
+                  fontWeight: 600,
+                  textAlign: "center",
+                  width: "100%",
+                }}
+              >
+                Participants
+              </Typography>
               {channelUsers.map((user) => (
-                <Chip
+                <Box
                   key={user.id}
-                  label={user.username}
-                  sx={{ m: 0.5 }}
-                  color="primary"
-                />
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 2,
+                    width: "100%",
+                  }}
+                >
+                  <Avatar
+                    src={user.profilePicture}
+                    sx={{ mr: 1, width: 40, height: 40 }}
+                  />
+                  <Typography sx={{ fontWeight: 500 }}>
+                    {user.username}
+                  </Typography>
+                </Box>
               ))}
-            </Box>
+            </Paper>
           </Box>
         </Stack>
       </DialogContent>
-      <DialogActions>
+      <DialogActions
+        sx={{
+          justifyContent: "flex-end",
+          pr: 4,
+          pb: 2,
+          position: "sticky",
+          bottom: 0,
+          zIndex: 2,
+          background: (theme) => theme.palette.background.paper,
+          borderTop: 1,
+          borderColor: "divider",
+        }}
+      >
         <Button onClick={onClose} disabled={isCreating}>
           Cancel
         </Button>
         <Button
           onClick={onSubmit}
           variant="contained"
-          color="primary"
+          sx={{
+            minWidth: 180,
+            fontWeight: 600,
+            background: "linear-gradient(45deg, #C680E3, #9333EA)",
+            color: "#fff",
+            "&:hover": {
+              background: "linear-gradient(45deg, #9333EA, #7928CA)",
+            },
+          }}
           disabled={isCreating}
           startIcon={isCreating ? <CircularProgress size={20} /> : null}
         >

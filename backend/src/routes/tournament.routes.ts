@@ -5,6 +5,7 @@ import { Tournament } from "../models/Tournament.model.js";
 import { Channel } from "../models/Channel.model.js";
 import { logger } from "../utils/logger.js";
 import mongoose from "mongoose";
+import { User } from "../models/User.model.js";
 
 const router = express.Router();
 
@@ -183,5 +184,71 @@ router.post("/:id/join", protect, async (req: Request, res: Response) => {
     });
   }
 });
+
+// Get channel user stats
+router.get(
+  "/stats/channel/:channelId",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const tournaments = await Tournament.find({
+        channel: req.params.channelId,
+      }).populate("participants", "username profilePicture");
+
+      // Get all unique participants
+      const participants = new Set<string>();
+      tournaments.forEach((tournament) => {
+        tournament.participants.forEach((participant) => {
+          participants.add(participant._id.toString());
+        });
+      });
+
+      // Calculate stats for each participant
+      const userStats = await Promise.all(
+        Array.from(participants).map(async (userId) => {
+          const userTournaments = tournaments.filter((tournament) =>
+            tournament.participants.some((p) => p._id.toString() === userId)
+          );
+
+          const wins = userTournaments.filter(
+            (tournament) => tournament.winner?.toString() === userId
+          ).length;
+
+          const losses = userTournaments.length - wins;
+          const winRate =
+            userTournaments.length > 0
+              ? (wins / userTournaments.length) * 100
+              : 0;
+
+          const user = await User.findById(userId).select(
+            "username profilePicture"
+          );
+
+          return {
+            userId,
+            username: user?.username || "Unknown",
+            profilePicture: user?.profilePicture,
+            totalTournaments: userTournaments.length,
+            wins,
+            losses,
+            winRate,
+            customStats: {}, // Add any custom stats here
+          };
+        })
+      );
+
+      res.json({
+        success: true,
+        data: userStats,
+      });
+    } catch (error) {
+      logger.error("Get Channel User Stats Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching channel user stats",
+      });
+    }
+  }
+);
 
 export default router;
