@@ -1,15 +1,45 @@
+export interface TournamentStructure {
+  groups: number;
+  participantsPerGroup: number;
+  knockoutRounds: string[];
+  seedingMethod: "ranking" | "random";
+}
+
+export interface Match {
+  id: string;
+  round: string;
+  matchNumber: number;
+  team1?: TournamentParticipant;
+  team2?: TournamentParticipant;
+  score1?: number;
+  score2?: number;
+  winner?: TournamentParticipant;
+}
+
 export interface Tournament {
   id: string;
-  channelId: string;
   name: string;
+  description?: string;
+  channelId: string;
+  format:
+    | "single_elimination"
+    | "double_elimination"
+    | "round_robin"
+    | "structured";
+  startDate: string;
+  maxParticipants: number;
+  rules?: string;
+  prizes?: string;
+  participants: TournamentParticipant[];
+  statsConfig: TournamentStatsConfig;
+  structure?: TournamentStructure;
+  matches?: Match[];
   date: string;
   time: string;
   location: string;
   createdBy: string;
   createdAt: string;
   status: TournamentStatus;
-  participants: TournamentParticipant[];
-  statsConfig: TournamentStatsConfig;
 }
 
 export interface TournamentParticipant {

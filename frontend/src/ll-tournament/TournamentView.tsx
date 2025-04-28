@@ -11,6 +11,9 @@ import {
   DialogActions,
   TextField,
   Chip,
+  Stack,
+  Paper,
+  Avatar,
 } from "@mui/material";
 import {
   EmojiEvents as TournamentIcon,
@@ -34,6 +37,9 @@ import TournamentList from "./components/TournamentList";
 import CreateTournamentDialog from "./components/CreateTournamentDialog";
 import StatsConfigDialog from "./components/StatsConfigDialog";
 import UserProfileDialog from "./components/UserProfileDialog";
+import EditTournamentDialog from "./components/EditTournamentDialog";
+import StructuredTournamentDialog from "./components/StructuredTournamentDialog";
+import TournamentBracket from "./components/TournamentBracket";
 
 interface TournamentViewProps {
   onBack: () => void;
@@ -106,6 +112,9 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   >({});
   const [tournamentToDelete, setTournamentToDelete] =
     useState<Tournament | null>(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [structuredDialogOpen, setStructuredDialogOpen] = useState(false);
+  const [showBracket, setShowBracket] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -253,12 +262,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
   const handleEditTournament = (tournament: Tournament) => {
     setSelectedTournament(tournament);
-    setEditingTournament({
-      name: tournament.name,
-      date: tournament.date,
-      time: tournament.time,
-      location: tournament.location,
-    });
     setEditDialogOpen(true);
   };
 
@@ -292,24 +295,78 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   };
 
   const handleTournamentClick = (tournament: Tournament) => {
-    console.log("Tournament clicked:", tournament);
     setSelectedTournament(tournament);
-    setTournamentDetailsOpen(true);
+    if (tournament.format === "structured") {
+      setShowBracket(true);
+    } else {
+      setTournamentDetailsOpen(true);
+    }
   };
 
   const handleUpdateTournament = async () => {
     if (!selectedTournament) return;
+
     try {
+      setIsUpdating(true);
       await tournamentService.updateTournament(
         selectedTournament.id,
-        editingTournament
+        selectedTournament
       );
       setEditDialogOpen(false);
       setSelectedTournament(null);
-      setEditingTournament({});
+      // Refresh tournaments list
+      const updatedTournaments = await tournamentService.getChannelTournaments(
+        channelId
+      );
+      setTournaments(updatedTournaments);
+    } catch (error) {
+      console.error("Error updating tournament:", error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleTournamentChange = (field: keyof Tournament, value: any) => {
+    if (selectedTournament) {
+      setSelectedTournament({
+        ...selectedTournament,
+        [field]: value,
+      });
+    }
+  };
+
+  const handleCreateStructuredTournament = async (
+    tournamentData: Partial<Tournament>
+  ) => {
+    try {
+      setIsCreating(true);
+      await tournamentService.createTournament(channelId, tournamentData);
+      setStructuredDialogOpen(false);
       loadData();
     } catch (error) {
-      console.error("Failed to update tournament:", error);
+      console.error("Failed to create structured tournament:", error);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleUpdateMatch = async (match: any) => {
+    if (!selectedTournament) return;
+    try {
+      // Update the match in the tournament
+      const updatedTournament = {
+        ...selectedTournament,
+        matches: selectedTournament.matches?.map((m) =>
+          m.id === match.id ? match : m
+        ) || [match],
+      };
+      await tournamentService.updateTournament(
+        selectedTournament.id,
+        updatedTournament
+      );
+      setSelectedTournament(updatedTournament);
+    } catch (error) {
+      console.error("Failed to update match:", error);
     }
   };
 
@@ -370,7 +427,15 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
         {/* Floating Create Tournament Button at bottom right */}
         {activeTab === 1 && isAdmin && (
-          <Box sx={{ position: "fixed", bottom: 32, right: 32, zIndex: 1200 }}>
+          <Box
+            sx={{
+              position: "fixed",
+              bottom: 32,
+              right: 32,
+              display: "flex",
+              gap: 2,
+            }}
+          >
             <Button
               variant="contained"
               startIcon={<AddIcon />}
@@ -391,6 +456,27 @@ const TournamentView: React.FC<TournamentViewProps> = ({
               }}
             >
               Create Tournament
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => setStructuredDialogOpen(true)}
+              sx={{
+                background: "linear-gradient(45deg, #C680E3, #9333EA)",
+                color: "#fff",
+                fontWeight: 600,
+                boxShadow: 6,
+                borderRadius: 3,
+                px: 3,
+                py: 1.5,
+                minWidth: 0,
+                minHeight: 0,
+                "&:hover": {
+                  background: "linear-gradient(45deg, #9333EA, #7928CA)",
+                },
+              }}
+            >
+              Create Structured Tournament
             </Button>
           </Box>
         )}
@@ -426,95 +512,196 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       <Dialog
         open={tournamentDetailsOpen}
         onClose={() => setTournamentDetailsOpen(false)}
-        maxWidth="sm"
-        fullWidth
+        maxWidth={false}
         PaperProps={{
           sx: {
+            width: 1200,
+            height: 600,
+            borderRadius: 3,
+            boxShadow: 8,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+            p: 0,
             backgroundColor: "rgba(15, 23, 42, 0.95)",
             color: "white",
-            "& .MuiDialogContent-root": {
-              padding: "24px",
-              backgroundColor: "rgba(15, 23, 42, 0.95)",
-              color: "white",
-              "& .MuiTypography-root": {
-                color: "white",
-              },
-            },
           },
         }}
       >
-        <DialogTitle sx={{ color: "white" }}>Tournament Details</DialogTitle>
-        <DialogContent>
+        <DialogTitle
+          sx={{
+            textAlign: "center",
+            fontSize: 28,
+            fontWeight: 600,
+            position: "sticky",
+            top: 0,
+            zIndex: 2,
+            background: "rgba(15, 23, 42, 0.95)",
+            borderBottom: 1,
+            borderColor: "divider",
+            color: "white",
+          }}
+        >
+          Tournament Details
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-start",
+            p: 4,
+            overflowY: "auto",
+            background: "rgba(15, 23, 42, 0.95)",
+          }}
+        >
           {selectedTournament && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="h6" gutterBottom sx={{ color: "white" }}>
-                {selectedTournament.name}
-              </Typography>
+            <Stack spacing={3} sx={{ width: "100%" }}>
+              <TextField
+                label="Tournament Name"
+                value={selectedTournament.name}
+                fullWidth
+                disabled
+                sx={{ mb: 1 }}
+                InputProps={{
+                  sx: { color: "white" },
+                }}
+                InputLabelProps={{
+                  sx: { color: "white" },
+                }}
+              />
+              <Box sx={{ display: "flex", gap: 2, width: "100%" }}>
+                <TextField
+                  label="Location"
+                  value={selectedTournament.location}
+                  fullWidth
+                  disabled
+                  InputProps={{
+                    sx: { color: "white" },
+                  }}
+                  InputLabelProps={{
+                    sx: { color: "white" },
+                  }}
+                />
+                <TextField
+                  label="Date"
+                  type="date"
+                  value={selectedTournament.date}
+                  InputLabelProps={{
+                    shrink: true,
+                    sx: { color: "white" },
+                  }}
+                  fullWidth
+                  disabled
+                  InputProps={{
+                    sx: { color: "white" },
+                  }}
+                />
+                <TextField
+                  label="Time"
+                  type="time"
+                  value={selectedTournament.time}
+                  InputLabelProps={{
+                    shrink: true,
+                    sx: { color: "white" },
+                  }}
+                  fullWidth
+                  disabled
+                  InputProps={{
+                    sx: { color: "white" },
+                  }}
+                />
+              </Box>
               <Box
-                sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}
+                sx={{
+                  display: "flex",
+                  flex: 1,
+                  gap: 3,
+                  minHeight: 400,
+                }}
               >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <CalendarIcon sx={{ color: "white" }} />
-                  <Typography sx={{ color: "white" }}>
-                    {selectedTournament.date}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <TimeIcon sx={{ color: "white" }} />
-                  <Typography sx={{ color: "white" }}>
-                    {selectedTournament.time}
-                  </Typography>
-                </Box>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                  <LocationIcon sx={{ color: "white" }} />
-                  <Typography sx={{ color: "white" }}>
-                    {selectedTournament.location}
-                  </Typography>
-                </Box>
-              </Box>
-              <Box sx={{ mt: 3 }}>
-                <Typography
-                  variant="subtitle1"
-                  gutterBottom
-                  sx={{ color: "white" }}
+                <Paper
+                  sx={{
+                    flex: 7,
+                    minWidth: 0,
+                    height: 400,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    border: "2px dashed",
+                    borderColor: "divider",
+                    background: "transparent",
+                    color: "text.secondary",
+                    mr: 2,
+                    overflowY: "auto",
+                    p: 2,
+                  }}
+                  elevation={0}
                 >
-                  Participants
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                  {selectedTournament.participants.map((participant) => (
-                    <Box
-                      key={participant.userId}
-                      sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        p: 1,
-                        backgroundColor: "rgba(255, 255, 255, 0.05)",
-                        borderRadius: 1,
-                      }}
-                    >
-                      <Typography sx={{ color: "white" }}>
-                        {participant.username}
-                      </Typography>
-                      <Chip
-                        label={participant.status}
-                        size="small"
-                        color={
-                          participant.status === ParticipantStatus.CONFIRMED
-                            ? "success"
-                            : participant.status === ParticipantStatus.DECLINED
-                            ? "error"
-                            : "default"
-                        }
-                      />
-                    </Box>
-                  ))}
-                </Box>
+                  <Typography variant="h6" sx={{ color: "white", mb: 2 }}>
+                    Participants
+                  </Typography>
+                  {channelUsers.map((user) => {
+                    const participant = selectedTournament.participants.find(
+                      (p) => p.userId === user.id
+                    );
+                    return (
+                      <Box
+                        key={user.id}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          width: "100%",
+                          p: 1,
+                          mb: 1,
+                          backgroundColor: "rgba(255, 255, 255, 0.05)",
+                          borderRadius: 1,
+                        }}
+                      >
+                        <Box
+                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
+                        >
+                          <Avatar
+                            src={user.profilePicture}
+                            alt={user.username}
+                            sx={{ width: 32, height: 32 }}
+                          />
+                          <Typography sx={{ color: "white" }}>
+                            {user.username}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={
+                            participant?.status || ParticipantStatus.PENDING
+                          }
+                          size="small"
+                          color={
+                            participant?.status === ParticipantStatus.CONFIRMED
+                              ? "success"
+                              : participant?.status ===
+                                ParticipantStatus.DECLINED
+                              ? "error"
+                              : "default"
+                          }
+                        />
+                      </Box>
+                    );
+                  })}
+                </Paper>
               </Box>
-            </Box>
+            </Stack>
           )}
         </DialogContent>
-        <DialogActions sx={{ backgroundColor: "rgba(15, 23, 42, 0.95)" }}>
+        <DialogActions
+          sx={{
+            p: 3,
+            borderTop: 1,
+            borderColor: "divider",
+            background: "rgba(15, 23, 42, 0.95)",
+          }}
+        >
           <Button
             onClick={() => setTournamentDetailsOpen(false)}
             sx={{ color: "white" }}
@@ -524,68 +711,17 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         </DialogActions>
       </Dialog>
 
-      {/* Edit Tournament Dialog */}
-      <Dialog open={editDialogOpen} onClose={() => setEditDialogOpen(false)}>
-        <DialogTitle>Edit Tournament</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2, display: "flex", flexDirection: "column", gap: 2 }}>
-            <TextField
-              label="Tournament Name"
-              value={editingTournament.name || ""}
-              onChange={(e) =>
-                setEditingTournament({
-                  ...editingTournament,
-                  name: e.target.value,
-                })
-              }
-              fullWidth
-            />
-            <TextField
-              label="Date"
-              type="date"
-              value={editingTournament.date || ""}
-              onChange={(e) =>
-                setEditingTournament({
-                  ...editingTournament,
-                  date: e.target.value,
-                })
-              }
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Time"
-              type="time"
-              value={editingTournament.time || ""}
-              onChange={(e) =>
-                setEditingTournament({
-                  ...editingTournament,
-                  time: e.target.value,
-                })
-              }
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Location"
-              value={editingTournament.location || ""}
-              onChange={(e) =>
-                setEditingTournament({
-                  ...editingTournament,
-                  location: e.target.value,
-                })
-              }
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleUpdateTournament} variant="contained">
-            Save Changes
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <EditTournamentDialog
+        open={editDialogOpen}
+        onClose={() => {
+          setEditDialogOpen(false);
+          setSelectedTournament(null);
+        }}
+        onSubmit={handleUpdateTournament}
+        tournament={selectedTournament || ({} as Tournament)}
+        onTournamentChange={handleTournamentChange}
+        isUpdating={isUpdating}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog
@@ -616,6 +752,21 @@ const TournamentView: React.FC<TournamentViewProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+
+      <StructuredTournamentDialog
+        open={structuredDialogOpen}
+        onClose={() => setStructuredDialogOpen(false)}
+        onSubmit={handleCreateStructuredTournament}
+        channelUsers={channelUsers}
+        isCreating={isCreating}
+      />
+
+      {showBracket && selectedTournament && (
+        <TournamentBracket
+          tournament={selectedTournament}
+          onUpdateMatch={handleUpdateMatch}
+        />
+      )}
     </Box>
   );
 };
