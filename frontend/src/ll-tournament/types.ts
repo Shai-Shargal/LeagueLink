@@ -21,11 +21,7 @@ export interface Tournament {
   name: string;
   description?: string;
   channelId: string;
-  format:
-    | "single_elimination"
-    | "double_elimination"
-    | "round_robin"
-    | "structured";
+  format: "single_elimination" | "double_elimination" | "round_robin";
   startDate: string;
   maxParticipants: number;
   rules?: string;

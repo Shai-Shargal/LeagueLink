@@ -38,7 +38,6 @@ import CreateTournamentDialog from "./components/CreateTournamentDialog";
 import StatsConfigDialog from "./components/StatsConfigDialog";
 import UserProfileDialog from "./components/UserProfileDialog";
 import EditTournamentDialog from "./components/EditTournamentDialog";
-import StructuredTournamentDialog from "./components/StructuredTournamentDialog";
 import TournamentBracket from "./components/TournamentBracket";
 
 interface TournamentViewProps {
@@ -113,7 +112,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const [tournamentToDelete, setTournamentToDelete] =
     useState<Tournament | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [structuredDialogOpen, setStructuredDialogOpen] = useState(false);
   const [showBracket, setShowBracket] = useState(false);
 
   useEffect(() => {
@@ -296,11 +294,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
   const handleTournamentClick = (tournament: Tournament) => {
     setSelectedTournament(tournament);
-    if (tournament.format === "structured") {
-      setShowBracket(true);
-    } else {
-      setTournamentDetailsOpen(true);
-    }
+    setTournamentDetailsOpen(true);
   };
 
   const handleUpdateTournament = async () => {
@@ -332,21 +326,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         ...selectedTournament,
         [field]: value,
       });
-    }
-  };
-
-  const handleCreateStructuredTournament = async (
-    tournamentData: Partial<Tournament>
-  ) => {
-    try {
-      setIsCreating(true);
-      await tournamentService.createTournament(channelId, tournamentData);
-      setStructuredDialogOpen(false);
-      loadData();
-    } catch (error) {
-      console.error("Failed to create structured tournament:", error);
-    } finally {
-      setIsCreating(false);
     }
   };
 
@@ -456,27 +435,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
               }}
             >
               Create Tournament
-            </Button>
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setStructuredDialogOpen(true)}
-              sx={{
-                background: "linear-gradient(45deg, #C680E3, #9333EA)",
-                color: "#fff",
-                fontWeight: 600,
-                boxShadow: 6,
-                borderRadius: 3,
-                px: 3,
-                py: 1.5,
-                minWidth: 0,
-                minHeight: 0,
-                "&:hover": {
-                  background: "linear-gradient(45deg, #9333EA, #7928CA)",
-                },
-              }}
-            >
-              Create Structured Tournament
             </Button>
           </Box>
         )}
@@ -752,14 +710,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
-      <StructuredTournamentDialog
-        open={structuredDialogOpen}
-        onClose={() => setStructuredDialogOpen(false)}
-        onSubmit={handleCreateStructuredTournament}
-        channelUsers={channelUsers}
-        isCreating={isCreating}
-      />
 
       {showBracket && selectedTournament && (
         <TournamentBracket
