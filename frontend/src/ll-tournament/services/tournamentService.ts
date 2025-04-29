@@ -43,12 +43,22 @@ export const tournamentService = {
       channelId: channelId,
       format: "single_elimination",
       startDate: new Date(
-        tournamentData.date + "T" + tournamentData.time
+        `${tournamentData.date}T${tournamentData.time}`
       ).toISOString(),
-      maxParticipants: 8,
+      location: tournamentData.location,
+      maxParticipants: 32,
       rules: "Standard tournament rules apply",
       prizes: "Trophies for winners",
-      participants: tournamentData.participants?.map((p) => p.userId) || [],
+      participants: [
+        ...(tournamentData.participants?.map((p) => ({
+          userId: p.userId,
+          username: p.username,
+          isGuest: p.isGuest || false,
+          status: p.status,
+        })) || []),
+      ],
+      matches: tournamentData.matches || [],
+      status: tournamentData.status || "UPCOMING",
       statsConfig: tournamentData.statsConfig || defaultStatsConfig,
     };
 

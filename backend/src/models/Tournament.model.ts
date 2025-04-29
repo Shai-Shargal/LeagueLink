@@ -1,66 +1,55 @@
-import mongoose, { Document, Schema } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import { IUser } from "./User.model.js";
 import { IChannel } from "./Channel.model.js";
 
+export interface ITournamentParticipant {
+  userId: string;
+  username: string;
+  isGuest: boolean;
+  status: string;
+}
+
 export interface IMatch {
-  participants: mongoose.Types.ObjectId[];
-  scores: number[];
-  winner?: mongoose.Types.ObjectId;
-  scheduledDate: Date;
-  completedDate?: Date;
+  id: string;
   round: number;
-  status: "pending" | "in_progress" | "completed" | "cancelled";
+  matchNumber: number;
+  team1: ITournamentParticipant | null;
+  team2: ITournamentParticipant | null;
 }
 
 export interface ITournament extends Document {
   name: string;
   description: string;
-  channel: IChannel["_id"];
-  organizer: IUser["_id"];
-  format: "single_elimination" | "double_elimination" | "round_robin" | "swiss";
+  channel: mongoose.Types.ObjectId | IChannel;
+  organizer: mongoose.Types.ObjectId | IUser;
+  format: string;
   startDate: Date;
+  location: string;
   maxParticipants: number;
-  participants: IUser["_id"][];
   rules: string;
-  prizes?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  prizes: string;
+  participants: ITournamentParticipant[];
+  matches: IMatch[];
+  status: string;
+  statsConfig: {
+    enabledStats: string[];
+    customStats: any[];
+  };
 }
 
-const matchSchema = new Schema<IMatch>({
-  participants: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-  ],
-  scores: [
-    {
-      type: Number,
-      required: true,
-    },
-  ],
-  winner: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-  },
-  scheduledDate: {
-    type: Date,
-    required: true,
-  },
-  completedDate: {
-    type: Date,
-  },
-  round: {
-    type: Number,
-    required: true,
-  },
-  status: {
-    type: String,
-    enum: ["pending", "in_progress", "completed", "cancelled"],
-    default: "pending",
-  },
+const tournamentParticipantSchema = new Schema({
+  userId: String,
+  username: String,
+  isGuest: Boolean,
+  status: String,
+});
+
+const matchSchema = new Schema({
+  id: String,
+  round: Number,
+  matchNumber: Number,
+  team1: { type: tournamentParticipantSchema, default: null },
+  team2: { type: tournamentParticipantSchema, default: null },
 });
 
 const tournamentSchema = new Schema<ITournament>(
@@ -68,14 +57,10 @@ const tournamentSchema = new Schema<ITournament>(
     name: {
       type: String,
       required: true,
-      trim: true,
-      minlength: 3,
     },
     description: {
       type: String,
-      required: true,
-      trim: true,
-      minlength: 10,
+      default: "",
     },
     channel: {
       type: Schema.Types.ObjectId,
@@ -89,37 +74,51 @@ const tournamentSchema = new Schema<ITournament>(
     },
     format: {
       type: String,
-      enum: [
-        "single_elimination",
-        "double_elimination",
-        "round_robin",
-        "swiss",
-      ],
-      required: true,
+      enum: ["single_elimination", "double_elimination", "round_robin"],
+      default: "single_elimination",
     },
     startDate: {
       type: Date,
       required: true,
     },
-    maxParticipants: {
-      type: Number,
-      required: true,
-      min: 2,
-    },
-    participants: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
-    rules: {
+    location: {
       type: String,
       required: true,
-      trim: true,
+    },
+    maxParticipants: {
+      type: Number,
+      default: 32,
+    },
+    rules: {
+      type: String,
+      default: "Standard tournament rules apply",
     },
     prizes: {
       type: String,
-      trim: true,
+      default: "Trophies for winners",
+    },
+    participants: {
+      type: [tournamentParticipantSchema],
+      default: [],
+    },
+    matches: {
+      type: [matchSchema],
+      default: [],
+    },
+    status: {
+      type: String,
+      enum: ["UPCOMING", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
+      default: "UPCOMING",
+    },
+    statsConfig: {
+      enabledStats: {
+        type: [String],
+        default: ["wins", "losses", "winRate"],
+      },
+      customStats: {
+        type: [Schema.Types.Mixed],
+        default: [],
+      },
     },
   },
   {
@@ -133,4 +132,5 @@ tournamentSchema.index({ startDate: 1 });
 tournamentSchema.index({ organizer: 1 });
 
 const Tournament = mongoose.model<ITournament>("Tournament", tournamentSchema);
+
 export { Tournament };

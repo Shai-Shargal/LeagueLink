@@ -10,84 +10,97 @@ import { User } from "../models/User.model.js";
 const router = express.Router();
 
 // Create a new tournament
-router.post(
-  "/",
-  protect,
-  [
-    body("name").trim().isLength({ min: 3 }),
-    body("description").trim().isLength({ min: 10 }),
-    body("channelId").notEmpty(),
-    body("format").isIn([
-      "single_elimination",
-      "double_elimination",
-      "round_robin",
-      "swiss",
-    ]),
-    body("startDate").isISO8601(),
-    body("maxParticipants").isInt({ min: 2 }),
-    body("rules").trim().notEmpty(),
-  ],
-  async (req: Request, res: Response) => {
+router.post("/", protect, async (req: Request, res: Response) => {
+  try {
+    const {
+      name,
+      description,
+      channelId,
+      format,
+      startDate,
+      location,
+      maxParticipants,
+      rules,
+      prizes,
+      participants,
+      matches,
+      status,
+      statsConfig,
+    } = req.body;
+
+    // Check if user has permission to create tournament in channel
+    const channel = await Channel.findById(channelId);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        message: "Channel not found",
+      });
+    }
+
+    if (!channel.admins.includes(req.user.id)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to create tournaments in this channel",
+      });
+    }
+
+    // Validate required fields
+    if (!name || !startDate || !location) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing required fields: name, startDate, and location are required",
+      });
+    }
+
     try {
-      const {
-        name,
-        description,
-        channelId,
-        format,
-        startDate,
-        maxParticipants,
-        rules,
-        prizes,
-      } = req.body;
-
-      // Check if user has permission to create tournament in channel
-      const channel = await Channel.findById(channelId);
-      if (!channel) {
-        return res.status(404).json({
-          success: false,
-          message: "Channel not found",
-        });
-      }
-
-      if (!channel.admins.includes(req.user.id)) {
-        return res.status(403).json({
-          success: false,
-          message: "Not authorized to create tournaments in this channel",
-        });
-      }
-
       const tournament = await Tournament.create({
         name,
         description,
         channel: channelId,
         organizer: req.user.id,
-        format,
-        startDate,
-        maxParticipants,
-        rules,
-        prizes,
-        participants: [req.user.id],
+        format: format || "single_elimination",
+        startDate: new Date(startDate),
+        location,
+        maxParticipants: maxParticipants || 32,
+        rules: rules || "Standard tournament rules apply",
+        prizes: prizes || "Trophies for winners",
+        participants: participants || [],
+        matches: matches || [],
+        status: status || "UPCOMING",
+        statsConfig: statsConfig || {
+          enabledStats: ["wins", "losses", "winRate"],
+          customStats: [],
+        },
       });
 
       // Add tournament to channel
-      channel.tournaments.push(
-        tournament._id as unknown as mongoose.Types.ObjectId
-      );
+      if (channel.tournaments) {
+        channel.tournaments.push(tournament._id);
+      } else {
+        channel.tournaments = [tournament._id];
+      }
       await channel.save();
 
       res.status(201).json({
         success: true,
         data: tournament,
       });
-    } catch (error) {
-      logger.error("Create Tournament Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error creating tournament",
-      });
+    } catch (err) {
+      if (err instanceof Error) {
+        throw new Error(`Failed to create tournament: ${err.message}`);
+      }
+      throw new Error("Failed to create tournament");
     }
+  } catch (error) {
+    logger.error("Create Tournament Error:", error);
+    res.status(500).json({
+      success: false,
+      message:
+        error instanceof Error ? error.message : "Error creating tournament",
+    });
   }
-);
+});
 
 // Get tournaments in a channel
 router.get(
