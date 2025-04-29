@@ -27,6 +27,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonIcon from "@mui/icons-material/Person";
+import CloseIcon from "@mui/icons-material/Close";
 import { v4 as uuidv4 } from "uuid";
 
 interface CreateTournamentDialogProps {
@@ -147,11 +148,26 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setDraggedParticipant(null);
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent, existingMatchId?: string) => {
     e.preventDefault();
     if (!draggedParticipant) return;
 
-    if (!pendingMatch.participant1) {
+    if (existingMatchId) {
+      // Add player to existing match
+      setMatches(
+        matches.map((match) => {
+          if (match.id === existingMatchId) {
+            if (!match.team1) {
+              return { ...match, team1: draggedParticipant };
+            } else if (!match.team2) {
+              return { ...match, team2: draggedParticipant };
+            }
+          }
+          return match;
+        })
+      );
+    } else if (!pendingMatch.participant1) {
+      // Create new pending match
       setPendingMatch({ participant1: draggedParticipant });
     } else if (
       !pendingMatch.participant2 &&
@@ -176,6 +192,29 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
   const removeMatch = (matchId: string) => {
     setMatches(matches.filter((match) => match.id !== matchId));
+  };
+
+  const removePlayerFromMatch = (matchId: string, isTeam1: boolean) => {
+    const updatedMatches = matches.reduce<Match[]>((acc, match) => {
+      if (match.id === matchId) {
+        // If this will be the last player removed, don't include the match at all
+        if ((isTeam1 && !match.team2) || (!isTeam1 && !match.team1)) {
+          return acc; // Skip this match entirely
+        }
+        // Otherwise, create new match with one player removed
+        return [
+          ...acc,
+          {
+            ...match,
+            team1: isTeam1 ? null : match.team1,
+            team2: isTeam1 ? match.team2 : null,
+          } as Match,
+        ];
+      }
+      return [...acc, match];
+    }, []);
+
+    setMatches(updatedMatches);
   };
 
   // Group matches by round
@@ -375,6 +414,8 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                               backgroundColor: "rgba(255, 255, 255, 0.1)",
                             },
                           }}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, match.id)}
                         >
                           <Box
                             sx={{
@@ -384,29 +425,86 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                               height: "50%",
                               borderBottom:
                                 "1px solid rgba(255, 255, 255, 0.1)",
+                              position: "relative",
+                              ...(!match.team1 && {
+                                border: "1px dashed",
+                                borderColor: "primary.main",
+                                m: 1,
+                                borderRadius: 1,
+                                backgroundColor: "rgba(147, 51, 234, 0.1)",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }),
                             }}
                           >
-                            <Avatar
-                              src={
-                                match.team1?.isGuest
-                                  ? undefined
-                                  : channelUsers.find(
-                                      (u) => u.id === match.team1?.userId
-                                    )?.profilePicture
-                              }
-                              sx={{ width: 40, height: 40, mr: 2 }}
-                            >
-                              {match.team1?.isGuest && <PersonIcon />}
-                            </Avatar>
-                            <Typography
-                              sx={{
-                                flex: 1,
-                                color: "rgba(255, 255, 255, 0.9)",
-                                fontSize: "0.9rem",
-                              }}
-                            >
-                              {match.team1?.username}
-                            </Typography>
+                            {match.team1 ? (
+                              <>
+                                <Avatar
+                                  src={
+                                    match.team1.isGuest
+                                      ? undefined
+                                      : channelUsers.find(
+                                          (u) => u.id === match.team1?.userId
+                                        )?.profilePicture
+                                  }
+                                  sx={{ width: 40, height: 40, mr: 2 }}
+                                >
+                                  {match.team1.isGuest && <PersonIcon />}
+                                </Avatar>
+                                <Typography
+                                  sx={{
+                                    flex: 1,
+                                    color: "rgba(255, 255, 255, 0.9)",
+                                    fontSize: "0.9rem",
+                                  }}
+                                >
+                                  {match.team1.username}
+                                </Typography>
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removePlayerFromMatch(match.id, true);
+                                  }}
+                                  sx={{
+                                    position: "absolute",
+                                    top: 4,
+                                    right: 4,
+                                    color: "rgba(255, 255, 255, 0.7)",
+                                    "&:hover": {
+                                      color: "white",
+                                      backgroundColor: "rgba(255,255,255,0.08)",
+                                    },
+                                    padding: 0.5,
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </>
+                            ) : (
+                              <AddIcon
+                                sx={{
+                                  fontSize: 24,
+                                  color: "primary.main",
+                                  animation: "pulse 1.5s infinite",
+                                  "@keyframes pulse": {
+                                    "0%": {
+                                      transform: "scale(1)",
+                                      opacity: 0.7,
+                                    },
+                                    "50%": {
+                                      transform: "scale(1.2)",
+                                      opacity: 1,
+                                    },
+                                    "100%": {
+                                      transform: "scale(1)",
+                                      opacity: 0.7,
+                                    },
+                                  },
+                                }}
+                              />
+                            )}
                           </Box>
                           <Box
                             sx={{
@@ -414,46 +512,87 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                               alignItems: "center",
                               p: 2,
                               height: "50%",
+                              position: "relative",
+                              ...(!match.team2 && {
+                                border: "1px dashed",
+                                borderColor: "primary.main",
+                                m: 1,
+                                borderRadius: 1,
+                                backgroundColor: "rgba(147, 51, 234, 0.1)",
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                              }),
                             }}
                           >
-                            <Avatar
-                              src={
-                                match.team2?.isGuest
-                                  ? undefined
-                                  : channelUsers.find(
-                                      (u) => u.id === match.team2?.userId
-                                    )?.profilePicture
-                              }
-                              sx={{ width: 40, height: 40, mr: 2 }}
-                            >
-                              {match.team2?.isGuest && <PersonIcon />}
-                            </Avatar>
-                            <Typography
-                              sx={{
-                                flex: 1,
-                                color: "rgba(255, 255, 255, 0.9)",
-                                fontSize: "0.9rem",
-                              }}
-                            >
-                              {match.team2?.username}
-                            </Typography>
+                            {match.team2 ? (
+                              <>
+                                <Avatar
+                                  src={
+                                    match.team2.isGuest
+                                      ? undefined
+                                      : channelUsers.find(
+                                          (u) => u.id === match.team2?.userId
+                                        )?.profilePicture
+                                  }
+                                  sx={{ width: 40, height: 40, mr: 2 }}
+                                >
+                                  {match.team2.isGuest && <PersonIcon />}
+                                </Avatar>
+                                <Typography
+                                  sx={{
+                                    flex: 1,
+                                    color: "rgba(255, 255, 255, 0.9)",
+                                    fontSize: "0.9rem",
+                                  }}
+                                >
+                                  {match.team2.username}
+                                </Typography>
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removePlayerFromMatch(match.id, false);
+                                  }}
+                                  sx={{
+                                    position: "absolute",
+                                    top: 4,
+                                    right: 4,
+                                    color: "rgba(255, 255, 255, 0.7)",
+                                    "&:hover": {
+                                      color: "white",
+                                      backgroundColor: "rgba(255,255,255,0.08)",
+                                    },
+                                    padding: 0.5,
+                                  }}
+                                >
+                                  <DeleteIcon fontSize="small" />
+                                </IconButton>
+                              </>
+                            ) : (
+                              <AddIcon
+                                sx={{
+                                  fontSize: 24,
+                                  color: "primary.main",
+                                  animation: "pulse 1.5s infinite",
+                                  "@keyframes pulse": {
+                                    "0%": {
+                                      transform: "scale(1)",
+                                      opacity: 0.7,
+                                    },
+                                    "50%": {
+                                      transform: "scale(1.2)",
+                                      opacity: 1,
+                                    },
+                                    "100%": {
+                                      transform: "scale(1)",
+                                      opacity: 0.7,
+                                    },
+                                  },
+                                }}
+                              />
+                            )}
                           </Box>
-                          <IconButton
-                            size="small"
-                            onClick={() => removeMatch(match.id)}
-                            sx={{
-                              position: "absolute",
-                              right: 4,
-                              top: 4,
-                              color: "rgba(255, 255, 255, 0.5)",
-                              "&:hover": {
-                                color: "rgba(255, 255, 255, 0.8)",
-                                backgroundColor: "rgba(255, 255, 255, 0.1)",
-                              },
-                            }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
                         </Paper>
                       ))}
 
@@ -595,6 +734,8 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                                   "0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12)",
                               },
                             }}
+                            onDragOver={handleDragOver}
+                            onDrop={(e) => handleDrop(e, match.id)}
                           >
                             <Box
                               sx={{
@@ -604,29 +745,87 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                                 height: "50%",
                                 borderBottom:
                                   "1px solid rgba(255, 255, 255, 0.1)",
+                                position: "relative",
+                                ...(!match.team1 && {
+                                  border: "1px dashed",
+                                  borderColor: "primary.main",
+                                  m: 1,
+                                  borderRadius: 1,
+                                  backgroundColor: "rgba(147, 51, 234, 0.1)",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }),
                               }}
                             >
-                              <Avatar
-                                src={
-                                  match.team1?.isGuest
-                                    ? undefined
-                                    : channelUsers.find(
-                                        (u) => u.id === match.team1?.userId
-                                      )?.profilePicture
-                                }
-                                sx={{ width: 40, height: 40, mr: 2 }}
-                              >
-                                {match.team1?.isGuest && <PersonIcon />}
-                              </Avatar>
-                              <Typography
-                                sx={{
-                                  flex: 1,
-                                  color: "rgba(255, 255, 255, 0.9)",
-                                  fontSize: "0.9rem",
-                                }}
-                              >
-                                {match.team1?.username}
-                              </Typography>
+                              {match.team1 ? (
+                                <>
+                                  <Avatar
+                                    src={
+                                      match.team1.isGuest
+                                        ? undefined
+                                        : channelUsers.find(
+                                            (u) => u.id === match.team1?.userId
+                                          )?.profilePicture
+                                    }
+                                    sx={{ width: 40, height: 40, mr: 2 }}
+                                  >
+                                    {match.team1.isGuest && <PersonIcon />}
+                                  </Avatar>
+                                  <Typography
+                                    sx={{
+                                      flex: 1,
+                                      color: "rgba(255, 255, 255, 0.9)",
+                                      fontSize: "0.9rem",
+                                    }}
+                                  >
+                                    {match.team1.username}
+                                  </Typography>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removePlayerFromMatch(match.id, true);
+                                    }}
+                                    sx={{
+                                      position: "absolute",
+                                      top: 4,
+                                      right: 4,
+                                      color: "rgba(255, 255, 255, 0.7)",
+                                      "&:hover": {
+                                        color: "white",
+                                        backgroundColor:
+                                          "rgba(255,255,255,0.08)",
+                                      },
+                                      padding: 0.5,
+                                    }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </>
+                              ) : (
+                                <AddIcon
+                                  sx={{
+                                    fontSize: 24,
+                                    color: "primary.main",
+                                    animation: "pulse 1.5s infinite",
+                                    "@keyframes pulse": {
+                                      "0%": {
+                                        transform: "scale(1)",
+                                        opacity: 0.7,
+                                      },
+                                      "50%": {
+                                        transform: "scale(1.2)",
+                                        opacity: 1,
+                                      },
+                                      "100%": {
+                                        transform: "scale(1)",
+                                        opacity: 0.7,
+                                      },
+                                    },
+                                  }}
+                                />
+                              )}
                             </Box>
                             <Box
                               sx={{
@@ -634,46 +833,88 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                                 alignItems: "center",
                                 p: 2,
                                 height: "50%",
+                                position: "relative",
+                                ...(!match.team2 && {
+                                  border: "1px dashed",
+                                  borderColor: "primary.main",
+                                  m: 1,
+                                  borderRadius: 1,
+                                  backgroundColor: "rgba(147, 51, 234, 0.1)",
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  alignItems: "center",
+                                }),
                               }}
                             >
-                              <Avatar
-                                src={
-                                  match.team2?.isGuest
-                                    ? undefined
-                                    : channelUsers.find(
-                                        (u) => u.id === match.team2?.userId
-                                      )?.profilePicture
-                                }
-                                sx={{ width: 40, height: 40, mr: 2 }}
-                              >
-                                {match.team2?.isGuest && <PersonIcon />}
-                              </Avatar>
-                              <Typography
-                                sx={{
-                                  flex: 1,
-                                  color: "rgba(255, 255, 255, 0.9)",
-                                  fontSize: "0.9rem",
-                                }}
-                              >
-                                {match.team2?.username}
-                              </Typography>
+                              {match.team2 ? (
+                                <>
+                                  <Avatar
+                                    src={
+                                      match.team2.isGuest
+                                        ? undefined
+                                        : channelUsers.find(
+                                            (u) => u.id === match.team2?.userId
+                                          )?.profilePicture
+                                    }
+                                    sx={{ width: 40, height: 40, mr: 2 }}
+                                  >
+                                    {match.team2.isGuest && <PersonIcon />}
+                                  </Avatar>
+                                  <Typography
+                                    sx={{
+                                      flex: 1,
+                                      color: "rgba(255, 255, 255, 0.9)",
+                                      fontSize: "0.9rem",
+                                    }}
+                                  >
+                                    {match.team2.username}
+                                  </Typography>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      removePlayerFromMatch(match.id, false);
+                                    }}
+                                    sx={{
+                                      position: "absolute",
+                                      top: 4,
+                                      right: 4,
+                                      color: "rgba(255, 255, 255, 0.7)",
+                                      "&:hover": {
+                                        color: "white",
+                                        backgroundColor:
+                                          "rgba(255,255,255,0.08)",
+                                      },
+                                      padding: 0.5,
+                                    }}
+                                  >
+                                    <DeleteIcon fontSize="small" />
+                                  </IconButton>
+                                </>
+                              ) : (
+                                <AddIcon
+                                  sx={{
+                                    fontSize: 24,
+                                    color: "primary.main",
+                                    animation: "pulse 1.5s infinite",
+                                    "@keyframes pulse": {
+                                      "0%": {
+                                        transform: "scale(1)",
+                                        opacity: 0.7,
+                                      },
+                                      "50%": {
+                                        transform: "scale(1.2)",
+                                        opacity: 1,
+                                      },
+                                      "100%": {
+                                        transform: "scale(1)",
+                                        opacity: 0.7,
+                                      },
+                                    },
+                                  }}
+                                />
+                              )}
                             </Box>
-                            <IconButton
-                              size="small"
-                              onClick={() => removeMatch(match.id)}
-                              sx={{
-                                position: "absolute",
-                                right: 4,
-                                top: 4,
-                                color: "rgba(255, 255, 255, 0.5)",
-                                "&:hover": {
-                                  color: "rgba(255, 255, 255, 0.8)",
-                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
-                                },
-                              }}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
                           </Paper>
                         ))}
                       </Box>
