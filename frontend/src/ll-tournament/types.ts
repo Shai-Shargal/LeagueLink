@@ -7,10 +7,10 @@ export interface TournamentStructure {
 
 export interface Match {
   id: string;
-  round: string;
+  round: number;
   matchNumber: number;
-  team1?: TournamentParticipant;
-  team2?: TournamentParticipant;
+  team1: TournamentParticipant;
+  team2: TournamentParticipant;
   score1?: number;
   score2?: number;
   winner?: TournamentParticipant;

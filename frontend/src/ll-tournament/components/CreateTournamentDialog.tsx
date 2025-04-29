@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -17,10 +17,17 @@ import {
   Chip,
   Divider,
 } from "@mui/material";
-import { Tournament, GuestUser } from "../types";
+import {
+  Tournament,
+  GuestUser,
+  Match,
+  TournamentParticipant,
+  ParticipantStatus,
+} from "../types";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonIcon from "@mui/icons-material/Person";
+import { v4 as uuidv4 } from "uuid";
 
 interface CreateTournamentDialogProps {
   open: boolean;
@@ -33,8 +40,17 @@ interface CreateTournamentDialogProps {
 }
 
 const DIALOG_WIDTH = 1200;
-const DIALOG_HEIGHT = 600;
-const GAMES_AREA_HEIGHT = 400;
+const DIALOG_HEIGHT = 800;
+const GAMES_AREA_HEIGHT = 600;
+const BASE_BOX_HEIGHT = 100;
+const BASE_BOX_WIDTH = 200;
+const MATCH_VERTICAL_GAP = 16;
+const ROUND_HORIZONTAL_GAP = 60;
+const INITIAL_TOP_MARGIN = 40;
+
+interface DraggableParticipant extends TournamentParticipant {
+  type: "channel" | "guest";
+}
 
 const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   open,
@@ -49,6 +65,13 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   const [guestUsers, setGuestUsers] = useState<GuestUser[]>([]);
   const [guestDialogOpen, setGuestDialogOpen] = useState(false);
   const [newGuestUsername, setNewGuestUsername] = useState("");
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [draggedParticipant, setDraggedParticipant] =
+    useState<DraggableParticipant | null>(null);
+  const [pendingMatch, setPendingMatch] = useState<{
+    participant1?: DraggableParticipant;
+    participant2?: DraggableParticipant;
+  }>({});
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -72,7 +95,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
   const handleSubmit = () => {
     if (validateForm()) {
-      // Add guest users to the tournament participants
+      // Add guest users to the tournament participants and include matches
       const guestParticipants = guestUsers.map((guest) => ({
         userId: `guest_${guest.username}`,
         username: guest.username,
@@ -85,6 +108,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         ...(newTournament.participants || []),
         ...guestParticipants,
       ]);
+      onTournamentChange("matches", matches);
       onSubmit();
     }
   };
@@ -114,6 +138,54 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   const removeGuestUser = (index: number) => {
     setGuestUsers(guestUsers.filter((_, i) => i !== index));
   };
+
+  const handleDragStart = (participant: DraggableParticipant) => {
+    setDraggedParticipant(participant);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedParticipant(null);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedParticipant) return;
+
+    if (!pendingMatch.participant1) {
+      setPendingMatch({ participant1: draggedParticipant });
+    } else if (
+      !pendingMatch.participant2 &&
+      draggedParticipant.userId !== pendingMatch.participant1.userId
+    ) {
+      // Create new match
+      const newMatch: Match = {
+        id: uuidv4(),
+        round: 1,
+        matchNumber: matches.length + 1,
+        team1: pendingMatch.participant1,
+        team2: draggedParticipant,
+      };
+      setMatches([...matches, newMatch]);
+      setPendingMatch({});
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const removeMatch = (matchId: string) => {
+    setMatches(matches.filter((match) => match.id !== matchId));
+  };
+
+  // Group matches by round
+  const matchesByRound = matches.reduce((acc, match) => {
+    if (!acc[match.round]) {
+      acc[match.round] = [];
+    }
+    acc[match.round].push(match);
+    return acc;
+  }, {} as { [key: number]: Match[] });
 
   return (
     <>
@@ -227,51 +299,410 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                   minWidth: 0,
                   height: GAMES_AREA_HEIGHT,
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  border: "2px dashed",
-                  borderColor: "divider",
-                  background: "transparent",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  border: "1px dashed rgba(255, 255, 255, 0.1)",
+                  background: "#1a2234",
                   color: "text.secondary",
                   mr: 2,
                   overflowY: "auto",
+                  overflowX: "auto",
+                  p: 2,
+                  position: "relative",
                 }}
                 elevation={0}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
               >
                 <Typography
                   variant="body1"
-                  color="text.secondary"
-                  sx={{ textAlign: "center" }}
+                  color="rgba(255, 255, 255, 0.7)"
+                  sx={{
+                    position: "absolute",
+                    top: 16,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    zIndex: 1,
+                  }}
                 >
-                  Games Area (Future Use)
+                  {pendingMatch.participant1
+                    ? "Drop another participant to create a match"
+                    : "Drag participants here to create matches"}
                 </Typography>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: ROUND_HORIZONTAL_GAP,
+                    p: 2,
+                    minWidth: "fit-content",
+                    mt: `${INITIAL_TOP_MARGIN}px`,
+                  }}
+                >
+                  {/* First Round Column */}
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: MATCH_VERTICAL_GAP,
+                      alignItems: "flex-start",
+                    }}
+                  >
+                    {/* Existing Matches */}
+                    {matches
+                      .filter((match) => match.round === 1)
+                      .map((match, index) => (
+                        <Paper
+                          key={match.id}
+                          elevation={1}
+                          className="css-95vexv-MuiPaper-root"
+                          sx={{
+                            width: BASE_BOX_WIDTH,
+                            height: BASE_BOX_HEIGHT,
+                            display: "flex",
+                            flexDirection: "column",
+                            backgroundColor: "#242b3d",
+                            borderRadius: 1,
+                            position: "relative",
+                            overflow: "hidden",
+                            "&::after": {
+                              content: '""',
+                              position: "absolute",
+                              right: -ROUND_HORIZONTAL_GAP,
+                              top: "50%",
+                              width: ROUND_HORIZONTAL_GAP,
+                              height: 2,
+                              backgroundColor: "rgba(255, 255, 255, 0.1)",
+                            },
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              p: 2,
+                              height: "50%",
+                              borderBottom:
+                                "1px solid rgba(255, 255, 255, 0.1)",
+                            }}
+                          >
+                            <Avatar
+                              src={
+                                match.team1?.isGuest
+                                  ? undefined
+                                  : channelUsers.find(
+                                      (u) => u.id === match.team1?.userId
+                                    )?.profilePicture
+                              }
+                              sx={{ width: 40, height: 40, mr: 2 }}
+                            >
+                              {match.team1?.isGuest && <PersonIcon />}
+                            </Avatar>
+                            <Typography
+                              sx={{
+                                flex: 1,
+                                color: "rgba(255, 255, 255, 0.9)",
+                                fontSize: "0.9rem",
+                              }}
+                            >
+                              {match.team1?.username}
+                            </Typography>
+                          </Box>
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              p: 2,
+                              height: "50%",
+                            }}
+                          >
+                            <Avatar
+                              src={
+                                match.team2?.isGuest
+                                  ? undefined
+                                  : channelUsers.find(
+                                      (u) => u.id === match.team2?.userId
+                                    )?.profilePicture
+                              }
+                              sx={{ width: 40, height: 40, mr: 2 }}
+                            >
+                              {match.team2?.isGuest && <PersonIcon />}
+                            </Avatar>
+                            <Typography
+                              sx={{
+                                flex: 1,
+                                color: "rgba(255, 255, 255, 0.9)",
+                                fontSize: "0.9rem",
+                              }}
+                            >
+                              {match.team2?.username}
+                            </Typography>
+                          </Box>
+                          <IconButton
+                            size="small"
+                            onClick={() => removeMatch(match.id)}
+                            sx={{
+                              position: "absolute",
+                              right: 4,
+                              top: 4,
+                              color: "rgba(255, 255, 255, 0.5)",
+                              "&:hover": {
+                                color: "rgba(255, 255, 255, 0.8)",
+                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                              },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Paper>
+                      ))}
+
+                    {/* Pending Match - Always at the bottom of first round */}
+                    {pendingMatch.participant1 && (
+                      <Paper
+                        elevation={1}
+                        className="css-95vexv-MuiPaper-root"
+                        sx={{
+                          width: BASE_BOX_WIDTH,
+                          height: BASE_BOX_HEIGHT,
+                          display: "flex",
+                          flexDirection: "column",
+                          backgroundColor: "#242b3d",
+                          borderRadius: 1,
+                          position: "relative",
+                          overflow: "hidden",
+                          opacity: 1,
+                          boxShadow:
+                            "0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12)",
+                          border: "2px solid",
+                          borderColor: "primary.main",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            p: 2,
+                            height: "50%",
+                            borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+                            backgroundColor: "#2a3447",
+                          }}
+                        >
+                          <Avatar
+                            src={
+                              pendingMatch.participant1.isGuest
+                                ? undefined
+                                : channelUsers.find(
+                                    (u) =>
+                                      u.id === pendingMatch.participant1?.userId
+                                  )?.profilePicture
+                            }
+                            sx={{ width: 40, height: 40, mr: 2 }}
+                          >
+                            {pendingMatch.participant1.isGuest && (
+                              <PersonIcon />
+                            )}
+                          </Avatar>
+                          <Typography
+                            sx={{
+                              flex: 1,
+                              color: "rgba(255, 255, 255, 0.9)",
+                              fontSize: "0.9rem",
+                            }}
+                          >
+                            {pendingMatch.participant1.username}
+                          </Typography>
+                        </Box>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            height: "50%",
+                            border: "1px dashed",
+                            borderColor: "primary.main",
+                            m: 1,
+                            borderRadius: 1,
+                            color: "primary.main",
+                            backgroundColor: "rgba(147, 51, 234, 0.1)",
+                          }}
+                        >
+                          <AddIcon
+                            sx={{
+                              fontSize: 24,
+                              animation: "pulse 1.5s infinite",
+                              "@keyframes pulse": {
+                                "0%": {
+                                  transform: "scale(1)",
+                                  opacity: 0.7,
+                                },
+                                "50%": {
+                                  transform: "scale(1.2)",
+                                  opacity: 1,
+                                },
+                                "100%": {
+                                  transform: "scale(1)",
+                                  opacity: 0.7,
+                                },
+                              },
+                            }}
+                          />
+                        </Box>
+                      </Paper>
+                    )}
+                  </Box>
+
+                  {/* Second Round and Later */}
+                  {Object.entries(matchesByRound)
+                    .filter(([round]) => Number(round) > 1)
+                    .map(([round, roundMatches]) => (
+                      <Box
+                        key={round}
+                        sx={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: MATCH_VERTICAL_GAP,
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        {roundMatches.map((match) => (
+                          <Paper
+                            key={match.id}
+                            elevation={1}
+                            className="css-95vexv-MuiPaper-root"
+                            sx={{
+                              width: BASE_BOX_WIDTH,
+                              height: BASE_BOX_HEIGHT,
+                              display: "flex",
+                              flexDirection: "column",
+                              backgroundColor: "#242b3d",
+                              borderRadius: 1,
+                              position: "relative",
+                              overflow: "hidden",
+                              "&::after": {
+                                content: '""',
+                                position: "absolute",
+                                right: -ROUND_HORIZONTAL_GAP,
+                                top: "50%",
+                                width: ROUND_HORIZONTAL_GAP,
+                                height: 2,
+                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                              },
+                              // Add specific styling for odd-numbered participants
+                              "&:nth-of-type(odd)": {
+                                backgroundColor: "#2a3447",
+                                boxShadow:
+                                  "0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12)",
+                              },
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                p: 2,
+                                height: "50%",
+                                borderBottom:
+                                  "1px solid rgba(255, 255, 255, 0.1)",
+                              }}
+                            >
+                              <Avatar
+                                src={
+                                  match.team1?.isGuest
+                                    ? undefined
+                                    : channelUsers.find(
+                                        (u) => u.id === match.team1?.userId
+                                      )?.profilePicture
+                                }
+                                sx={{ width: 40, height: 40, mr: 2 }}
+                              >
+                                {match.team1?.isGuest && <PersonIcon />}
+                              </Avatar>
+                              <Typography
+                                sx={{
+                                  flex: 1,
+                                  color: "rgba(255, 255, 255, 0.9)",
+                                  fontSize: "0.9rem",
+                                }}
+                              >
+                                {match.team1?.username}
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                p: 2,
+                                height: "50%",
+                              }}
+                            >
+                              <Avatar
+                                src={
+                                  match.team2?.isGuest
+                                    ? undefined
+                                    : channelUsers.find(
+                                        (u) => u.id === match.team2?.userId
+                                      )?.profilePicture
+                                }
+                                sx={{ width: 40, height: 40, mr: 2 }}
+                              >
+                                {match.team2?.isGuest && <PersonIcon />}
+                              </Avatar>
+                              <Typography
+                                sx={{
+                                  flex: 1,
+                                  color: "rgba(255, 255, 255, 0.9)",
+                                  fontSize: "0.9rem",
+                                }}
+                              >
+                                {match.team2?.username}
+                              </Typography>
+                            </Box>
+                            <IconButton
+                              size="small"
+                              onClick={() => removeMatch(match.id)}
+                              sx={{
+                                position: "absolute",
+                                right: 4,
+                                top: 4,
+                                color: "rgba(255, 255, 255, 0.5)",
+                                "&:hover": {
+                                  color: "rgba(255, 255, 255, 0.8)",
+                                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                                },
+                              }}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Paper>
+                        ))}
+                      </Box>
+                    ))}
+                </Box>
               </Paper>
+
               <Paper
                 sx={{
                   flex: 3,
-                  minWidth: 220,
+                  minWidth: 280,
                   height: GAMES_AREA_HEIGHT,
-                  background: "background.paper",
+                  background: "#242b3d",
                   borderRadius: 2,
-                  p: 2,
+                  p: 3,
                   display: "flex",
                   flexDirection: "column",
                   overflowY: "auto",
-                  alignItems: "center",
-                  border: "2px solid",
-                  borderColor: "divider",
-                  boxSizing: "border-box",
-                  justifyContent: "flex-start",
+                  alignItems: "stretch",
+                  border: "1px solid rgba(255, 255, 255, 0.1)",
                 }}
                 elevation={0}
               >
                 <Typography
-                  variant="subtitle1"
+                  variant="h6"
                   sx={{
-                    mb: 2,
-                    fontWeight: 600,
-                    textAlign: "center",
-                    width: "100%",
+                    mb: 3,
+                    color: "white",
+                    fontSize: "1.1rem",
                   }}
                 >
                   Channel Participants
@@ -279,30 +710,62 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                 {channelUsers.map((user) => (
                   <Box
                     key={user.id}
+                    draggable
+                    onDragStart={() =>
+                      handleDragStart({
+                        userId: user.id,
+                        username: user.username,
+                        status: ParticipantStatus.PENDING,
+                        stats: {},
+                        type: "channel",
+                      })
+                    }
+                    onDragEnd={handleDragEnd}
                     sx={{
                       display: "flex",
                       alignItems: "center",
                       mb: 2,
-                      width: "100%",
+                      p: 1,
+                      cursor: "grab",
+                      "&:active": { cursor: "grabbing" },
+                      backgroundColor:
+                        draggedParticipant?.userId === user.id
+                          ? "rgba(255, 255, 255, 0.1)"
+                          : "transparent",
+                      borderRadius: 1,
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                      },
                     }}
                   >
                     <Avatar
                       src={user.profilePicture}
-                      sx={{ mr: 1, width: 40, height: 40 }}
+                      sx={{ width: 40, height: 40, mr: 2 }}
                     />
-                    <Typography sx={{ flex: 1 }}>{user.username}</Typography>
+                    <Typography
+                      sx={{
+                        flex: 1,
+                        color: "white",
+                      }}
+                    >
+                      {user.username}
+                    </Typography>
                   </Box>
                 ))}
 
-                <Divider sx={{ width: "100%", my: 2 }} />
+                <Divider
+                  sx={{
+                    my: 3,
+                    borderColor: "rgba(255, 255, 255, 0.1)",
+                  }}
+                />
 
                 <Typography
-                  variant="subtitle1"
+                  variant="h6"
                   sx={{
-                    mb: 2,
-                    fontWeight: 600,
-                    textAlign: "center",
-                    width: "100%",
+                    mb: 3,
+                    color: "white",
+                    fontSize: "1.1rem",
                   }}
                 >
                   Guest Participants
@@ -312,8 +775,15 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                   variant="outlined"
                   startIcon={<AddIcon />}
                   onClick={() => setGuestDialogOpen(true)}
-                  fullWidth
-                  sx={{ mb: 2 }}
+                  sx={{
+                    mb: 2,
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                    color: "rgba(255, 255, 255, 0.9)",
+                    "&:hover": {
+                      borderColor: "rgba(255, 255, 255, 0.5)",
+                      backgroundColor: "rgba(255, 255, 255, 0.05)",
+                    },
+                  }}
                 >
                   Add Guest Participant
                 </Button>
@@ -321,29 +791,64 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                 {guestUsers.map((guest, index) => (
                   <Box
                     key={index}
+                    draggable
+                    onDragStart={() =>
+                      handleDragStart({
+                        userId: `guest_${guest.username}`,
+                        username: guest.username,
+                        status: ParticipantStatus.PENDING,
+                        stats: {},
+                        type: "guest",
+                        isGuest: true,
+                      })
+                    }
+                    onDragEnd={handleDragEnd}
                     sx={{
                       display: "flex",
                       alignItems: "center",
                       mb: 2,
-                      width: "100%",
+                      p: 1,
+                      cursor: "grab",
+                      "&:active": { cursor: "grabbing" },
+                      backgroundColor:
+                        draggedParticipant?.userId === `guest_${guest.username}`
+                          ? "rgba(255, 255, 255, 0.1)"
+                          : "transparent",
+                      borderRadius: 1,
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.05)",
+                      },
                     }}
                   >
                     <Avatar
                       sx={{
-                        mr: 1,
                         width: 40,
                         height: 40,
-                        backgroundColor: "rgba(0, 0, 0, 0.08)",
-                        color: "text.secondary",
+                        mr: 2,
+                        backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        color: "rgba(255, 255, 255, 0.9)",
                       }}
                     >
                       <PersonIcon />
                     </Avatar>
-                    <Typography sx={{ flex: 1 }}>{guest.username}</Typography>
+                    <Typography
+                      sx={{
+                        flex: 1,
+                        color: "white",
+                      }}
+                    >
+                      {guest.username}
+                    </Typography>
                     <IconButton
                       size="small"
                       onClick={() => removeGuestUser(index)}
-                      sx={{ ml: 1 }}
+                      sx={{
+                        color: "rgba(255, 255, 255, 0.5)",
+                        "&:hover": {
+                          color: "rgba(255, 255, 255, 0.8)",
+                          backgroundColor: "rgba(255, 255, 255, 0.1)",
+                        },
+                      }}
                     >
                       <DeleteIcon fontSize="small" />
                     </IconButton>
