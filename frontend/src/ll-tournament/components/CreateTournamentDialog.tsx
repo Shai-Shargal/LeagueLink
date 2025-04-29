@@ -150,30 +150,45 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
   const handleDrop = (e: React.DragEvent, existingMatchId?: string) => {
     e.preventDefault();
+    e.stopPropagation(); // Prevent event bubbling
     if (!draggedParticipant) return;
 
+    // If dropping into an existing match
     if (existingMatchId) {
-      // Add player to existing match
-      setMatches(
-        matches.map((match) => {
+      setMatches((prevMatches) => {
+        return prevMatches.map((match) => {
           if (match.id === existingMatchId) {
+            // Check if player is already in this match
+            if (
+              match.team1?.userId === draggedParticipant.userId ||
+              match.team2?.userId === draggedParticipant.userId
+            ) {
+              return match;
+            }
+
+            // Add to empty team1 slot
             if (!match.team1) {
               return { ...match, team1: draggedParticipant };
-            } else if (!match.team2) {
+            }
+
+            // Add to empty team2 slot
+            if (!match.team2) {
               return { ...match, team2: draggedParticipant };
             }
           }
           return match;
-        })
-      );
-    } else if (!pendingMatch.participant1) {
-      // Create new pending match
+        });
+      });
+      return; // Important: exit here to prevent creating new match
+    }
+
+    // Only create new match if not dropping into existing one
+    if (!pendingMatch.participant1) {
       setPendingMatch({ participant1: draggedParticipant });
     } else if (
       !pendingMatch.participant2 &&
       draggedParticipant.userId !== pendingMatch.participant1.userId
     ) {
-      // Create new match
       const newMatch: Match = {
         id: uuidv4(),
         round: 1,
@@ -181,7 +196,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         team1: pendingMatch.participant1,
         team2: draggedParticipant,
       };
-      setMatches([...matches, newMatch]);
+      setMatches((prevMatches) => [...prevMatches, newMatch]);
       setPendingMatch({});
     }
   };
@@ -225,6 +240,18 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     acc[match.round].push(match);
     return acc;
   }, {} as { [key: number]: Match[] });
+
+  // Fix the spread operator type error by explicitly typing the style objects
+  const emptySlotStyle = {
+    border: "1px dashed",
+    borderColor: "primary.main",
+    m: 1,
+    borderRadius: 1,
+    backgroundColor: "rgba(147, 51, 234, 0.1)",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  } as const;
 
   return (
     <>
@@ -414,7 +441,10 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                               backgroundColor: "rgba(255, 255, 255, 0.1)",
                             },
                           }}
-                          onDragOver={handleDragOver}
+                          onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           onDrop={(e) => handleDrop(e, match.id)}
                         >
                           <Box
@@ -426,16 +456,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                               borderBottom:
                                 "1px solid rgba(255, 255, 255, 0.1)",
                               position: "relative",
-                              ...(!match.team1 && {
-                                border: "1px dashed",
-                                borderColor: "primary.main",
-                                m: 1,
-                                borderRadius: 1,
-                                backgroundColor: "rgba(147, 51, 234, 0.1)",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                              }),
+                              ...(!match.team1 ? emptySlotStyle : {}),
                             }}
                           >
                             {match.team1 ? (
@@ -513,16 +534,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                               p: 2,
                               height: "50%",
                               position: "relative",
-                              ...(!match.team2 && {
-                                border: "1px dashed",
-                                borderColor: "primary.main",
-                                m: 1,
-                                borderRadius: 1,
-                                backgroundColor: "rgba(147, 51, 234, 0.1)",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                              }),
+                              ...(!match.team2 ? emptySlotStyle : {}),
                             }}
                           >
                             {match.team2 ? (
@@ -734,7 +746,10 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                                   "0px 2px 1px -1px rgba(0,0,0,0.2), 0px 1px 1px 0px rgba(0,0,0,0.14), 0px 1px 3px 0px rgba(0,0,0,0.12)",
                               },
                             }}
-                            onDragOver={handleDragOver}
+                            onDragOver={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
                             onDrop={(e) => handleDrop(e, match.id)}
                           >
                             <Box
@@ -746,16 +761,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                                 borderBottom:
                                   "1px solid rgba(255, 255, 255, 0.1)",
                                 position: "relative",
-                                ...(!match.team1 && {
-                                  border: "1px dashed",
-                                  borderColor: "primary.main",
-                                  m: 1,
-                                  borderRadius: 1,
-                                  backgroundColor: "rgba(147, 51, 234, 0.1)",
-                                  display: "flex",
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                }),
+                                ...(!match.team1 ? emptySlotStyle : {}),
                               }}
                             >
                               {match.team1 ? (
@@ -834,16 +840,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                                 p: 2,
                                 height: "50%",
                                 position: "relative",
-                                ...(!match.team2 && {
-                                  border: "1px dashed",
-                                  borderColor: "primary.main",
-                                  m: 1,
-                                  borderRadius: 1,
-                                  backgroundColor: "rgba(147, 51, 234, 0.1)",
-                                  display: "flex",
-                                  justifyContent: "center",
-                                  alignItems: "center",
-                                }),
+                                ...(!match.team2 ? emptySlotStyle : {}),
                               }}
                             >
                               {match.team2 ? (
