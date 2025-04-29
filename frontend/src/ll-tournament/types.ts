@@ -43,6 +43,7 @@ export interface TournamentParticipant {
   username: string;
   status: ParticipantStatus;
   stats: ParticipantStats;
+  isGuest?: boolean;
 }
 
 export interface ParticipantStats {
@@ -84,4 +85,10 @@ export interface ChannelUserStats {
   customStats: {
     [key: string]: number | string;
   };
+}
+
+export interface GuestUser {
+  username: string;
+  email?: string;
+  phone?: string;
 }

@@ -425,10 +425,11 @@ const TournamentView: React.FC<TournamentViewProps> = ({
                 fontWeight: 600,
                 boxShadow: 6,
                 borderRadius: 3,
-                px: 3,
-                py: 1.5,
+                px: 4,
+                py: 2,
                 minWidth: 0,
                 minHeight: 0,
+                fontSize: "1.1rem",
                 "&:hover": {
                   background: "linear-gradient(45deg, #9333EA, #7928CA)",
                 },
