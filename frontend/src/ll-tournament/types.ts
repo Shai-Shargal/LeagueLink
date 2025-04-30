@@ -3,6 +3,18 @@ export interface TournamentStructure {
   participantsPerGroup: number;
   knockoutRounds: string[];
   seedingMethod: "ranking" | "random";
+  matches: TournamentMatch[];
+}
+
+export interface TournamentMatch {
+  id: string;
+  round: number;
+  position: number;
+  team1: TournamentParticipant;
+  team2: TournamentParticipant;
+  score1?: number;
+  score2?: number;
+  winner?: TournamentParticipant;
 }
 
 export interface Match {
@@ -14,6 +26,10 @@ export interface Match {
   score1?: number;
   score2?: number;
   winner?: TournamentParticipant;
+  position?: {
+    x: number;
+    y: number;
+  };
 }
 
 export interface Tournament {
@@ -36,12 +52,16 @@ export interface Tournament {
   createdBy: string;
   createdAt: string;
   status: TournamentStatus;
+  sportType: string;
 }
 
 export interface TournamentParticipant {
+  id: string;
   userId: string;
   username: string;
-  status: ParticipantStatus;
+  teamName?: string;
+  profilePicture?: string;
+  status?: ParticipantStatus;
   stats: ParticipantStats;
   isGuest?: boolean;
 }

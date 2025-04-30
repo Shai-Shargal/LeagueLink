@@ -79,13 +79,25 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
     if (!newTournament.name?.trim()) {
       newErrors.name = "Tournament name is required";
+    } else if (newTournament.name.trim().length < 3) {
+      newErrors.name = "Tournament name must be at least 3 characters";
     }
+
     if (!newTournament.location?.trim()) {
       newErrors.location = "Location is required";
     }
+
     if (!newTournament.date) {
       newErrors.date = "Date is required";
+    } else {
+      const selectedDate = new Date(newTournament.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        newErrors.date = "Date cannot be in the past";
+      }
     }
+
     if (!newTournament.time) {
       newErrors.time = "Time is required";
     }
@@ -96,20 +108,76 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
   const handleSubmit = () => {
     if (validateForm()) {
-      // Add guest users to the tournament participants and include matches
+      // Add guest users to the tournament participants
       const guestParticipants = guestUsers.map((guest) => ({
+        id: `guest_${guest.username}`,
         userId: `guest_${guest.username}`,
         username: guest.username,
-        status: "PENDING",
+        status: ParticipantStatus.PENDING,
         stats: {},
         isGuest: true,
+      }));
+
+      // Update tournament data
+      if (newTournament.name) {
+        onTournamentChange("name", newTournament.name.trim());
+      }
+      if (newTournament.location) {
+        onTournamentChange("location", newTournament.location.trim());
+      }
+
+      // Handle date and time
+      if (newTournament.date && newTournament.time) {
+        // Parse the date and time inputs
+        const [year, month, day] = newTournament.date.split("-").map(Number);
+        const [hours, minutes] = newTournament.time.split(":").map(Number);
+
+        // Create a new Date object (months are 0-based in JavaScript)
+        const date = new Date(year, month - 1, day, hours, minutes);
+
+        // Only update if we got a valid date
+        if (!isNaN(date.getTime())) {
+          onTournamentChange("date", newTournament.date);
+          onTournamentChange("time", newTournament.time);
+        }
+      }
+
+      // Handle matches
+      const formattedMatches = matches.map((match) => ({
+        id: match.id,
+        round: match.round || 1,
+        matchNumber: match.matchNumber || matches.indexOf(match) + 1,
+        team1: match.team1
+          ? {
+              userId: match.team1.userId,
+              username: match.team1.username,
+              isGuest: match.team1.isGuest || false,
+              status: match.team1.status || ParticipantStatus.PENDING,
+            }
+          : null,
+        team2: match.team2
+          ? {
+              userId: match.team2.userId,
+              username: match.team2.username,
+              isGuest: match.team2.isGuest || false,
+              status: match.team2.status || ParticipantStatus.PENDING,
+            }
+          : null,
+        position: match.position || {
+          x: (match.round - 1) * 220,
+          y: match.matchNumber * 100,
+        },
+        score1: 0,
+        score2: 0,
+        winner: null,
       }));
 
       onTournamentChange("participants", [
         ...(newTournament.participants || []),
         ...guestParticipants,
       ]);
-      onTournamentChange("matches", matches);
+      onTournamentChange("matches", formattedMatches);
+
       onSubmit();
     }
   };
@@ -153,6 +221,11 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     e.stopPropagation(); // Prevent event bubbling
     if (!draggedParticipant) return;
 
+    // Get drop position relative to the tournament area
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
     // If dropping into an existing match
     if (existingMatchId) {
       setMatches((prevMatches) => {
@@ -195,6 +268,10 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         matchNumber: matches.length + 1,
         team1: pendingMatch.participant1,
         team2: draggedParticipant,
+        position: {
+          x,
+          y,
+        },
       };
       setMatches((prevMatches) => [...prevMatches, newMatch]);
       setPendingMatch({});
@@ -275,8 +352,12 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         <DialogTitle
           sx={{
             textAlign: "center",
-            fontSize: 28,
-            fontWeight: 600,
+            "&.MuiDialogTitle-root": {
+              fontSize: "1rem",
+              padding: "8px 16px",
+              minHeight: "auto",
+            },
+            fontWeight: 500,
             position: "sticky",
             top: 0,
             zIndex: 2,
@@ -293,9 +374,12 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             display: "flex",
             flexDirection: "column",
             justifyContent: "flex-start",
-            p: 4,
+            p: 2,
             overflowY: "auto",
             background: (theme) => theme.palette.background.paper,
+            "&.MuiDialogContent-root": {
+              paddingTop: "16px",
+            },
           }}
         >
           {Object.keys(errors).length > 0 && (
@@ -367,7 +451,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "flex-start",
-                  border: "1px dashed rgba(255, 255, 255, 0.1)",
+                  border: "2px dashed rgba(147, 51, 234, 0.5)",
                   background: "#1a2234",
                   color: "text.secondary",
                   mr: 2,
@@ -375,6 +459,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                   overflowX: "auto",
                   p: 2,
                   position: "relative",
+                  borderRadius: 2,
                 }}
                 elevation={0}
                 onDragOver={handleDragOver}
@@ -385,10 +470,14 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                   color="rgba(255, 255, 255, 0.7)"
                   sx={{
                     position: "absolute",
-                    top: 16,
+                    top: "50%",
                     left: "50%",
-                    transform: "translateX(-50%)",
+                    transform: "translate(-50%, -50%)",
                     zIndex: 1,
+                    fontSize: "1.1rem",
+                    textAlign: "center",
+                    pointerEvents: "none",
+                    opacity: matches.length === 0 ? 1 : 0,
                   }}
                 >
                   {pendingMatch.participant1
@@ -403,6 +492,9 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                     p: 2,
                     minWidth: "fit-content",
                     mt: `${INITIAL_TOP_MARGIN}px`,
+                    position: "relative",
+                    width: "100%",
+                    minHeight: "100%",
                   }}
                 >
                   {/* First Round Column */}
@@ -412,6 +504,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                       flexDirection: "column",
                       gap: MATCH_VERTICAL_GAP,
                       alignItems: "flex-start",
+                      width: "100%",
                     }}
                   >
                     {/* Existing Matches */}
@@ -421,7 +514,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                         <Paper
                           key={match.id}
                           elevation={1}
-                          className="css-95vexv-MuiPaper-root"
                           sx={{
                             width: BASE_BOX_WIDTH,
                             height: BASE_BOX_HEIGHT,
@@ -431,6 +523,11 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                             borderRadius: 1,
                             position: "relative",
                             overflow: "hidden",
+                            transition: "all 0.2s ease",
+                            "&:hover": {
+                              transform: "scale(1.02)",
+                              boxShadow: "0 4px 20px rgba(0,0,0,0.2)",
+                            },
                             "&::after": {
                               content: '""',
                               position: "absolute",
@@ -438,7 +535,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                               top: "50%",
                               width: ROUND_HORIZONTAL_GAP,
                               height: 2,
-                              backgroundColor: "rgba(255, 255, 255, 0.1)",
+                              backgroundColor: "rgba(147, 51, 234, 0.3)",
                             },
                           }}
                           onDragOver={(e) => {
@@ -951,6 +1048,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                     draggable
                     onDragStart={() =>
                       handleDragStart({
+                        id: user.id,
                         userId: user.id,
                         username: user.username,
                         status: ParticipantStatus.PENDING,
@@ -1032,6 +1130,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                     draggable
                     onDragStart={() =>
                       handleDragStart({
+                        id: `guest_${guest.username}`,
                         userId: `guest_${guest.username}`,
                         username: guest.username,
                         status: ParticipantStatus.PENDING,

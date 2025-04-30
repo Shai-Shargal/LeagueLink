@@ -14,6 +14,8 @@ import {
   Stack,
   Paper,
   Avatar,
+  Grid,
+  IconButton,
 } from "@mui/material";
 import {
   EmojiEvents as TournamentIcon,
@@ -22,6 +24,8 @@ import {
   CalendarMonth as CalendarIcon,
   AccessTime as TimeIcon,
   LocationOn as LocationIcon,
+  Close as CloseIcon,
+  Person as PersonIcon,
 } from "@mui/icons-material";
 import {
   Tournament,
@@ -76,6 +80,13 @@ interface UserProfileData {
   favoriteSports: string[];
   profilePicture?: string;
 }
+
+// Constants for bracket layout
+const ROUND_HORIZONTAL_GAP = 100;
+const MATCH_VERTICAL_GAP = 40;
+const INITIAL_TOP_MARGIN = 20;
+const BASE_BOX_WIDTH = 200;
+const BASE_BOX_HEIGHT = 100;
 
 const TournamentView: React.FC<TournamentViewProps> = ({
   onBack,
@@ -167,6 +178,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     setIsCreating(true);
     try {
       const initialParticipants = channelUsers.map((user) => ({
+        id: user.id,
         userId: user.id,
         username: user.username,
         status: ParticipantStatus.PENDING,
@@ -177,29 +189,39 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         },
       }));
 
+      // Get current date and time as fallback
+      const now = new Date();
+      const currentDate = now.toISOString().split("T")[0];
+      const currentTime = now.toTimeString().split(" ")[0].slice(0, 5);
+
+      // Use provided date and time or fallback to current
+      const dateToUse = newTournament.date || currentDate;
+      const timeToUse = newTournament.time || currentTime;
+
+      // Create the tournament data
       const tournamentData = {
         name: newTournament.name,
-        date: newTournament.date,
-        time: newTournament.time,
+        date: dateToUse,
+        time: timeToUse,
         location: newTournament.location,
-        participants: initialParticipants,
-        status: TournamentStatus.UPCOMING,
-        statsConfig: newTournament.statsConfig,
+        participants: [
+          ...initialParticipants,
+          ...(newTournament.participants || []),
+        ],
+        matches: newTournament.matches || [],
       };
 
-      await tournamentService.createTournament(channelId, tournamentData);
+      const createdTournament = await tournamentService.createTournament(
+        channelId,
+        tournamentData
+      );
+
+      setTournaments((prev) => [...prev, createdTournament]);
+      setNewTournament({});
       setCreateDialogOpen(false);
-      setNewTournament({
-        name: "",
-        date: "",
-        time: "",
-        location: "",
-        statsConfig: defaultStatsConfig,
-      });
-      loadData();
+      setIsCreating(false);
     } catch (error) {
       console.error("Failed to create tournament:", error);
-    } finally {
       setIsCreating(false);
     }
   };
@@ -293,6 +315,8 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   };
 
   const handleTournamentClick = (tournament: Tournament) => {
+    console.log("Selected tournament:", tournament);
+    console.log("Tournament matches:", tournament.matches);
     setSelectedTournament(tournament);
     setTournamentDetailsOpen(true);
   };
@@ -321,12 +345,11 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   };
 
   const handleTournamentChange = (field: keyof Tournament, value: any) => {
-    if (selectedTournament) {
-      setSelectedTournament({
-        ...selectedTournament,
-        [field]: value,
-      });
-    }
+    console.log("Tournament change:", field, value); // Debug log
+    setNewTournament((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
 
   const handleUpdateMatch = async (match: any) => {
@@ -446,9 +469,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         onClose={handleCloseCreateDialog}
         onSubmit={handleCreateTournament}
         newTournament={newTournament}
-        onTournamentChange={(field: keyof Tournament, value: string) =>
-          setNewTournament({ ...newTournament, [field]: value })
-        }
+        onTournamentChange={handleTournamentChange}
         channelUsers={channelUsers}
         isCreating={isCreating}
       />
@@ -471,203 +492,299 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       <Dialog
         open={tournamentDetailsOpen}
         onClose={() => setTournamentDetailsOpen(false)}
-        maxWidth={false}
+        maxWidth="xl"
+        fullWidth
         PaperProps={{
           sx: {
-            width: 1200,
-            height: 600,
-            borderRadius: 3,
-            boxShadow: 8,
+            backgroundColor: "rgb(30, 41, 59)",
+            color: "white",
+            minHeight: "80vh",
+            maxHeight: "90vh",
             display: "flex",
             flexDirection: "column",
-            justifyContent: "center",
-            p: 0,
-            backgroundColor: "rgba(15, 23, 42, 0.95)",
-            color: "white",
           },
         }}
       >
         <DialogTitle
           sx={{
-            textAlign: "center",
-            fontSize: 28,
+            fontSize: 20,
             fontWeight: 600,
-            position: "sticky",
-            top: 0,
-            zIndex: 2,
-            background: "rgba(15, 23, 42, 0.95)",
-            borderBottom: 1,
-            borderColor: "divider",
+            textAlign: "center",
+            padding: "8px",
             color: "white",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            minHeight: "40px",
           }}
         >
-          Tournament Details
+          <Box sx={{ flex: 1 }}></Box>
+          <Typography variant="h6" sx={{ fontSize: "1.1rem" }}>
+            {selectedTournament?.name}
+          </Typography>
+          <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+            <IconButton
+              onClick={() => setTournamentDetailsOpen(false)}
+              sx={{ color: "white", padding: "4px" }}
+            >
+              <CloseIcon sx={{ fontSize: "1.2rem" }} />
+            </IconButton>
+          </Box>
         </DialogTitle>
         <DialogContent
           sx={{
-            flex: 1,
             display: "flex",
             flexDirection: "column",
-            justifyContent: "flex-start",
-            p: 4,
-            overflowY: "auto",
-            background: "rgba(15, 23, 42, 0.95)",
+            gap: 2,
+            p: 3,
+            pt: 2,
+            flex: 1,
+            overflow: "auto",
+            backgroundColor: "rgb(30, 41, 59)",
           }}
         >
           {selectedTournament && (
-            <Stack spacing={3} sx={{ width: "100%" }}>
-              <TextField
-                label="Tournament Name"
-                value={selectedTournament.name}
-                fullWidth
-                disabled
-                sx={{ mb: 1 }}
-                InputProps={{
-                  sx: { color: "white" },
+            <>
+              {/* Tournament Info */}
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  alignItems: "center",
+                  mb: 2,
+                  mt: 1,
+                  position: "sticky",
+                  top: 0,
+                  backgroundColor: "rgb(30, 41, 59)",
+                  zIndex: 1,
+                  py: 1,
                 }}
-                InputLabelProps={{
-                  sx: { color: "white" },
-                }}
-              />
-              <Box sx={{ display: "flex", gap: 2, width: "100%" }}>
+              >
                 <TextField
                   label="Location"
                   value={selectedTournament.location}
-                  fullWidth
                   disabled
-                  InputProps={{
-                    sx: { color: "white" },
-                  }}
-                  InputLabelProps={{
-                    sx: { color: "white" },
+                  sx={{
+                    width: "30%",
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "rgb(30, 41, 59)",
+                      "& fieldset": {
+                        borderColor: "rgba(255, 255, 255, 0.2)",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "rgba(255, 255, 255, 0.7)",
+                    },
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      WebkitTextFillColor: "rgba(255, 255, 255, 0.7)",
+                    },
                   }}
                 />
                 <TextField
                   label="Date"
-                  type="date"
                   value={selectedTournament.date}
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: { color: "white" },
-                  }}
-                  fullWidth
+                  type="date"
                   disabled
-                  InputProps={{
-                    sx: { color: "white" },
+                  sx={{
+                    width: "30%",
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "rgb(30, 41, 59)",
+                      "& fieldset": {
+                        borderColor: "rgba(255, 255, 255, 0.2)",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "rgba(255, 255, 255, 0.7)",
+                    },
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      WebkitTextFillColor: "rgba(255, 255, 255, 0.7)",
+                    },
                   }}
                 />
                 <TextField
                   label="Time"
-                  type="time"
                   value={selectedTournament.time}
-                  InputLabelProps={{
-                    shrink: true,
-                    sx: { color: "white" },
-                  }}
-                  fullWidth
+                  type="time"
                   disabled
-                  InputProps={{
-                    sx: { color: "white" },
+                  sx={{
+                    width: "30%",
+                    "& .MuiOutlinedInput-root": {
+                      backgroundColor: "rgb(30, 41, 59)",
+                      "& fieldset": {
+                        borderColor: "rgba(255, 255, 255, 0.2)",
+                      },
+                    },
+                    "& .MuiInputLabel-root": {
+                      color: "rgba(255, 255, 255, 0.7)",
+                    },
+                    "& .MuiInputBase-input.Mui-disabled": {
+                      WebkitTextFillColor: "rgba(255, 255, 255, 0.7)",
+                    },
                   }}
                 />
               </Box>
+
+              {/* Tournament Bracket */}
               <Box
                 sx={{
-                  display: "flex",
                   flex: 1,
-                  gap: 3,
-                  minHeight: 400,
+                  minHeight: 0,
+                  overflow: "auto",
+                  mt: 2,
+                  position: "relative",
+                  display: "flex",
+                  flexDirection: "column",
                 }}
               >
-                <Paper
+                <Typography
+                  variant="h6"
                   sx={{
-                    flex: 7,
-                    minWidth: 0,
-                    height: 400,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "flex-start",
-                    border: "2px dashed",
-                    borderColor: "divider",
-                    background: "transparent",
-                    color: "text.secondary",
-                    mr: 2,
-                    overflowY: "auto",
-                    p: 2,
+                    color: "white",
+                    mb: 2,
+                    position: "sticky",
+                    top: 0,
+                    backgroundColor: "rgb(30, 41, 59)",
+                    zIndex: 1,
+                    py: 1,
                   }}
-                  elevation={0}
                 >
-                  <Typography variant="h6" sx={{ color: "white", mb: 2 }}>
-                    Participants
-                  </Typography>
-                  {channelUsers.map((user) => {
-                    const participant = selectedTournament.participants.find(
-                      (p) => p.userId === user.id
-                    );
-                    return (
+                  Tournament Bracket
+                </Typography>
+
+                {/* Bracket Content */}
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: ROUND_HORIZONTAL_GAP,
+                    p: 2,
+                    overflowX: "auto",
+                    minHeight: 400,
+                    position: "relative",
+                    minWidth: "fit-content",
+                  }}
+                >
+                  {selectedTournament?.matches &&
+                  selectedTournament.matches.length > 0 ? (
+                    Object.entries(
+                      selectedTournament.matches.reduce((acc, match) => {
+                        if (!acc[match.round]) {
+                          acc[match.round] = [];
+                        }
+                        acc[match.round].push(match);
+                        return acc;
+                      }, {} as { [key: number]: typeof selectedTournament.matches })
+                    ).map(([round, roundMatches]) => (
                       <Box
-                        key={user.id}
+                        key={round}
                         sx={{
                           display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          width: "100%",
-                          p: 1,
-                          mb: 1,
-                          backgroundColor: "rgba(255, 255, 255, 0.05)",
-                          borderRadius: 1,
+                          flexDirection: "column",
+                          gap: MATCH_VERTICAL_GAP,
+                          alignItems: "flex-start",
+                          minWidth: BASE_BOX_WIDTH,
                         }}
                       >
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 2 }}
-                        >
-                          <Avatar
-                            src={user.profilePicture}
-                            alt={user.username}
-                            sx={{ width: 32, height: 32 }}
-                          />
-                          <Typography sx={{ color: "white" }}>
-                            {user.username}
-                          </Typography>
-                        </Box>
-                        <Chip
-                          label={
-                            participant?.status || ParticipantStatus.PENDING
-                          }
-                          size="small"
-                          color={
-                            participant?.status === ParticipantStatus.CONFIRMED
-                              ? "success"
-                              : participant?.status ===
-                                ParticipantStatus.DECLINED
-                              ? "error"
-                              : "default"
-                          }
-                        />
+                        {roundMatches.map((match) => (
+                          <Paper
+                            key={match.id}
+                            elevation={1}
+                            sx={{
+                              width: BASE_BOX_WIDTH,
+                              height: BASE_BOX_HEIGHT,
+                              display: "flex",
+                              flexDirection: "column",
+                              backgroundColor: "#242b3d",
+                              borderRadius: 1,
+                              position: "relative",
+                              overflow: "hidden",
+                              marginTop: match.position?.y
+                                ? `${match.position.y}px`
+                                : 0,
+                              "&::after": {
+                                content: '""',
+                                position: "absolute",
+                                right: -ROUND_HORIZONTAL_GAP,
+                                top: "50%",
+                                width: ROUND_HORIZONTAL_GAP,
+                                height: 2,
+                                backgroundColor: "rgba(255, 255, 255, 0.1)",
+                              },
+                            }}
+                          >
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                p: 2,
+                                height: "50%",
+                                borderBottom:
+                                  "1px solid rgba(255, 255, 255, 0.1)",
+                              }}
+                            >
+                              <Avatar
+                                src={match.team1?.profilePicture}
+                                sx={{ width: 32, height: 32, mr: 1 }}
+                              >
+                                {!match.team1?.profilePicture && <PersonIcon />}
+                              </Avatar>
+                              <Typography
+                                sx={{
+                                  flex: 1,
+                                  color: "rgba(255, 255, 255, 0.9)",
+                                  fontSize: "0.9rem",
+                                }}
+                              >
+                                {match.team1?.username || "TBD"}
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                p: 2,
+                                height: "50%",
+                              }}
+                            >
+                              <Avatar
+                                src={match.team2?.profilePicture}
+                                sx={{ width: 32, height: 32, mr: 1 }}
+                              >
+                                {!match.team2?.profilePicture && <PersonIcon />}
+                              </Avatar>
+                              <Typography
+                                sx={{
+                                  flex: 1,
+                                  color: "rgba(255, 255, 255, 0.9)",
+                                  fontSize: "0.9rem",
+                                }}
+                              >
+                                {match.team2?.username || "TBD"}
+                              </Typography>
+                            </Box>
+                          </Paper>
+                        ))}
                       </Box>
-                    );
-                  })}
-                </Paper>
+                    ))
+                  ) : (
+                    <Typography
+                      sx={{
+                        color: "rgba(255, 255, 255, 0.7)",
+                        position: "absolute",
+                        top: "50%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                      }}
+                    >
+                      No matches in this tournament
+                    </Typography>
+                  )}
+                </Box>
               </Box>
-            </Stack>
+            </>
           )}
         </DialogContent>
-        <DialogActions
-          sx={{
-            p: 3,
-            borderTop: 1,
-            borderColor: "divider",
-            background: "rgba(15, 23, 42, 0.95)",
-          }}
-        >
-          <Button
-            onClick={() => setTournamentDetailsOpen(false)}
-            sx={{ color: "white" }}
-          >
-            Close
-          </Button>
-        </DialogActions>
       </Dialog>
 
       <EditTournamentDialog
