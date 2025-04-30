@@ -33,7 +33,7 @@ import { v4 as uuidv4 } from "uuid";
 interface CreateTournamentDialogProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: (tournamentData: any) => void;
   newTournament: Partial<Tournament>;
   onTournamentChange: (field: keyof Tournament, value: any) => void;
   channelUsers: { id: string; username: string; profilePicture?: string }[];
@@ -106,79 +106,70 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      // Add guest users to the tournament participants
-      const guestParticipants = guestUsers.map((guest) => ({
-        id: `guest_${guest.username}`,
-        userId: `guest_${guest.username}`,
-        username: guest.username,
-        status: ParticipantStatus.PENDING,
-        stats: {},
-        isGuest: true,
-      }));
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
 
-      // Update tournament data
-      if (newTournament.name) {
-        onTournamentChange("name", newTournament.name.trim());
-      }
-      if (newTournament.location) {
-        onTournamentChange("location", newTournament.location.trim());
-      }
+    try {
+      // Format the date and time
+      const [year, month, day] = newTournament.date?.split("-") || [];
+      const [hours, minutes] = newTournament.time?.split(":") || [];
+      const formattedDate = new Date(
+        parseInt(year),
+        parseInt(month) - 1,
+        parseInt(day),
+        parseInt(hours),
+        parseInt(minutes)
+      );
 
-      // Handle date and time
-      if (newTournament.date && newTournament.time) {
-        // Parse the date and time inputs
-        const [year, month, day] = newTournament.date.split("-").map(Number);
-        const [hours, minutes] = newTournament.time.split(":").map(Number);
+      console.log("Original date:", newTournament.date);
+      console.log("Original time:", newTournament.time);
+      console.log("Formatted date:", formattedDate);
 
-        // Create a new Date object (months are 0-based in JavaScript)
-        const date = new Date(year, month - 1, day, hours, minutes);
-
-        // Only update if we got a valid date
-        if (!isNaN(date.getTime())) {
-          onTournamentChange("date", newTournament.date);
-          onTournamentChange("time", newTournament.time);
-        }
-      }
-
-      // Handle matches
+      // Format matches for submission
       const formattedMatches = matches.map((match) => ({
         id: match.id,
-        round: match.round || 1,
-        matchNumber: match.matchNumber || matches.indexOf(match) + 1,
-        team1: match.team1
-          ? {
-              userId: match.team1.userId,
-              username: match.team1.username,
-              isGuest: match.team1.isGuest || false,
-              status: match.team1.status || ParticipantStatus.PENDING,
-            }
-          : null,
-        team2: match.team2
-          ? {
-              userId: match.team2.userId,
-              username: match.team2.username,
-              isGuest: match.team2.isGuest || false,
-              status: match.team2.status || ParticipantStatus.PENDING,
-            }
-          : null,
-        position: match.position || {
-          x: (match.round - 1) * 220,
-          y: match.matchNumber * 100,
-        },
+        round: match.round,
+        matchNumber: match.matchNumber,
+        team1: match.team1 ? { userId: match.team1.userId } : null,
+        team2: match.team2 ? { userId: match.team2.userId } : null,
+        position: match.position,
         score1: 0,
         score2: 0,
         winner: null,
       }));
 
-      onTournamentChange("participants", [
-        ...(newTournament.participants || []),
-        ...guestParticipants,
-      ]);
-      onTournamentChange("matches", formattedMatches);
+      console.log("Original matches:", matches);
+      console.log("Formatted matches:", formattedMatches);
 
-      onSubmit();
+      const tournamentData = {
+        name: newTournament.name,
+        location: newTournament.location,
+        startDate: formattedDate.toISOString(),
+        format: "single elimination",
+        participants: [
+          ...(newTournament.participants || []),
+          ...guestUsers.map((guest) => ({
+            id: `guest_${guest.username}`,
+            userId: `guest_${guest.username}`,
+            username: guest.username,
+            status: ParticipantStatus.PENDING,
+            stats: {},
+            isGuest: true,
+          })),
+        ],
+        matches: formattedMatches,
+      };
+
+      console.log("Submitting tournament data:", tournamentData);
+
+      await onSubmit(tournamentData);
+      onClose();
+    } catch (error) {
+      console.error("Error creating tournament:", error);
+      setErrors({
+        name: "Failed to create tournament. Please try again.",
+      });
     }
   };
 
@@ -226,37 +217,53 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    console.log("Dropping participant:", draggedParticipant);
+    console.log("Drop position:", { x, y });
+    console.log("Existing match ID:", existingMatchId);
+
     // If dropping into an existing match
     if (existingMatchId) {
       setMatches((prevMatches) => {
-        return prevMatches.map((match) => {
+        const updatedMatches = prevMatches.map((match) => {
           if (match.id === existingMatchId) {
             // Check if player is already in this match
             if (
               match.team1?.userId === draggedParticipant.userId ||
               match.team2?.userId === draggedParticipant.userId
             ) {
+              console.log("Participant already in match:", match);
               return match;
             }
 
             // Add to empty team1 slot
             if (!match.team1) {
+              console.log("Adding to team1:", {
+                ...match,
+                team1: draggedParticipant,
+              });
               return { ...match, team1: draggedParticipant };
             }
 
             // Add to empty team2 slot
             if (!match.team2) {
+              console.log("Adding to team2:", {
+                ...match,
+                team2: draggedParticipant,
+              });
               return { ...match, team2: draggedParticipant };
             }
           }
           return match;
         });
+        console.log("Updated matches:", updatedMatches);
+        return updatedMatches;
       });
       return; // Important: exit here to prevent creating new match
     }
 
     // Only create new match if not dropping into existing one
     if (!pendingMatch.participant1) {
+      console.log("Setting pending match participant1:", draggedParticipant);
       setPendingMatch({ participant1: draggedParticipant });
     } else if (
       !pendingMatch.participant2 &&
@@ -273,7 +280,12 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
           y,
         },
       };
-      setMatches((prevMatches) => [...prevMatches, newMatch]);
+      console.log("Creating new match:", newMatch);
+      setMatches((prevMatches) => {
+        const updatedMatches = [...prevMatches, newMatch];
+        console.log("Updated matches array:", updatedMatches);
+        return updatedMatches;
+      });
       setPendingMatch({});
     }
   };
@@ -384,13 +396,13 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         >
           {Object.keys(errors).length > 0 && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              Please fill in all required fields
+              {errors.name}
             </Alert>
           )}
           <Stack spacing={3} sx={{ width: "100%" }}>
             <TextField
               label="Tournament Name"
-              value={newTournament.name}
+              value={newTournament.name || ""}
               onChange={(e) => onTournamentChange("name", e.target.value)}
               fullWidth
               disabled={isCreating}
@@ -402,7 +414,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             <Box sx={{ display: "flex", gap: 2, width: "100%" }}>
               <TextField
                 label="Location"
-                value={newTournament.location}
+                value={newTournament.location || ""}
                 onChange={(e) => onTournamentChange("location", e.target.value)}
                 fullWidth
                 disabled={isCreating}
@@ -413,7 +425,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               <TextField
                 label="Date"
                 type="date"
-                value={newTournament.date}
+                value={newTournament.date || ""}
                 onChange={(e) => onTournamentChange("date", e.target.value)}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
@@ -425,7 +437,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               <TextField
                 label="Time"
                 type="time"
-                value={newTournament.time}
+                value={newTournament.time || ""}
                 onChange={(e) => onTournamentChange("time", e.target.value)}
                 InputLabelProps={{ shrink: true }}
                 fullWidth

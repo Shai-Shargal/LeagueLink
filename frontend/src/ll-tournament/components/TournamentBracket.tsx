@@ -28,22 +28,11 @@ import {
   SportsRugby as RugbyIcon,
   SportsBaseball as BaseballIcon,
 } from "@mui/icons-material";
-import { Tournament, TournamentParticipant } from "../types";
-
-interface Match {
-  id: string;
-  round: string;
-  matchNumber: number;
-  team1?: TournamentParticipant;
-  team2?: TournamentParticipant;
-  score1?: number;
-  score2?: number;
-  winner?: TournamentParticipant;
-}
+import { Tournament, TournamentParticipant, Match } from "../types";
 
 interface TournamentBracketProps {
   tournament: Tournament;
-  onUpdateMatch: (match: Match) => void;
+  onUpdateTournament: (tournament: Tournament) => void;
 }
 
 const SPORTS_ICONS: { [key: string]: React.ReactNode } = {
@@ -61,13 +50,13 @@ const SPORTS_ICONS: { [key: string]: React.ReactNode } = {
 
 const TournamentBracket: React.FC<TournamentBracketProps> = ({
   tournament,
-  onUpdateMatch,
+  onUpdateTournament,
 }) => {
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [matches, setMatches] = useState<Match[]>([]);
   const [sportType, setSportType] = useState<string>("soccer");
 
-  const generateBracket = () => {
+  const generateBracket = async () => {
     if (!tournament.structure) {
       console.error("Tournament structure is not defined");
       return;
@@ -88,7 +77,7 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
         for (let j = i + 1; j < groupParticipants.length; j++) {
           newMatches.push({
             id: `group-${group}-${matchNumber}`,
-            round: `Group ${String.fromCharCode(65 + group)}`,
+            round: group + 1,
             matchNumber: matchNumber++,
             team1: groupParticipants[i],
             team2: groupParticipants[j],
@@ -98,28 +87,41 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
     }
 
     // Generate knockout stage matches
-    if (tournament.structure.knockoutRounds) {
+    if (tournament.structure?.knockoutRounds) {
       const knockoutRounds = tournament.structure.knockoutRounds;
-      knockoutRounds.forEach((round) => {
+      knockoutRounds.forEach((round, index) => {
         const numMatches = Math.pow(2, knockoutRounds.indexOf(round));
         for (let i = 0; i < numMatches; i++) {
           newMatches.push({
             id: `${round.toLowerCase()}-${matchNumber}`,
-            round,
+            round: (tournament.structure?.groups || 0) + index + 1,
             matchNumber: matchNumber++,
+            team1: null as any, // We'll set these later when teams are determined
+            team2: null as any,
           });
         }
       });
     }
 
     setMatches(newMatches);
+
+    // Save the generated matches to the backend
+    try {
+      const updatedTournament = {
+        ...tournament,
+        matches: newMatches,
+      };
+      await onUpdateTournament(updatedTournament);
+    } catch (error) {
+      console.error("Failed to save generated matches:", error);
+    }
   };
 
   const handleMatchClick = (match: Match) => {
     setSelectedMatch(match);
   };
 
-  const handleUpdateScore = (
+  const handleUpdateScore = async (
     match: Match,
     team: "team1" | "team2",
     score: number
@@ -132,8 +134,21 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
           ? match[team]
           : match[team === "team1" ? "team2" : "team1"],
     };
-    setMatches(matches.map((m) => (m.id === match.id ? updatedMatch : m)));
-    onUpdateMatch(updatedMatch);
+    const updatedMatches = matches.map((m) =>
+      m.id === match.id ? updatedMatch : m
+    );
+    setMatches(updatedMatches);
+
+    // Update the tournament in the backend
+    try {
+      const updatedTournament = {
+        ...tournament,
+        matches: updatedMatches,
+      };
+      await onUpdateTournament(updatedTournament);
+    } catch (error) {
+      console.error("Failed to update match:", error);
+    }
   };
 
   const renderMatch = (match: Match) => (
@@ -151,7 +166,10 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
       onClick={() => handleMatchClick(match)}
     >
       <Typography variant="subtitle2" sx={{ color: "white", mb: 1 }}>
-        {match.round} - Match {match.matchNumber}
+        {match.round <= (tournament.structure?.groups || 0)
+          ? `Group ${String.fromCharCode(64 + match.round)}`
+          : `Round ${match.round - (tournament.structure?.groups || 0)}`}{" "}
+        - Match {match.matchNumber}
       </Typography>
       <Box
         sx={{
@@ -259,7 +277,9 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
             Group Stage
           </Typography>
           {matches
-            .filter((match) => match.round.startsWith("Group"))
+            .filter(
+              (match) => match.round <= (tournament.structure?.groups || 0)
+            )
             .map(renderMatch)}
         </Box>
 
@@ -269,7 +289,9 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
             Knockout Stage
           </Typography>
           {matches
-            .filter((match) => !match.round.startsWith("Group"))
+            .filter(
+              (match) => match.round > (tournament.structure?.groups || 0)
+            )
             .map(renderMatch)}
         </Box>
       </Box>
@@ -290,7 +312,12 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
           {selectedMatch && (
             <Box sx={{ mt: 2 }}>
               <Typography variant="h6" sx={{ color: "white", mb: 2 }}>
-                {selectedMatch.round} - Match {selectedMatch.matchNumber}
+                {selectedMatch.round <= (tournament.structure?.groups || 0)
+                  ? `Group ${String.fromCharCode(64 + selectedMatch.round)}`
+                  : `Round ${
+                      selectedMatch.round - (tournament.structure?.groups || 0)
+                    }`}{" "}
+                - Match {selectedMatch.matchNumber}
               </Typography>
               <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
                 <Box sx={{ flex: 1 }}>

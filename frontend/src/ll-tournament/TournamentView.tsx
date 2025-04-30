@@ -174,7 +174,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     }
   };
 
-  const handleCreateTournament = async () => {
+  const handleCreateTournament = async (tournamentData: any) => {
     setIsCreating(true);
     try {
       const initialParticipants = channelUsers.map((user) => ({
@@ -189,31 +189,30 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         },
       }));
 
-      // Get current date and time as fallback
-      const now = new Date();
-      const currentDate = now.toISOString().split("T")[0];
-      const currentTime = now.toTimeString().split(" ")[0].slice(0, 5);
+      console.log("Creating tournament with data:", tournamentData);
 
-      // Use provided date and time or fallback to current
-      const dateToUse = newTournament.date || currentDate;
-      const timeToUse = newTournament.time || currentTime;
-
-      // Create the tournament data
-      const tournamentData = {
-        name: newTournament.name,
-        date: dateToUse,
-        time: timeToUse,
-        location: newTournament.location,
+      const backendData = {
+        name: tournamentData.name,
+        description: "Tournament created through the LeagueLink platform",
+        channelId: channelId,
+        format: "single_elimination",
+        startDate: tournamentData.startDate,
+        location: tournamentData.location,
+        maxParticipants: 32,
+        rules: "Standard tournament rules apply",
+        prizes: "Trophies for winners",
         participants: [
           ...initialParticipants,
-          ...(newTournament.participants || []),
+          ...(tournamentData.participants || []),
         ],
-        matches: newTournament.matches || [],
+        matches: tournamentData.matches || [],
       };
+
+      console.log("Sending tournament data to backend:", backendData);
 
       const createdTournament = await tournamentService.createTournament(
         channelId,
-        tournamentData
+        backendData
       );
 
       setTournaments((prev) => [...prev, createdTournament]);
@@ -520,7 +519,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
           }}
         >
           <Box sx={{ flex: 1 }}></Box>
-          <Typography variant="h6" sx={{ fontSize: "1.1rem" }}>
+          <Typography variant="h2" sx={{ fontSize: "1.1rem" }}>
             {selectedTournament?.name}
           </Typography>
           <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
