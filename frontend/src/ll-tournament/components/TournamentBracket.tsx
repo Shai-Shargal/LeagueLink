@@ -13,8 +13,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  IconButton,
-  Tooltip,
 } from "@mui/material";
 import {
   SportsSoccer as SoccerIcon,
@@ -28,11 +26,12 @@ import {
   SportsRugby as RugbyIcon,
   SportsBaseball as BaseballIcon,
 } from "@mui/icons-material";
-import { Tournament, TournamentParticipant, Match } from "../types";
+import { Tournament, Match } from "../types";
 
 interface TournamentBracketProps {
   tournament: Tournament;
   onUpdateTournament: (tournament: Tournament) => void;
+  onUpdateMatch?: (match: Match) => Promise<void>;
 }
 
 const SPORTS_ICONS: { [key: string]: React.ReactNode } = {

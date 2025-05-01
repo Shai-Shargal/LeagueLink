@@ -1,16 +1,6 @@
-import {
-  Tournament,
-  ChannelUserStats,
-  TournamentStatsConfig,
-  ParticipantStatus,
-} from "../types";
+import { Tournament, TournamentStatsConfig, ParticipantStatus } from "../types";
 
 const API_BASE_URL = "http://localhost:5000/api/tournaments";
-
-const defaultStatsConfig: TournamentStatsConfig = {
-  enabledStats: ["wins", "losses", "winRate"],
-  customStats: [],
-};
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem("token");

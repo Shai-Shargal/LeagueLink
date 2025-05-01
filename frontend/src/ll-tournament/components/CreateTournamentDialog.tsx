@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -14,7 +14,6 @@ import {
   Avatar,
   Alert,
   IconButton,
-  Chip,
   Divider,
   Tooltip,
 } from "@mui/material";
@@ -28,13 +27,10 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonIcon from "@mui/icons-material/Person";
-import CloseIcon from "@mui/icons-material/Close";
-import SaveIcon from "@mui/icons-material/Save";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
-import ViewWeekIcon from "@mui/icons-material/ViewWeek";
 import { v4 as uuidv4 } from "uuid";
 
 interface CreateTournamentDialogProps {
@@ -77,7 +73,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   const [draggedParticipant, setDraggedParticipant] =
     useState<DraggableParticipant | null>(null);
   const [draggedMatch, setDraggedMatch] = useState<Match | null>(null);
-  const [pendingMatch, setPendingMatch] = useState<{
+  const [] = useState<{
     participant1?: DraggableParticipant;
     participant2?: DraggableParticipant;
   }>({});
@@ -242,10 +238,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     );
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
   const removeMatch = (matchId: string) => {
     setMatches(matches.filter((match) => match.id !== matchId));
   };
@@ -271,45 +263,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     }, []);
 
     setMatches(updatedMatches);
-  };
-
-  // Group matches by round
-  const matchesByRound = matches.reduce((acc, match) => {
-    if (!acc[match.round]) {
-      acc[match.round] = [];
-    }
-    acc[match.round].push(match);
-    return acc;
-  }, {} as { [key: number]: Match[] });
-
-  // Fix the spread operator type error by explicitly typing the style objects
-  const emptySlotStyle = {
-    border: "1px dashed",
-    borderColor: "primary.main",
-    m: 1,
-    borderRadius: 1,
-    backgroundColor: "rgba(147, 51, 234, 0.1)",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  } as const;
-
-  const addEmptyMatch = (round: number) => {
-    const newMatch: Match = {
-      id: uuidv4(),
-      round: round,
-      matchNumber: matches.filter((m) => m.round === round).length + 1,
-      team1: null as any,
-      team2: null as any,
-      position: {
-        x: (round - 1) * ROUND_HORIZONTAL_GAP,
-        y:
-          matches.filter((m) => m.round === round).length *
-            (BASE_BOX_HEIGHT + MATCH_VERTICAL_GAP) +
-          INITIAL_TOP_MARGIN,
-      },
-    };
-    setMatches([...matches, newMatch]);
   };
 
   const handleMatchDragStart = (match: Match) => {

@@ -10,20 +10,14 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Chip,
-  Stack,
   Paper,
   Avatar,
-  Grid,
   IconButton,
 } from "@mui/material";
 import {
   EmojiEvents as TournamentIcon,
   BarChart as StatsIcon,
   Add as AddIcon,
-  CalendarMonth as CalendarIcon,
-  AccessTime as TimeIcon,
-  LocationOn as LocationIcon,
   Close as CloseIcon,
   Person as PersonIcon,
 } from "@mui/icons-material";
@@ -32,7 +26,6 @@ import {
   ChannelUserStats,
   TournamentStatsConfig,
   ParticipantStatus,
-  TournamentStatus,
 } from "./types";
 import { tournamentService } from "./services/tournamentService";
 import { authService } from "../services/api";
@@ -56,24 +49,6 @@ const defaultStatsConfig: TournamentStatsConfig = {
   customStats: [],
 };
 
-const SPORTS_EMOJIS: { emoji: string; name: string }[] = [
-  { emoji: "⚽", name: "Soccer" },
-  { emoji: "🏀", name: "Basketball" },
-  { emoji: "🏈", name: "Football" },
-  { emoji: "⚾", name: "Baseball" },
-  { emoji: "🏒", name: "Hockey" },
-  { emoji: "🎾", name: "Tennis" },
-  { emoji: "🏐", name: "Volleyball" },
-  { emoji: "🏓", name: "Table Tennis" },
-  { emoji: "🏸", name: "Badminton" },
-  { emoji: "🏊", name: "Swimming" },
-  { emoji: "🏃", name: "Running" },
-  { emoji: "🚴", name: "Cycling" },
-  { emoji: "🏋️", name: "Weightlifting" },
-  { emoji: "🥊", name: "Boxing" },
-  { emoji: "🥋", name: "Martial Arts" },
-];
-
 interface UserProfileData {
   username: string;
   bio: string;
@@ -84,12 +59,10 @@ interface UserProfileData {
 // Constants for bracket layout
 const ROUND_HORIZONTAL_GAP = 100;
 const MATCH_VERTICAL_GAP = 40;
-const INITIAL_TOP_MARGIN = 20;
 const BASE_BOX_WIDTH = 200;
 const BASE_BOX_HEIGHT = 100;
 
 const TournamentView: React.FC<TournamentViewProps> = ({
-  onBack,
   channelId,
   isAdmin,
   channelUsers,
@@ -117,13 +90,11 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentDetailsOpen, setTournamentDetailsOpen] = useState(false);
-  const [editingTournament, setEditingTournament] = useState<
-    Partial<Tournament>
-  >({});
+  const [] = useState<Partial<Tournament>>({});
   const [tournamentToDelete, setTournamentToDelete] =
     useState<Tournament | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [showBracket, setShowBracket] = useState(false);
+  const [showBracket] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -212,7 +183,10 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
       const createdTournament = await tournamentService.createTournament(
         channelId,
-        backendData
+        {
+          ...backendData,
+          format: "single_elimination" as const,
+        }
       );
 
       setTournaments((prev) => [...prev, createdTournament]);
@@ -320,22 +294,15 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     setTournamentDetailsOpen(true);
   };
 
-  const handleUpdateTournament = async () => {
-    if (!selectedTournament) return;
-
+  const handleUpdateTournament = async (updatedTournament: Tournament) => {
     try {
       setIsUpdating(true);
       await tournamentService.updateTournament(
-        selectedTournament.id,
-        selectedTournament
+        updatedTournament.id,
+        updatedTournament
       );
-      setEditDialogOpen(false);
-      setSelectedTournament(null);
-      // Refresh tournaments list
-      const updatedTournaments = await tournamentService.getChannelTournaments(
-        channelId
-      );
-      setTournaments(updatedTournaments);
+      setSelectedTournament(updatedTournament);
+      await loadData();
     } catch (error) {
       console.error("Error updating tournament:", error);
     } finally {
@@ -394,7 +361,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         <Box sx={{ borderBottom: 1, borderColor: "divider", mb: 3 }}>
           <Tabs
             value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
+            onChange={(_event, newValue) => setActiveTab(newValue)}
             textColor="secondary"
             indicatorColor="secondary"
           >
@@ -831,6 +798,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       {showBracket && selectedTournament && (
         <TournamentBracket
           tournament={selectedTournament}
+          onUpdateTournament={handleUpdateTournament}
           onUpdateMatch={handleUpdateMatch}
         />
       )}
