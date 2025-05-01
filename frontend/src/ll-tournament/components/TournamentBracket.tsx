@@ -117,6 +117,46 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
     }
   };
 
+  const generateEmptyBracket = async () => {
+    const newMatches: Match[] = [];
+    let matchNumber = 1;
+
+    // Calculate number of rounds needed based on number of participants
+    const numParticipants = tournament.participants.length;
+    const numRounds = Math.ceil(Math.log2(numParticipants));
+
+    // Generate matches for each round
+    for (let round = 1; round <= numRounds; round++) {
+      const matchesInRound = Math.pow(2, numRounds - round);
+      for (let i = 0; i < matchesInRound; i++) {
+        newMatches.push({
+          id: `round-${round}-${matchNumber}`,
+          round: round,
+          matchNumber: matchNumber++,
+          team1: null as any,
+          team2: null as any,
+          position: {
+            x: (round - 1) * 220,
+            y: i * 100,
+          },
+        });
+      }
+    }
+
+    setMatches(newMatches);
+
+    // Save the generated matches to the backend
+    try {
+      const updatedTournament = {
+        ...tournament,
+        matches: newMatches,
+      };
+      await onUpdateTournament(updatedTournament);
+    } catch (error) {
+      console.error("Failed to save generated matches:", error);
+    }
+  };
+
   const handleMatchClick = (match: Match) => {
     setSelectedMatch(match);
   };
@@ -158,7 +198,14 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
         p: 2,
         mb: 2,
         cursor: "pointer",
-        backgroundColor: "rgba(255, 255, 255, 0.05)",
+        backgroundColor:
+          match.team1 === null && match.team2 === null
+            ? "rgba(255, 255, 255, 0.02)"
+            : "rgba(255, 255, 255, 0.05)",
+        border:
+          match.team1 === null && match.team2 === null
+            ? "1px dashed rgba(255, 255, 255, 0.2)"
+            : "none",
         "&:hover": {
           backgroundColor: "rgba(255, 255, 255, 0.1)",
         },
@@ -166,10 +213,7 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
       onClick={() => handleMatchClick(match)}
     >
       <Typography variant="subtitle2" sx={{ color: "white", mb: 1 }}>
-        {match.round <= (tournament.structure?.groups || 0)
-          ? `Group ${String.fromCharCode(64 + match.round)}`
-          : `Round ${match.round - (tournament.structure?.groups || 0)}`}{" "}
-        - Match {match.matchNumber}
+        Round {match.round} - Match {match.matchNumber}
       </Typography>
       <Box
         sx={{
@@ -222,6 +266,19 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
           Winner: {match.winner.username}
         </Typography>
       )}
+      {match.team1 === null && match.team2 === null && (
+        <Typography
+          variant="caption"
+          sx={{
+            color: "text.secondary",
+            mt: 1,
+            display: "block",
+            fontStyle: "italic",
+          }}
+        >
+          Waiting for previous round results
+        </Typography>
+      )}
     </Paper>
   );
 
@@ -239,6 +296,14 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
           {tournament.name}
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={generateEmptyBracket}
+            sx={{ mr: 2 }}
+          >
+            Generate Empty Bracket
+          </Button>
           <FormControl sx={{ minWidth: 120 }}>
             <InputLabel sx={{ color: "white" }}>Sport Type</InputLabel>
             <Select
@@ -248,10 +313,8 @@ const TournamentBracket: React.FC<TournamentBracketProps> = ({
             >
               {Object.keys(SPORTS_ICONS).map((sport) => (
                 <MenuItem key={sport} value={sport}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    {SPORTS_ICONS[sport]}
-                    {sport.charAt(0).toUpperCase() + sport.slice(1)}
-                  </Box>
+                  {SPORTS_ICONS[sport]}{" "}
+                  {sport.charAt(0).toUpperCase() + sport.slice(1)}
                 </MenuItem>
               ))}
             </Select>
