@@ -8,7 +8,6 @@ import {
   ListItemAvatar,
   ListItemText,
   Divider,
-  Paper,
   TextField,
   InputAdornment,
   IconButton,
@@ -18,7 +17,6 @@ import {
   Send as SendIcon,
   EmojiEvents as TournamentIcon,
   BarChart as StatsIcon,
-  PhotoCamera,
   Add as AddIcon,
 } from "@mui/icons-material";
 import { authService } from "../services/api";

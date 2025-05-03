@@ -10,7 +10,6 @@ import SignIn from "./ll-dashboard/SignIn";
 import Register from "./ll-dashboard/Register";
 import Dashboard from "./ll-dashboard/Dashboard";
 import ProfileEditor from "./ll-dashboard/ProfileEditor";
-import { authService } from "./services/api";
 import "./App.css";
 
 // Protected Route component
