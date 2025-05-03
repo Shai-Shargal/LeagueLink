@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
   Box,
-  Typography,
   Button,
   TextField,
   Dialog,
@@ -27,10 +26,7 @@ import {
   Edit as EditIcon,
 } from "@mui/icons-material";
 import { authService } from "../services/api";
-import ChannelView from "./ChannelView";
 import { useSearchParams } from "react-router-dom";
-
-const DRAWER_WIDTH = 240;
 
 interface Channel {
   _id: string;
@@ -415,15 +411,6 @@ const Channels: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  // Add a handler for description changes
-  const handleDescriptionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("Description changed:", e.target.value);
-    setEditChannelData({
-      ...editChannelData,
-      description: e.target.value,
-    });
   };
 
   const handleDeleteChannel = async () => {
