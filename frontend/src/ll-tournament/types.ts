@@ -21,15 +21,15 @@ export interface Match {
   id: string;
   round: number;
   matchNumber: number;
-  team1: TournamentParticipant;
-  team2: TournamentParticipant;
-  score1?: number;
-  score2?: number;
-  winner?: TournamentParticipant;
-  position?: {
+  position: {
     x: number;
     y: number;
   };
+  team1: DraggableParticipant | null;
+  team2: DraggableParticipant | null;
+  score1?: number;
+  score2?: number;
+  winner?: DraggableParticipant | null;
 }
 
 export interface Tournament {
@@ -88,12 +88,6 @@ export enum TournamentStatus {
   CANCELLED = "CANCELLED",
 }
 
-export enum ParticipantStatus {
-  PENDING = "PENDING",
-  CONFIRMED = "CONFIRMED",
-  DECLINED = "DECLINED",
-}
-
 export interface ChannelUserStats {
   userId: string;
   username: string;
@@ -108,7 +102,41 @@ export interface ChannelUserStats {
 }
 
 export interface GuestUser {
+  id: string;
   username: string;
-  email?: string;
-  phone?: string;
+  profilePicture?: string;
+}
+
+export interface DraggableParticipant {
+  id: string;
+  userId: string;
+  username: string;
+  profilePicture?: string;
+  status: ParticipantStatus;
+  isGuest?: boolean;
+}
+
+export interface CreateTournamentDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (tournament: any) => void;
+  newTournament: any;
+  onTournamentChange: (updates: any) => void;
+  channelUsers: DraggableParticipant[];
+  isCreating: boolean;
+}
+
+export const DIALOG_WIDTH = 1200;
+export const DIALOG_HEIGHT = 800;
+export const SIDEBAR_WIDTH = 300;
+export const GAMES_AREA_HEIGHT = 600;
+export const BASE_BOX_WIDTH = 200;
+export const BASE_BOX_HEIGHT = 100;
+export const ROUND_HORIZONTAL_GAP = 250;
+export const INITIAL_TOP_MARGIN = 50;
+
+export enum ParticipantStatus {
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  DECLINED = "DECLINED",
 }
