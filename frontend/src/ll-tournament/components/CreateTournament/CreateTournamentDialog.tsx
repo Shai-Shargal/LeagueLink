@@ -5,7 +5,6 @@ import {
   DialogContent,
   DialogActions,
   Button,
-  TextField,
   Stack,
   Typography,
   Box,
@@ -15,14 +14,12 @@ import {
   IconButton,
   Divider,
   Tooltip,
-  Avatar,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import UndoIcon from "@mui/icons-material/Undo";
 import RedoIcon from "@mui/icons-material/Redo";
 import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
-import PersonIcon from "@mui/icons-material/Person";
 import { v4 as uuidv4 } from "uuid";
 
 import {

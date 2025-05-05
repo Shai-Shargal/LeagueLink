@@ -24,7 +24,6 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
   onDragEnd,
   onDrop,
   onDelete,
-  onUpdate,
 }) => {
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("text/plain", match.id);
