@@ -19,7 +19,7 @@ import { tournamentService } from "./services/tournamentService";
 import { authService } from "../services/api";
 import TournamentTabs from "./components/TournamentTabs";
 import TournamentDetailsDialog from "./components/TournamentDetailsDialog";
-import CreateTournamentDialog from "./components/CreateTournamentDialog";
+import CreateTournamentDialog from "./components/CreateTournament/CreateTournamentDialog";
 import StatsConfigDialog from "./components/StatsConfigDialog";
 import UserProfileDialog from "./components/UserProfileDialog";
 import EditTournamentDialog from "./components/EditTournamentDialog";

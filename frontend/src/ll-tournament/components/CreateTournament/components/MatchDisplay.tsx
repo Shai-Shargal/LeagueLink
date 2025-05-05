@@ -16,7 +16,7 @@ export const MatchDisplay: React.FC<MatchDisplayProps> = ({
   onRemovePlayer,
 }) => {
   const isGuest = (participant: DraggableParticipant) => {
-    return participant.isGuest === true;
+    return participant.status === "guest";
   };
 
   const renderTeam = (team: DraggableParticipant | null, isTeam1: boolean) => {

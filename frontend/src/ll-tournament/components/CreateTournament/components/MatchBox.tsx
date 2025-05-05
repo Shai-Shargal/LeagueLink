@@ -1,14 +1,21 @@
 import React from "react";
-import { Box, Paper, Avatar, Tooltip, IconButton } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Avatar,
+  Tooltip,
+  IconButton,
+  useTheme,
+} from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { Match, DraggableParticipant } from "../../../types";
 
 interface MatchBoxProps {
   match: Match;
   channelUsers: DraggableParticipant[];
+  draggedParticipant: DraggableParticipant | null;
   onDragStart: (e: React.DragEvent) => void;
   onDragEnd: () => void;
-  onDrop: (e: React.DragEvent) => void;
   onDelete: () => void;
   onUpdate: (updates: Partial<Match>) => void;
 }
@@ -19,36 +26,86 @@ const MATCH_BOX_HEIGHT = 100;
 export const MatchBox: React.FC<MatchBoxProps> = ({
   match,
   channelUsers,
+  draggedParticipant,
   onDragStart,
   onDragEnd,
-  onDrop,
   onDelete,
+  onUpdate,
 }) => {
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData("text/plain", match.id);
-    onDragStart(e);
-  };
+  const theme = useTheme();
 
-  const handleDrop = (e: React.DragEvent) => {
+  // Debug: log match on each render
+  React.useEffect(() => {
+    console.log("MatchBox render:", match);
+  }, [match]);
+
+  const handleDrop = (e: React.DragEvent, isTeam1: boolean) => {
     e.preventDefault();
-    onDrop(e);
+    if (draggedParticipant) {
+      onUpdate({ [isTeam1 ? "team1" : "team2"]: draggedParticipant });
+    }
   };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
 
-  const renderParticipant = (participant: DraggableParticipant | null) => {
-    if (!participant) return null;
-    const user = channelUsers.find((u) => u.id === participant.id);
+  const renderParticipantBox = (
+    participant: DraggableParticipant | null,
+    color: string,
+    isTeam1: boolean
+  ) => {
     return (
-      <Tooltip key={participant.id} title={user?.username || "Unknown"}>
-        <Avatar
-          src={user?.profilePicture}
-          alt={user?.username || "Unknown"}
-          sx={{ width: 24, height: 24 }}
-        />
-      </Tooltip>
+      <Box
+        onDrop={(e) => {
+          e.preventDefault();
+          console.log("Drop event:", { isTeam1, draggedParticipant });
+          if (draggedParticipant) {
+            onUpdate({ [isTeam1 ? "team1" : "team2"]: draggedParticipant });
+            console.log(
+              "onUpdate called for",
+              isTeam1 ? "team1" : "team2",
+              draggedParticipant
+            );
+          } else {
+            console.log("No draggedParticipant");
+          }
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: participant ? "flex-start" : "center",
+          backgroundColor: color,
+          color: "#fff",
+          borderRadius: 2,
+          p: 1,
+          minHeight: 36,
+          minWidth: 0,
+          width: "100%",
+          mb: 1,
+          fontWeight: 600,
+          fontSize: 16,
+          opacity: participant ? 1 : 0.7,
+          border: participant ? undefined : "2px dashed #fff",
+          cursor: "pointer",
+        }}
+      >
+        {participant ? (
+          <>
+            <Avatar
+              src={participant.profilePicture}
+              alt={participant.username}
+              sx={{ width: 28, height: 28, mr: 1, border: "2px solid #fff" }}
+            />
+            <Box sx={{ fontWeight: 600, fontSize: 16 }}>
+              {participant.username}
+            </Box>
+          </>
+        ) : (
+          "TBD"
+        )}
+      </Box>
     );
   };
 
@@ -65,39 +122,23 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         backgroundColor: "background.paper",
         border: "1px solid",
         borderColor: "divider",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
         "&:hover": {
           borderColor: "primary.main",
         },
       }}
       draggable
-      onDragStart={handleDragStart}
+      onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      onDrop={handleDrop}
-      onDragOver={handleDragOver}
     >
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          position: "relative",
-        }}
-      >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {renderParticipant(match.team1)}
-        </Box>
-        <Box sx={{ mx: 1 }}>vs</Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {renderParticipant(match.team2)}
-        </Box>
-        <IconButton
-          size="small"
-          onClick={onDelete}
-          sx={{ position: "absolute", top: -20, right: -20 }}
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
+      {renderParticipantBox(match.team1, theme.palette.primary.main, true)}
+      <Box sx={{ textAlign: "center", fontWeight: 700, color: "#fff", mb: 1 }}>
+        VS
       </Box>
+      {renderParticipantBox(match.team2, theme.palette.secondary.main, false)}
     </Paper>
   );
 };

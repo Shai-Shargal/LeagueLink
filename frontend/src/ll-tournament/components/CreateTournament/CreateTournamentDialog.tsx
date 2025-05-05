@@ -538,16 +538,25 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                 )}
 
                 {matches.map((match) => (
-                  <MatchBox
+                  <Box
+                    draggable
                     key={match.id}
-                    match={match}
-                    channelUsers={channelUsers}
-                    onDragStart={handleMatchDragStart}
-                    onDragEnd={handleMatchDragEnd}
-                    onDrop={(e) => handleDrop(e, match.id, true)}
-                    onDelete={() => removeMatch(match.id)}
-                    onUpdate={(updates) => updateMatch(match.id, updates)}
-                  />
+                    onDragStart={() =>
+                      handleDragStart(match.team1 || match.team2)
+                    }
+                    onDragEnd={handleDragEnd}
+                  >
+                    <MatchBox
+                      match={match}
+                      channelUsers={channelUsers}
+                      onDragStart={handleMatchDragStart}
+                      onDragEnd={handleMatchDragEnd}
+                      onDrop={(e) => handleDrop(e, match.id, true)}
+                      onDelete={() => removeMatch(match.id)}
+                      onUpdate={(updates) => updateMatch(match.id, updates)}
+                      draggedParticipant={draggedParticipant}
+                    />
+                  </Box>
                 ))}
               </Paper>
 

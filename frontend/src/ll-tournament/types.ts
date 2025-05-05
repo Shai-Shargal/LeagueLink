@@ -113,7 +113,6 @@ export interface DraggableParticipant {
   username: string;
   profilePicture?: string;
   status: ParticipantStatus;
-  isGuest?: boolean;
 }
 
 export interface CreateTournamentDialogProps {
