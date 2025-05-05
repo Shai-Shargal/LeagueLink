@@ -215,29 +215,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setDraggedMatch(null);
   };
 
-  const handleDrop = (
-    e: React.DragEvent,
-    matchId: string,
-    isTeam1: boolean
-  ) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!draggedParticipant) return;
-
-    const updatedMatches = matches.map((match) => {
-      if (match.id === matchId) {
-        return {
-          ...match,
-          team1: isTeam1 ? draggedParticipant : match.team1,
-          team2: !isTeam1 ? draggedParticipant : match.team2,
-        } as Match;
-      }
-      return match;
-    });
-
-    setMatches(updatedMatches);
-  };
-
   const handleMatchDrop = (e: React.DragEvent) => {
     e.preventDefault();
     if (!draggedMatch) return;
@@ -551,7 +528,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                       channelUsers={channelUsers}
                       onDragStart={handleMatchDragStart}
                       onDragEnd={handleMatchDragEnd}
-                      onDrop={(e) => handleDrop(e, match.id, true)}
                       onDelete={() => removeMatch(match.id)}
                       onUpdate={(updates) => updateMatch(match.id, updates)}
                       draggedParticipant={draggedParticipant}

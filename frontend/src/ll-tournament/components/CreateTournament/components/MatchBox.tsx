@@ -1,13 +1,6 @@
 import React from "react";
-import {
-  Box,
-  Paper,
-  Avatar,
-  Tooltip,
-  IconButton,
-  useTheme,
-} from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { Box, Paper, Avatar, useTheme } from "@mui/material";
+
 import { Match, DraggableParticipant } from "../../../types";
 
 interface MatchBoxProps {
@@ -25,11 +18,9 @@ const MATCH_BOX_HEIGHT = 100;
 
 export const MatchBox: React.FC<MatchBoxProps> = ({
   match,
-  channelUsers,
   draggedParticipant,
   onDragStart,
   onDragEnd,
-  onDelete,
   onUpdate,
 }) => {
   const theme = useTheme();
@@ -38,17 +29,6 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
   React.useEffect(() => {
     console.log("MatchBox render:", match);
   }, [match]);
-
-  const handleDrop = (e: React.DragEvent, isTeam1: boolean) => {
-    e.preventDefault();
-    if (draggedParticipant) {
-      onUpdate({ [isTeam1 ? "team1" : "team2"]: draggedParticipant });
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
 
   const renderParticipantBox = (
     participant: DraggableParticipant | null,
@@ -109,12 +89,25 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
     );
   };
 
+  // Clamp the position so the box stays inside the parent, respecting parent padding
+  const parentWidth = 1200; // DIALOG_WIDTH or parent Paper width
+  const parentHeight = 600; // GAMES_AREA_HEIGHT or parent Paper height
+  const parentPadding = 16 * 2; // p:2 in MUI = 16px, both sides = 32px
+  let left = match.position.x - MATCH_BOX_WIDTH / 2;
+  let top = match.position.y - MATCH_BOX_HEIGHT / 2;
+  if (left < parentPadding / 2) left = parentPadding / 2;
+  if (top < parentPadding / 2) top = parentPadding / 2;
+  if (left + MATCH_BOX_WIDTH > parentWidth - parentPadding / 2)
+    left = parentWidth - parentPadding / 2 - MATCH_BOX_WIDTH;
+  if (top + MATCH_BOX_HEIGHT > parentHeight - parentPadding / 2)
+    top = parentHeight - parentPadding / 2 - MATCH_BOX_HEIGHT;
+
   return (
     <Paper
       sx={{
         position: "absolute",
-        left: match.position.x - MATCH_BOX_WIDTH / 2,
-        top: match.position.y - MATCH_BOX_HEIGHT / 2,
+        left,
+        top,
         width: MATCH_BOX_WIDTH,
         height: MATCH_BOX_HEIGHT,
         p: 2,
@@ -131,7 +124,7 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         },
       }}
       draggable
-      onDragStart={onDragStart}
+      onDragStart={() => onDragStart(match.team1 || match.team2)}
       onDragEnd={onDragEnd}
     >
       {renderParticipantBox(match.team1, theme.palette.primary.main, true)}
