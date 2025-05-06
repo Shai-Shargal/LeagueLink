@@ -1,5 +1,8 @@
-import React, { useEffect, useState, useMemo, useRef } from "react";
 import {
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
   Box,
   Typography,
   Avatar,
@@ -12,46 +15,22 @@ import {
   InputAdornment,
   IconButton,
   Button,
-} from "@mui/material";
-import {
-  Send as SendIcon,
-  EmojiEvents as TournamentIcon,
-  BarChart as StatsIcon,
-  Add as AddIcon,
-} from "@mui/icons-material";
-import { authService } from "../services/api";
-import TournamentView from "../ll-tournament/TournamentView";
-import {
+  SendIcon,
+  TournamentIcon,
+  StatsIcon,
+  AddIcon,
+  authService,
+  TournamentView,
   sendMessage,
   subscribeToChannelMessages,
-  Message,
-} from "../services/chat.service";
-import { uploadChannelImage } from "../services/channel.service";
-
-interface Member {
-  _id: string;
-  username: string;
-  profilePicture: string;
-}
-
-interface Channel {
-  _id: string;
-  name: string;
-  description: string;
-  image: string;
-  members: Member[];
-  admins: Member[];
-  owner: Member;
-}
-
-interface ApiResponse {
-  success: boolean;
-  data: Channel;
-}
-
-interface ChannelViewProps {
-  channelId: string;
-}
+  uploadChannelImage,
+} from "./ChannelViewExport";
+import type { Message } from "./ChannelViewExport";
+import type {
+  Channel,
+  ApiResponse,
+  ChannelViewProps,
+} from "./types/ChannelView";
 
 const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [channel, setChannel] = useState<Channel | null>(null);
@@ -60,7 +39,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [showTournament, setShowTournament] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [setUploadingImage] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

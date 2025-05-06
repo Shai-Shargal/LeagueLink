@@ -14,33 +14,12 @@ import {
   EditIcon,
   authService,
   useSearchParams,
-} from "./ChannelsImports";
-import ChannelList from "./ChannelList";
-import CreateChannelDialog from "./CreateChannelDialog";
-import JoinChannelDialog from "./JoinChannelDialog";
-import EditChannelDialog from "./EditChannelDialog";
-
-interface Channel {
-  _id: string;
-  name: string;
-  description: string;
-  image: string;
-  members: Array<{
-    _id: string;
-    username: string;
-    profilePicture: string;
-  }>;
-  admins: Array<{
-    _id: string;
-    username: string;
-    profilePicture: string;
-  }>;
-  owner: {
-    _id: string;
-    username: string;
-    profilePicture: string;
-  };
-}
+  Channel,
+  ChannelList,
+  CreateChannelDialog,
+  JoinChannelDialog,
+  EditChannelDialog,
+} from "./ChannelsExport";
 
 interface ChannelsResponse {
   data: Channel[];
