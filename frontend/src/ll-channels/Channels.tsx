@@ -2,26 +2,15 @@ import React, { useState, useEffect } from "react";
 import {
   Box,
   Button,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  List,
-  ListItem,
   ListItemIcon,
   ListItemText,
-  IconButton,
-  Tooltip,
   Divider,
   Snackbar,
   Menu,
   MenuItem,
-  SvgIcon,
 } from "@mui/material";
 import {
   Add as AddIcon,
-  Settings as SettingsIcon,
   Delete as DeleteIcon,
   Edit as EditIcon,
 } from "@mui/icons-material";
@@ -57,119 +46,6 @@ interface Channel {
 interface ChannelsResponse {
   data: Channel[];
 }
-
-// Custom Crown Icon component
-const CrownIcon = React.forwardRef<SVGSVGElement, any>((props, ref) => (
-  <SvgIcon {...props} ref={ref} viewBox="0 0 511.993 511.993">
-    <g>
-      <polygon
-        style={{ fill: "#C680E3" }}
-        points="70.521,313.224 70.521,391.149 256,411.879 441.479,391.149 441.479,313.224 256,292.495"
-      />
-      <circle style={{ fill: "#b61616" }} cx="139.621" cy="352.19" r="13.594" />
-      <polygon
-        style={{ opacity: 0.1 }}
-        points="131.47,391.149 131.47,313.224 286.474,295.901 256,292.495 70.521,313.224 70.521,391.149 256,411.879 286.474,408.473"
-      />
-      <g>
-        <circle
-          style={{ fill: "#b61616" }}
-          cx="255.996"
-          cy="352.19"
-          r="13.594"
-        />
-        <circle
-          style={{ fill: "#b61616" }}
-          cx="372.384"
-          cy="352.19"
-          r="13.594"
-        />
-      </g>
-      <path
-        style={{ fill: "#C680E3" }}
-        d="M441.479,292.495l50.693-150.076l-10.654-11.414c0,0-131.556,159.811-215.767-15.981h-19.504 c-84.209,175.792-215.767,15.981-215.767,15.981l-10.654,11.414l50.693,150.076H441.479z"
-      />
-      <g style={{ opacity: 0.1 }}>
-        <path d="M30.483,131.004l-10.654,11.416l50.693,150.076h60.949l-36.928-109.32C57.337,163.622,30.483,131.004,30.483,131.004z" />
-      </g>
-      <g>
-        <circle
-          style={{ fill: "#9244a2" }}
-          cx="255.996"
-          cy="106.225"
-          r="26.842"
-        />
-        <circle
-          style={{ fill: "#9244a2" }}
-          cx="26.842"
-          cy="137.382"
-          r="26.842"
-        />
-        <circle
-          style={{ fill: "#9244a2" }}
-          cx="485.151"
-          cy="137.382"
-          r="26.842"
-        />
-      </g>
-      <ellipse
-        style={{ fill: "#b61616" }}
-        cx="255.996"
-        cy="208.717"
-        rx="22.568"
-        ry="33.217"
-      />
-      <path
-        style={{ fill: "#9244a2" }}
-        d="M441.479,271.766H70.521c-11.449,0-20.73,9.281-20.73,20.73l0,0c0,11.449,9.281,20.73,20.73,20.73 h370.958c11.449,0,20.73-9.281,20.73-20.73l0,0C462.209,281.046,452.927,271.766,441.479,271.766z"
-      />
-      <path
-        style={{ opacity: 0.1 }}
-        d="M110.74,292.495L110.74,292.495c0-11.449,9.281-20.73,20.73-20.73H70.521 c-11.449,0-20.73,9.281-20.73,20.73l0,0c0,11.449,9.281,20.73,20.73,20.73h60.949C120.021,313.224,110.74,303.944,110.74,292.495z"
-      />
-      <path
-        style={{ fill: "#9244a2" }}
-        d="M441.479,391.149H70.521c-11.449,0-20.73,9.281-20.73,20.73l0,0c0,11.449,9.281,20.73,20.73,20.73 h370.958c11.449,0,20.73-9.281,20.73-20.73l0,0C462.209,400.431,452.927,391.149,441.479,391.149z"
-      />
-      <path
-        style={{ opacity: 0.1 }}
-        d="M110.74,411.879L110.74,411.879c0-11.449,9.281-20.73,20.73-20.73H70.521 c-11.449,0-20.73,9.281-20.73,20.73l0,0c0,11.449,9.281,20.73,20.73,20.73h60.949C120.021,432.609,110.74,423.328,110.74,411.879z"
-      />
-    </g>
-  </SvgIcon>
-));
-
-// Custom Football Icon component
-const FootballIcon = (props: any) => (
-  <SvgIcon {...props} viewBox="0 0 48 48">
-    <g
-      stroke="none"
-      strokeWidth="1"
-      fill="none"
-      fillRule="evenodd"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="48" height="48" fill="white" fillOpacity="0.01" />
-      <g
-        transform="translate(4.000000, 4.000000)"
-        stroke="#C680E3"
-        strokeWidth="4"
-      >
-        <circle cx="20" cy="20" r="20" />
-        <g transform="translate(2.000000, 2.000000)">
-          <g transform="translate(0.000000, 0.500000)">
-            <polyline points="24.0930233 -8.8817842e-16 18.0697674 4.35897436 18.0697674 8.71794872 25.8139535 14.8205128 30.1162791 13.0769231 32.6976744 6.1025641" />
-            <polyline points="12.0465116 -8.8817842e-16 18.0697674 4.35897436 18.0697674 8.71794872 10.3255814 14.8205128 6.02325581 13.0769231 3.44186047 6.1025641" />
-            <polyline points="1.0658141e-14 15.6923077 6.02325581 13.0769231 10.3255814 14.8205128 12.9069767 24.4102564 10.3255814 27.8974359 2.58139535 27.8974359" />
-            <polyline points="10.3255814 34 10.3255814 27.8974359 12.9069767 24.4102564 23.2325581 24.4102564 25.8139535 27.8974359 25.8139535 34" />
-            <polyline points="33.5581395 27.8974359 25.8139535 27.8974359 23.2325581 24.4102564 25.8139535 14.8205128 30.1162791 13.0769231 37 16.5641026" />
-          </g>
-        </g>
-      </g>
-    </g>
-  </SvgIcon>
-);
 
 const Channels: React.FC = () => {
   const [channels, setChannels] = useState<Channel[]>([]);

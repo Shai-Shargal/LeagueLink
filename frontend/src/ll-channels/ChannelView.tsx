@@ -60,7 +60,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [showTournament, setShowTournament] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
+  const [setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
