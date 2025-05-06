@@ -1,21 +1,20 @@
-import React, { useState, useEffect } from "react";
 import {
+  useEffect,
+  useState,
   Box,
-  Button,
-  ListItemIcon,
   ListItemText,
   Divider,
+  Button,
+  ListItemIcon,
   Snackbar,
   Menu,
   MenuItem,
-} from "@mui/material";
-import {
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  Edit as EditIcon,
-} from "@mui/icons-material";
-import { authService } from "../services/api";
-import { useSearchParams } from "react-router-dom";
+  AddIcon,
+  DeleteIcon,
+  EditIcon,
+  authService,
+  useSearchParams,
+} from "./ChannelsImports";
 import ChannelList from "./ChannelList";
 import CreateChannelDialog from "./CreateChannelDialog";
 import JoinChannelDialog from "./JoinChannelDialog";

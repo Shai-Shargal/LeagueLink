@@ -122,7 +122,6 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   ) => {
     const file = event.target.files?.[0];
     if (!file || !channelId) return;
-
     try {
       setUploadingImage(true);
       const imageUrl = await uploadChannelImage(channelId, file);
