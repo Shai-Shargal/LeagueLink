@@ -27,6 +27,10 @@ import {
 } from "@mui/icons-material";
 import { authService } from "../services/api";
 import { useSearchParams } from "react-router-dom";
+import ChannelList from "./ChannelList";
+import CreateChannelDialog from "./CreateChannelDialog";
+import JoinChannelDialog from "./JoinChannelDialog";
+import EditChannelDialog from "./EditChannelDialog";
 
 interface Channel {
   _id: string;
@@ -175,21 +179,6 @@ const Channels: React.FC = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState<Channel | null>(null);
-  const [newChannel, setNewChannel] = useState({
-    name: "",
-    description: "",
-    passcode: "",
-    image: "",
-  });
-  const [joinChannel, setJoinChannel] = useState({
-    channelName: "",
-    passcode: "",
-  });
-  const [formErrors, setFormErrors] = useState({
-    name: "",
-    description: "",
-    passcode: "",
-  });
   const [searchParams, setSearchParams] = useSearchParams();
   const [settingsAnchorEl, setSettingsAnchorEl] = useState<null | HTMLElement>(
     null
@@ -197,9 +186,6 @@ const Channels: React.FC = () => {
   const [selectedChannelForSettings, setSelectedChannelForSettings] =
     useState<Channel | null>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [editChannelData, setEditChannelData] = useState({
-    description: "",
-  });
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -241,51 +227,19 @@ const Channels: React.FC = () => {
     }
   };
 
-  const validateForm = () => {
-    const errors = {
-      name: "",
-      description: "",
-      passcode: "",
-    };
-    let isValid = true;
-
-    if (!newChannel.name || newChannel.name.length < 3) {
-      errors.name = "Channel name must be at least 3 characters long";
-      isValid = false;
-    }
-
-    if (!newChannel.description || newChannel.description.length < 10) {
-      errors.description = "Description must be at least 10 characters long";
-      isValid = false;
-    }
-
-    if (!newChannel.passcode || newChannel.passcode.length < 6) {
-      errors.passcode = "Passcode must be at least 6 characters long";
-      isValid = false;
-    }
-
-    setFormErrors(errors);
-    return isValid;
-  };
-
-  const handleCreateChannel = async () => {
-    if (!validateForm()) {
-      return;
-    }
-
+  const handleCreateChannel = async (channelData: {
+    name: string;
+    description: string;
+    passcode: string;
+    image: string;
+  }) => {
     try {
       setLoading(true);
       setError("");
       setSuccess("");
 
-      await authService.createChannel(newChannel);
+      await authService.createChannel(channelData);
       setOpenCreate(false);
-      setNewChannel({
-        name: "",
-        description: "",
-        passcode: "",
-        image: "",
-      });
       setSuccess("Channel created successfully!");
       fetchChannels();
     } catch (error: any) {
@@ -295,13 +249,16 @@ const Channels: React.FC = () => {
     }
   };
 
-  const handleJoinChannel = async () => {
+  const handleJoinChannel = async (channelData: {
+    channelName: string;
+    passcode: string;
+  }) => {
     try {
       setLoading(true);
       setError("");
       setSuccess("");
 
-      await authService.joinChannel(joinChannel);
+      await authService.joinChannel(channelData);
       setOpenJoin(false);
       setSuccess("Successfully joined the channel!");
       fetchChannels();
@@ -355,9 +312,6 @@ const Channels: React.FC = () => {
         "Opening edit dialog with description:",
         selectedChannelForSettings.description
       );
-      setEditChannelData({
-        description: selectedChannelForSettings.description,
-      });
       setOpenEditDialog(true);
       setSettingsAnchorEl(null);
     }
@@ -366,22 +320,13 @@ const Channels: React.FC = () => {
   const handleCloseEditDialog = () => {
     setOpenEditDialog(false);
     setSelectedChannelForSettings(null);
-    setEditChannelData({ description: "" });
     setError("");
   };
 
-  const handleEditChannel = async () => {
+  const handleEditChannel = async (description: string) => {
     try {
       if (!selectedChannelForSettings) {
         console.error("No channel selected for editing");
-        return;
-      }
-
-      if (
-        !editChannelData.description ||
-        editChannelData.description.length < 10
-      ) {
-        setError("Description must be at least 10 characters long");
         return;
       }
 
@@ -390,18 +335,18 @@ const Channels: React.FC = () => {
 
       console.log("Updating channel:", {
         channelId: selectedChannelForSettings._id,
-        newDescription: editChannelData.description,
+        newDescription: description,
       });
 
       const response = await authService.updateChannel(
         selectedChannelForSettings._id,
-        editChannelData
+        { description }
       );
 
       console.log("Update response:", response);
       setSuccess("Channel updated successfully!");
       setOpenEditDialog(false);
-      await fetchChannels(); // Refresh the channels list
+      await fetchChannels();
     } catch (error: any) {
       console.error("Error updating channel:", error);
       if (error.response) {
@@ -432,7 +377,6 @@ const Channels: React.FC = () => {
       setSuccess("Channel deleted successfully!");
       handleSettingsClose();
       fetchChannels();
-      // Clear the channel from URL if it was selected
       if (searchParams.get("channel") === selectedChannelForSettings._id) {
         setSearchParams({});
       }
@@ -471,121 +415,14 @@ const Channels: React.FC = () => {
         position: "relative",
       }}
     >
-      {/* Channels List */}
-      <List
-        sx={{
-          flex: 1,
-          overflowY: "auto",
-          pt: 0,
-          height: "calc(100% - 64px)", // Leave space for create/join buttons
-          "&::-webkit-scrollbar": {
-            width: "4px",
-          },
-          "&::-webkit-scrollbar-track": {
-            background: "rgba(15, 23, 42, 0.3)",
-          },
-          "&::-webkit-scrollbar-thumb": {
-            background: "rgba(198, 128, 227, 0.3)",
-            borderRadius: "2px",
-          },
-          "&::-webkit-scrollbar-thumb:hover": {
-            background: "rgba(198, 128, 227, 0.5)",
-          },
-        }}
-      >
-        <ListItem
-          sx={{
-            px: 2,
-            py: 1,
-            color: "#dcddde",
-            fontSize: "12px",
-            fontWeight: "bold",
-          }}
-        >
-          CHANNELS
-        </ListItem>
-        {channels.map((channel) => (
-          <ListItem
-            key={channel._id}
-            component="div"
-            onClick={() => handleChannelClick(channel)}
-            sx={{
-              px: 2,
-              py: 0.5,
-              color: selectedChannel?._id === channel._id ? "#fff" : "#8e9297",
-              cursor: "pointer",
-              backgroundColor:
-                selectedChannel?._id === channel._id
-                  ? "rgba(79, 84, 92, 0.6)"
-                  : "transparent",
-              "&:hover": {
-                backgroundColor:
-                  selectedChannel?._id === channel._id
-                    ? "rgba(79, 84, 92, 0.6)"
-                    : "rgba(79, 84, 92, 0.4)",
-                color: "#dcddde",
-                "& .channel-settings": {
-                  opacity: 1,
-                },
-              },
-            }}
-          >
-            <ListItemIcon sx={{ minWidth: 32, color: "inherit" }}>
-              {(() => {
-                return (
-                  <Tooltip
-                    title={
-                      channel.owner?._id === currentUserId
-                        ? "You own this channel"
-                        : "Channel member"
-                    }
-                  >
-                    {channel.owner?._id === currentUserId ? (
-                      <CrownIcon
-                        sx={{
-                          fontSize: "20px",
-                          transform: "scale(1.2)",
-                          opacity: 1,
-                        }}
-                      />
-                    ) : (
-                      <FootballIcon
-                        sx={{
-                          fontSize: "20px",
-                          transform: "scale(1.2)",
-                          opacity: 0.7,
-                        }}
-                      />
-                    )}
-                  </Tooltip>
-                );
-              })()}
-            </ListItemIcon>
-            <ListItemText
-              primary={channel.name}
-              sx={{
-                "& .MuiListItemText-primary": {
-                  fontSize: "14px",
-                },
-              }}
-            />
-            <IconButton
-              size="small"
-              className="channel-settings"
-              onClick={(e) => handleSettingsClick(e, channel)}
-              sx={{
-                color: "inherit",
-                opacity: 0,
-                transition: "opacity 0.2s",
-              }}
-            >
-              <SettingsIcon fontSize="small" />
-            </IconButton>
-          </ListItem>
-        ))}
-      </List>
+      <ChannelList
+        channels={channels}
+        selectedChannel={selectedChannel}
+        currentUserId={currentUserId}
+        onChannelClick={handleChannelClick}
+        onSettingsClick={handleSettingsClick}
+      />
 
-      {/* Create/Join Channel Buttons */}
       <Box
         sx={{
           p: 2,
@@ -629,166 +466,28 @@ const Channels: React.FC = () => {
         </Box>
       </Box>
 
-      {/* Create Channel Dialog */}
-      <Dialog
+      <CreateChannelDialog
         open={openCreate}
-        onClose={() => {
-          setOpenCreate(false);
-          setFormErrors({
-            name: "",
-            description: "",
-            passcode: "",
-          });
-          setNewChannel({
-            name: "",
-            description: "",
-            passcode: "",
-            image: "",
-          });
-        }}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Create New Channel</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
-            <TextField
-              label="Channel Name"
-              value={newChannel.name}
-              onChange={(e) =>
-                setNewChannel({ ...newChannel, name: e.target.value })
-              }
-              error={!!formErrors.name}
-              helperText={formErrors.name || "Must be at least 3 characters"}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Description"
-              value={newChannel.description}
-              onChange={(e) =>
-                setNewChannel({ ...newChannel, description: e.target.value })
-              }
-              error={!!formErrors.description}
-              helperText={
-                formErrors.description || "Must be at least 10 characters"
-              }
-              multiline
-              rows={3}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Passcode"
-              value={newChannel.passcode}
-              onChange={(e) =>
-                setNewChannel({ ...newChannel, passcode: e.target.value })
-              }
-              error={!!formErrors.passcode}
-              helperText={
-                formErrors.passcode || "Must be at least 6 characters"
-              }
-              fullWidth
-              required
-              type="password"
-            />
-            <TextField
-              label="Image URL (optional)"
-              value={newChannel.image}
-              onChange={(e) =>
-                setNewChannel({ ...newChannel, image: e.target.value })
-              }
-              fullWidth
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={() => {
-              setOpenCreate(false);
-              setFormErrors({
-                name: "",
-                description: "",
-                passcode: "",
-              });
-              setNewChannel({
-                name: "",
-                description: "",
-                passcode: "",
-                image: "",
-              });
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleCreateChannel}
-            disabled={loading}
-            variant="contained"
-            sx={{
-              background: "linear-gradient(45deg, #C680E3, #9333EA)",
-              "&:hover": {
-                background: "linear-gradient(45deg, #9333EA, #7928CA)",
-              },
-            }}
-          >
-            {loading ? "Creating..." : "Create Channel"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onClose={() => setOpenCreate(false)}
+        onSubmit={handleCreateChannel}
+        loading={loading}
+      />
 
-      {/* Join Channel Dialog */}
-      <Dialog
+      <JoinChannelDialog
         open={openJoin}
         onClose={() => setOpenJoin(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle>Join Channel</DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 2 }}>
-            <TextField
-              label="Channel Name"
-              value={joinChannel.channelName}
-              onChange={(e) =>
-                setJoinChannel({
-                  ...joinChannel,
-                  channelName: e.target.value,
-                })
-              }
-              fullWidth
-              required
-            />
-            <TextField
-              label="Passcode"
-              value={joinChannel.passcode}
-              onChange={(e) =>
-                setJoinChannel({ ...joinChannel, passcode: e.target.value })
-              }
-              fullWidth
-              required
-            />
-          </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenJoin(false)}>Cancel</Button>
-          <Button
-            onClick={handleJoinChannel}
-            disabled={loading}
-            variant="contained"
-            sx={{
-              background: "linear-gradient(45deg, #C680E3, #9333EA)",
-              "&:hover": {
-                background: "linear-gradient(45deg, #9333EA, #7928CA)",
-              },
-            }}
-          >
-            {loading ? "Joining..." : "Join Channel"}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onSubmit={handleJoinChannel}
+        loading={loading}
+      />
 
-      {/* Replace Alert components with Snackbar */}
+      <EditChannelDialog
+        open={openEditDialog}
+        onClose={handleCloseEditDialog}
+        onSubmit={handleEditChannel}
+        initialDescription={selectedChannelForSettings?.description || ""}
+        loading={loading}
+      />
+
       <Snackbar
         open={!!error}
         autoHideDuration={6000}
@@ -866,90 +565,6 @@ const Channels: React.FC = () => {
           </MenuItem>
         )}
       </Menu>
-
-      {/* Edit Channel Dialog */}
-      <Dialog
-        open={openEditDialog}
-        onClose={handleCloseEditDialog}
-        maxWidth="sm"
-        fullWidth
-        PaperProps={{
-          sx: {
-            backgroundColor: "rgba(15, 23, 42, 0.95)",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(198, 128, 227, 0.2)",
-          },
-        }}
-      >
-        <DialogTitle sx={{ color: "#fff" }}>
-          Edit Channel Description
-        </DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Description"
-            type="text"
-            fullWidth
-            multiline
-            rows={4}
-            value={editChannelData.description}
-            onChange={(e) =>
-              setEditChannelData({
-                ...editChannelData,
-                description: e.target.value,
-              })
-            }
-            sx={{
-              mt: 2,
-              "& .MuiOutlinedInput-root": {
-                color: "#fff",
-                "& fieldset": {
-                  borderColor: "rgba(198, 128, 227, 0.4)",
-                },
-                "&:hover fieldset": {
-                  borderColor: "rgba(198, 128, 227, 0.6)",
-                },
-                "&.Mui-focused fieldset": {
-                  borderColor: "#C680E3",
-                },
-              },
-              "& .MuiInputLabel-root": {
-                color: "rgba(198, 128, 227, 0.7)",
-                "&.Mui-focused": {
-                  color: "#C680E3",
-                },
-              },
-            }}
-          />
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button
-            onClick={handleCloseEditDialog}
-            sx={{
-              color: "#C680E3",
-              "&:hover": {
-                backgroundColor: "rgba(198, 128, 227, 0.1)",
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleEditChannel}
-            variant="contained"
-            disabled={loading}
-            sx={{
-              backgroundColor: "#C680E3",
-              "&:hover": {
-                backgroundColor: "#9333EA",
-              },
-            }}
-          >
-            {loading ? "Saving..." : "Save Changes"}
-          </Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 };
