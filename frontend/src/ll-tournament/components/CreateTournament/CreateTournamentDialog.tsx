@@ -342,7 +342,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             alignItems: "center",
           }}
         >
-          <Typography variant="h6">Create New Tournament</Typography>
+          <Typography variant="subtitle1">Create New Tournament</Typography>
           <Paper
             sx={{
               display: "flex",
@@ -367,7 +367,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                     color: "primary.main",
                     "&:hover": {
                       borderColor: "primary.dark",
-                      backgroundColor: "rgba(241, 3, 3, 0.08)",
+                      backgroundColor: "rgba(240, 6, 201, 0.08)",
                     },
                   }}
                 >
@@ -417,24 +417,28 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               <Tooltip title="Auto-arrange Matches">
-                <IconButton
-                  size="small"
-                  onClick={autoArrangeMatches}
-                  disabled={matches.length === 0}
-                  sx={{ color: "text.secondary" }}
-                >
-                  <AutoFixHighIcon fontSize="small" />
-                </IconButton>
+                <span>
+                  <IconButton
+                    size="small"
+                    onClick={autoArrangeMatches}
+                    disabled={matches.length === 0}
+                    sx={{ color: "text.secondary" }}
+                  >
+                    <AutoFixHighIcon fontSize="small" />
+                  </IconButton>
+                </span>
               </Tooltip>
               <Tooltip title="Clear All Matches">
-                <IconButton
-                  size="small"
-                  onClick={clearAllMatches}
-                  disabled={matches.length === 0}
-                  sx={{ color: "text.secondary" }}
-                >
-                  <DeleteSweepIcon fontSize="small" />
-                </IconButton>
+                <span>
+                  <IconButton
+                    size="small"
+                    onClick={clearAllMatches}
+                    disabled={matches.length === 0}
+                    sx={{ color: "text.secondary" }}
+                  >
+                    <DeleteSweepIcon fontSize="small" />
+                  </IconButton>
+                </span>
               </Tooltip>
             </Box>
 
