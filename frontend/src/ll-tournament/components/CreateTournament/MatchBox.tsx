@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Paper, Avatar, useTheme } from "@mui/material";
 
-import { Match, DraggableParticipant } from "../../../types";
+import { Match, DraggableParticipant } from "../../types";
 
 interface MatchBoxProps {
   match: Match;

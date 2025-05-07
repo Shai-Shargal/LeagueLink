@@ -8,7 +8,7 @@ import {
   TextField,
   Box,
 } from "@mui/material";
-import { GuestUser } from "../../../types";
+import { GuestUser } from "../../types";
 
 interface GuestDialogProps {
   open: boolean;

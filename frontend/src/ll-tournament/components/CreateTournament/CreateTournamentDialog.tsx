@@ -36,10 +36,10 @@ import {
   GuestUser,
 } from "../../types";
 import { useMatchHistory } from "../../hooks/useMatchHistory";
-import { TournamentForm } from "./components/TournamentForm";
-import { GuestDialog } from "./components/GuestDialog";
-import { TournamentParticipants } from "./components/TournamentParticipants";
-import { MatchBox } from "./components/MatchBox";
+import { TournamentForm } from "./TournamentForm";
+import { GuestDialog } from "./GuestDialog";
+import { TournamentParticipants } from "./TournamentParticipants";
+import { MatchBox } from "./MatchBox";
 
 const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   open,

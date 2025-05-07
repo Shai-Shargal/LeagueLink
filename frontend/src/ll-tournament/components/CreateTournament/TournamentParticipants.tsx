@@ -15,7 +15,7 @@ import {
   DraggableParticipant,
   GuestUser,
   ParticipantStatus,
-} from "../../../types";
+} from "../../types";
 
 interface TournamentParticipantsProps {
   channelUsers: DraggableParticipant[];
