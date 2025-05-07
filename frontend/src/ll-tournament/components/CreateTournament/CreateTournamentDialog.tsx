@@ -356,7 +356,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                     color: "primary.main",
                     "&:hover": {
                       borderColor: "primary.dark",
-                      backgroundColor: "rgba(147, 51, 234, 0.08)",
+                      backgroundColor: "rgba(240, 6, 201, 0.08)",
                     },
                   }}
                 >

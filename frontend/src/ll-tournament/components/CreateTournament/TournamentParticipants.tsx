@@ -3,7 +3,6 @@ import {
   Box,
   Paper,
   Typography,
-  Button,
   Avatar,
   IconButton,
   Tooltip,
@@ -25,7 +24,6 @@ interface TournamentParticipantsProps {
 export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
   channelUsers,
   guestUsers,
-  draggedParticipant,
   onDragStart,
   onDragEnd,
   onAddGuest,
@@ -35,7 +33,7 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
     <Paper
       sx={{
         p: 2,
-        backgroundColor: "rgba(16, 20, 30, 0.7)",
+        backgroundColor: "rgba(216, 66, 6, 0.7)",
         backdropFilter: "blur(8px)",
         borderRadius: 2,
         border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -108,7 +106,7 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
                 borderRadius: 1,
                 backgroundColor: "rgba(255, 255, 255, 0.05)",
                 "&:hover": {
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                  backgroundColor: "rgb(73, 221, 5)",
                 },
               }}
             >

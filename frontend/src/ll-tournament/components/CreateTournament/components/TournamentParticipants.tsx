@@ -135,7 +135,7 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
                     width: 32,
                     height: 32,
                     backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    color: "rgba(255, 255, 255, 0.9)",
+                    color: "rgba(233, 19, 144, 0.9)",
                   }}
                 >
                   <PersonIcon />

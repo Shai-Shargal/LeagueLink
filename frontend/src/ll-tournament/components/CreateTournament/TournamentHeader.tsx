@@ -35,7 +35,7 @@ export const TournamentHeader: React.FC<TournamentHeaderProps> = ({
         alignItems: "center",
         gap: 2,
         p: 1,
-        backgroundColor: "rgba(16, 20, 30, 0.7)",
+        backgroundColor: "rgba(196, 216, 14, 0.7)",
         backdropFilter: "blur(8px)",
         borderRadius: 2,
         border: "1px solid rgba(255, 255, 255, 0.1)",
