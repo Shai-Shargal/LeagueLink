@@ -1,8 +1,11 @@
 import React from "react";
 import type { Preview } from "@storybook/react";
-import { ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
-import { theme } from "../src/theme";
+
+const theme = createTheme({
+  // You can customize your theme here
+});
 
 const preview: Preview = {
   parameters: {
