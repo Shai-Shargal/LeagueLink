@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -62,6 +62,8 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     y: number;
   } | null>(null);
   const [newGuestUsername, setNewGuestUsername] = useState("");
+  const [paperSize, setPaperSize] = useState({ width: 1200, height: 700 });
+  const paperRef = useRef<HTMLDivElement>(null);
 
   const {
     matches,
@@ -74,6 +76,15 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     addToHistory,
     updateMatch,
   } = useMatchHistory();
+
+  useEffect(() => {
+    if (paperRef.current) {
+      setPaperSize({
+        width: paperRef.current.offsetWidth,
+        height: paperRef.current.offsetHeight,
+      });
+    }
+  }, [open, matches.length]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -471,10 +482,11 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               }}
             >
               <Paper
+                ref={paperRef}
                 sx={{
-                  flex: 7,
+                  flex: 10,
                   minWidth: 0,
-                  height: GAMES_AREA_HEIGHT,
+                  height: 700,
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "flex-start",
@@ -534,6 +546,8 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                       onDelete={() => removeMatch(match.id)}
                       onUpdate={(updates) => updateMatch(match.id, updates)}
                       draggedParticipant={draggedParticipant}
+                      parentWidth={paperSize.width}
+                      parentHeight={paperSize.height}
                     />
                   </Box>
                 ))}

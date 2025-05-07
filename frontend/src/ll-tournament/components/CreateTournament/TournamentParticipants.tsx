@@ -43,6 +43,8 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
         display: "flex",
         flexDirection: "column",
         gap: 2,
+        borderRadius: 3,
+        boxShadow: 3,
       }}
     >
       <Box>
@@ -53,21 +55,23 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
           {channelUsers.map((participant) => (
             <Box
               key={participant.id}
+              draggable
+              onDragStart={() => onDragStart(participant)}
+              onDragEnd={onDragEnd}
               sx={{
                 display: "flex",
                 alignItems: "center",
                 gap: 1,
                 p: 1,
-                borderRadius: 1,
+                borderRadius: 2,
                 bgcolor: "background.default",
                 cursor: "grab",
+                transition: "transform 0.2s ease-in-out",
                 "&:hover": {
                   bgcolor: "action.hover",
+                  transform: "scale(1.01)",
                 },
               }}
-              draggable
-              onDragStart={() => onDragStart(participant)}
-              onDragEnd={onDragEnd}
             >
               <Avatar
                 src={participant.profilePicture}
@@ -81,7 +85,9 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
           ))}
         </Box>
       </Box>
+
       <Divider />
+
       <Box>
         <Box
           sx={{
@@ -133,11 +139,13 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
                 justifyContent: "space-between",
                 gap: 1,
                 p: 1,
-                borderRadius: 1,
+                borderRadius: 2,
                 bgcolor: "background.default",
                 cursor: "grab",
+                transition: "transform 0.2s ease-in-out",
                 "&:hover": {
                   bgcolor: "action.hover",
+                  transform: "scale(1.01)",
                 },
               }}
             >
