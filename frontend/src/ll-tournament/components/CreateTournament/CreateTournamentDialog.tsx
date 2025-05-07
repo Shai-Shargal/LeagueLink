@@ -40,6 +40,7 @@ import { TournamentForm } from "./TournamentForm";
 import { GuestDialog } from "./GuestDialog";
 import { TournamentParticipants } from "./TournamentParticipants";
 import { MatchBox } from "./MatchBox";
+import { TournamentToolbar } from "./TournamentToolbar";
 
 const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   open,
@@ -343,113 +344,15 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
           }}
         >
           <Typography variant="subtitle1">Create New Tournament</Typography>
-          <Paper
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-              p: 1,
-              backgroundColor: "rgba(16, 20, 30, 0.7)",
-              backdropFilter: "blur(8px)",
-              borderRadius: 2,
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-            }}
-          >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Tooltip title="Add Match">
-                <Button
-                  variant="outlined"
-                  size="small"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddMatchClick}
-                  sx={{
-                    borderColor: "primary.main",
-                    color: "primary.main",
-                    "&:hover": {
-                      borderColor: "primary.dark",
-                      backgroundColor: "rgba(240, 6, 201, 0.08)",
-                    },
-                  }}
-                >
-                  Add Match
-                </Button>
-              </Tooltip>
-            </Box>
-
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
-            />
-
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Tooltip title="Undo">
-                <span>
-                  <IconButton
-                    size="small"
-                    onClick={handleUndo}
-                    disabled={historyIndex <= 0}
-                    sx={{ color: "text.secondary" }}
-                  >
-                    <UndoIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title="Redo">
-                <span>
-                  <IconButton
-                    size="small"
-                    onClick={handleRedo}
-                    disabled={historyIndex >= matches.length - 1}
-                    sx={{ color: "text.secondary" }}
-                  >
-                    <RedoIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </Box>
-
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ borderColor: "rgba(255, 255, 255, 0.1)" }}
-            />
-
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Tooltip title="Auto-arrange Matches">
-                <span>
-                  <IconButton
-                    size="small"
-                    onClick={autoArrangeMatches}
-                    disabled={matches.length === 0}
-                    sx={{ color: "text.secondary" }}
-                  >
-                    <AutoFixHighIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-              <Tooltip title="Clear All Matches">
-                <span>
-                  <IconButton
-                    size="small"
-                    onClick={clearAllMatches}
-                    disabled={matches.length === 0}
-                    sx={{ color: "text.secondary" }}
-                  >
-                    <DeleteSweepIcon fontSize="small" />
-                  </IconButton>
-                </span>
-              </Tooltip>
-            </Box>
-
-            <Box sx={{ flex: 1 }} />
-
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                {matches.length} matches
-              </Typography>
-            </Box>
-          </Paper>
+          <TournamentToolbar
+            matchesCount={matches.length}
+            historyIndex={historyIndex}
+            onAddMatch={handleAddMatchClick}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            onAutoArrange={autoArrangeMatches}
+            onClearAll={clearAllMatches}
+          />
         </DialogTitle>
         <DialogContent
           sx={{
