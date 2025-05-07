@@ -8,9 +8,9 @@ import {
   IconButton,
   Divider,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import PersonIcon from "@mui/icons-material/Person";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import {
   DraggableParticipant,
   GuestUser,
@@ -93,10 +93,22 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
         >
           <Typography variant="h6">Guest Participants</Typography>
           <Button
-            startIcon={<AddIcon />}
+            startIcon={<PersonAddIcon />}
             onClick={onAddGuest}
             size="small"
             variant="outlined"
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              px: 2,
+              borderColor: "primary.main",
+              color: "primary.main",
+              "&:hover": {
+                backgroundColor: "primary.main",
+                color: "primary.contrastText",
+                borderColor: "primary.main",
+              },
+            }}
           >
             Add Guest
           </Button>
