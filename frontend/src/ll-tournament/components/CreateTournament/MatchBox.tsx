@@ -105,7 +105,7 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         left,
         top,
         width: MATCH_BOX_WIDTH,
-        height: MATCH_BOX_HEIGHT,
+        height: MATCH_BOX_HEIGHT * 2.2,
         p: 1.5,
         borderRadius: 2,
         boxShadow: 3,
@@ -129,12 +129,28 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
     >
       <IconButton
         onClick={onDelete}
-        sx={{ position: "absolute", top: 4, right: 4 }}
+        sx={{
+          position: "absolute",
+          top: 4,
+          right: 4,
+          zIndex: 10,
+        }}
       >
         <DeleteIcon fontSize="small" />
       </IconButton>
       {renderParticipantBox(match.team1, theme.palette.primary.main, true)}
-      <Box sx={{ fontWeight: 700, color: "text.secondary", mb: 1 }}>VS</Box>
+      <Box
+        sx={{
+          fontWeight: 700,
+          color: "text.secondary",
+          fontSize: 14,
+          my: 0.5,
+        }}
+      >
+        VS
+      </Box>
+
+      {/* שחקן שני */}
       {renderParticipantBox(match.team2, theme.palette.secondary.main, false)}
     </Paper>
   );
