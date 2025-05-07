@@ -124,7 +124,12 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         },
       }}
       draggable
-      onDragStart={() => onDragStart(match.team1 || match.team2)}
+      onDragStart={(e) => {
+        const team = match.team1 || match.team2;
+        if (team) {
+          onDragStart(e);
+        }
+      }}
       onDragEnd={onDragEnd}
     >
       {renderParticipantBox(match.team1, theme.palette.primary.main, true)}

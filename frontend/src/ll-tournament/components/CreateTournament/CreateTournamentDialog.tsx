@@ -518,9 +518,12 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                   <Box
                     draggable
                     key={match.id}
-                    onDragStart={() =>
-                      handleDragStart(match.team1 || match.team2)
-                    }
+                    onDragStart={() => {
+                      const team = match.team1 || match.team2;
+                      if (team) {
+                        handleDragStart(team);
+                      }
+                    }}
                     onDragEnd={handleDragEnd}
                   >
                     <MatchBox

@@ -265,11 +265,11 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     setTournamentDetailsOpen(true);
   };
 
-  const handleTournamentChange = (field: keyof Tournament, value: any) => {
-    console.log("Tournament change:", field, value); // Debug log
+  const handleTournamentChange = (updates: Partial<Tournament>) => {
+    console.log("Tournament change:", updates); // Debug log
     setNewTournament((prev) => ({
       ...prev,
-      [field]: value,
+      ...updates,
     }));
   };
 
@@ -322,7 +322,19 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         onSubmit={handleCreateTournament}
         newTournament={newTournament}
         onTournamentChange={handleTournamentChange}
-        channelUsers={channelUsers}
+        channelUsers={channelUsers.map(
+          (user: {
+            id: string;
+            username: string;
+            profilePicture?: string;
+          }) => ({
+            id: user.id,
+            userId: user.id,
+            username: user.username,
+            profilePicture: user.profilePicture,
+            status: ParticipantStatus.PENDING,
+          })
+        )}
         isCreating={isCreating}
       />
 
