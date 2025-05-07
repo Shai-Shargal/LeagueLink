@@ -11,15 +11,7 @@ import {
   CircularProgress,
   Paper,
   Alert,
-  IconButton,
-  Divider,
-  Tooltip,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
-import UndoIcon from "@mui/icons-material/Undo";
-import RedoIcon from "@mui/icons-material/Redo";
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 import { v4 as uuidv4 } from "uuid";
 
 import {
@@ -343,7 +335,9 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             alignItems: "center",
           }}
         >
-          <Typography variant="subtitle1">Create New Tournament</Typography>
+          <Box component="div" sx={{ typography: "subtitle1" }}>
+            Create New Tournament
+          </Box>
           <TournamentToolbar
             matchesCount={matches.length}
             historyIndex={historyIndex}
