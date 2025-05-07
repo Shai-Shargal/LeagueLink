@@ -15,25 +15,23 @@ import {
   LocationOn as LocationIcon,
   AccessTime as TimeIcon,
   Settings as SettingsIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import { Tournament } from "../types";
 
 interface TournamentListProps {
   tournaments: Tournament[];
+  onTournamentClick: (tournament: Tournament) => void;
+  onDeleteTournament: (tournament: Tournament) => void;
+  onCreateTournament: () => void;
   isAdmin: boolean;
-  onTournamentClick?: (tournament: Tournament) => void;
-  onEditTournament?: (tournament: Tournament) => void;
-  onDeleteTournament?: (tournament: Tournament) => void;
 }
 
-const TournamentList: React.FC<TournamentListProps> = ({
+export const TournamentList: React.FC<TournamentListProps> = ({
   tournaments,
-  isAdmin,
   onTournamentClick,
-  onEditTournament,
   onDeleteTournament,
+  isAdmin,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedTournament, setSelectedTournament] =
@@ -53,17 +51,9 @@ const TournamentList: React.FC<TournamentListProps> = ({
     setSelectedTournament(null);
   };
 
-  const handleEdit = (event: React.MouseEvent) => {
-    event.stopPropagation();
-    if (selectedTournament?.id && onEditTournament) {
-      onEditTournament(selectedTournament);
-    }
-    handleMenuClose();
-  };
-
   const handleDelete = (event: React.MouseEvent) => {
     event.stopPropagation();
-    if (selectedTournament?.id && onDeleteTournament) {
+    if (selectedTournament?.id) {
       onDeleteTournament(selectedTournament);
     }
     handleMenuClose();
@@ -82,7 +72,7 @@ const TournamentList: React.FC<TournamentListProps> = ({
             transition: "background 0.2s",
             "&:hover": { backgroundColor: "rgba(255,255,255,0.10)" },
           }}
-          onClick={() => onTournamentClick?.(tournament)}
+          onClick={() => onTournamentClick(tournament)}
         >
           <Box
             sx={{
@@ -143,9 +133,6 @@ const TournamentList: React.FC<TournamentListProps> = ({
           onClose={handleMenuClose}
           onClick={(event) => event.stopPropagation()}
         >
-          <MenuItem onClick={handleEdit}>
-            <EditIcon sx={{ mr: 1 }} /> Edit Tournament
-          </MenuItem>
           <MenuItem onClick={handleDelete} sx={{ color: "error.main" }}>
             <DeleteIcon sx={{ mr: 1 }} /> Delete Tournament
           </MenuItem>

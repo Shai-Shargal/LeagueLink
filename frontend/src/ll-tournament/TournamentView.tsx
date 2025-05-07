@@ -22,8 +22,6 @@ import TournamentDetailsDialog from "./components/TournamentDetailsDialog";
 import CreateTournamentDialog from "./components/CreateTournament/CreateTournamentDialog";
 import StatsConfigDialog from "./components/StatsConfigDialog";
 import UserProfileDialog from "./components/UserProfileDialog";
-import EditTournamentDialog from "./components/EditTournamentDialog";
-import TournamentBracket from "./components/TournamentBracket";
 
 interface TournamentViewProps {
   onBack: () => void;
@@ -69,13 +67,10 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   );
   const [userProfileOpen, setUserProfileOpen] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tournamentDetailsOpen, setTournamentDetailsOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] =
     useState<Tournament | null>(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [showBracket] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -234,11 +229,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     setUserProfileOpen(true);
   };
 
-  const handleEditTournament = (tournament: Tournament) => {
-    setSelectedTournament(tournament);
-    setEditDialogOpen(true);
-  };
-
   const handleDeleteTournament = (tournament: Tournament) => {
     console.log("Deleting tournament:", tournament);
     if (!tournament.id) {
@@ -273,22 +263,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     console.log("Tournament matches:", tournament.matches);
     setSelectedTournament(tournament);
     setTournamentDetailsOpen(true);
-  };
-
-  const handleUpdateTournament = async (updatedTournament: Tournament) => {
-    try {
-      setIsUpdating(true);
-      await tournamentService.updateTournament(
-        updatedTournament.id,
-        updatedTournament
-      );
-      setSelectedTournament(updatedTournament);
-      await loadData();
-    } catch (error) {
-      console.error("Error updating tournament:", error);
-    } finally {
-      setIsUpdating(false);
-    }
   };
 
   const handleTournamentChange = (field: keyof Tournament, value: any) => {
@@ -338,7 +312,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         isAdmin={isAdmin}
         onUserClick={handleUserClick}
         onTournamentClick={handleTournamentClick}
-        onEditTournament={handleEditTournament}
         onDeleteTournament={handleDeleteTournament}
         onCreateTournament={() => setCreateDialogOpen(true)}
       />
@@ -374,18 +347,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         onUpdateMatch={handleUpdateMatch}
       />
 
-      <EditTournamentDialog
-        open={editDialogOpen}
-        onClose={() => {
-          setEditDialogOpen(false);
-          setSelectedTournament(null);
-        }}
-        onSubmit={handleUpdateTournament}
-        tournament={selectedTournament || ({} as Tournament)}
-        onTournamentChange={handleTournamentChange}
-        isUpdating={isUpdating}
-      />
-
       {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
@@ -415,14 +376,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
-      {showBracket && selectedTournament && (
-        <TournamentBracket
-          tournament={selectedTournament}
-          onUpdateTournament={handleUpdateTournament}
-          onUpdateMatch={handleUpdateMatch}
-        />
-      )}
     </Box>
   );
 };

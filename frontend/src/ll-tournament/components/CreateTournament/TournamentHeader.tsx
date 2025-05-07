@@ -38,7 +38,7 @@ export const TournamentHeader: React.FC<TournamentHeaderProps> = ({
         backgroundColor: "rgba(196, 216, 14, 0.7)",
         backdropFilter: "blur(8px)",
         borderRadius: 2,
-        border: "1px solid rgba(255, 255, 255, 0.1)",
+        border: "1px solid rgb(240, 10, 221)",
       }}
     >
       <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

@@ -33,13 +33,16 @@ const ViewTournamentDialog: React.FC<ViewTournamentDialogProps> = ({
 }) => {
   // Group matches by round
   const matchesByRound =
-    tournament.matches?.reduce((acc, match) => {
-      if (!acc[match.round]) {
-        acc[match.round] = [];
-      }
-      acc[match.round].push(match);
-      return acc;
-    }, {} as { [key: number]: typeof tournament.matches }) || {};
+    tournament.matches?.reduce(
+      (acc, match) => {
+        if (!acc[match.round]) {
+          acc[match.round] = [];
+        }
+        acc[match.round].push(match);
+        return acc;
+      },
+      {} as { [key: number]: typeof tournament.matches }
+    ) || {};
 
   return (
     <Dialog
@@ -112,7 +115,7 @@ const ViewTournamentDialog: React.FC<ViewTournamentDialogProps> = ({
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-start",
-            border: "1px dashed rgba(255, 255, 255, 0.1)",
+            border: "1px dashed rgba(243, 12, 12, 0.1)",
             background: "#1a2234",
             color: "text.secondary",
             mr: 2,

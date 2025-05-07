@@ -17,7 +17,6 @@ interface TournamentTabsProps {
   isAdmin: boolean;
   onUserClick: (userId: string) => void;
   onTournamentClick: (tournament: Tournament) => void;
-  onEditTournament: (tournament: Tournament) => void;
   onDeleteTournament: (tournament: Tournament) => void;
   onCreateTournament: () => void;
 }
@@ -30,7 +29,6 @@ const TournamentTabs: React.FC<TournamentTabsProps> = ({
   isAdmin,
   onUserClick,
   onTournamentClick,
-  onEditTournament,
   onDeleteTournament,
   onCreateTournament,
 }) => {
@@ -68,10 +66,10 @@ const TournamentTabs: React.FC<TournamentTabsProps> = ({
         <Box>
           <TournamentList
             tournaments={tournaments}
-            isAdmin={isAdmin}
             onTournamentClick={onTournamentClick}
-            onEditTournament={onEditTournament}
             onDeleteTournament={onDeleteTournament}
+            onCreateTournament={onCreateTournament}
+            isAdmin={isAdmin}
           />
         </Box>
       )}

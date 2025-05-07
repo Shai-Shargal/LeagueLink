@@ -568,7 +568,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               height: 48,
               fontSize: "1.1rem",
               fontWeight: 600,
-              background: "linear-gradient(45deg, #C680E3, #9333EA)",
+              background: "linear-gradient(45deg,rgb(48, 11, 65), #9333EA)",
               "&:hover": {
                 background: "linear-gradient(45deg, #9333EA, #7928CA)",
               },
