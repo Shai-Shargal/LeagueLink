@@ -12,6 +12,8 @@ import {
   Alert,
 } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
+import CloseIcon from "@mui/icons-material/Close";
+import IconButton from "@mui/material/IconButton";
 
 import {
   CreateTournamentDialogProps,
@@ -32,6 +34,7 @@ import { GuestDialog } from "./GuestDialog";
 import { TournamentParticipants } from "./TournamentParticipants";
 import { MatchBox } from "./MatchBox";
 import { TournamentToolbar } from "./TournamentToolbar";
+import { MatchConnections } from "./MatchConnections";
 
 const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   open,
@@ -56,6 +59,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   const [newGuestUsername, setNewGuestUsername] = useState("");
   const [paperSize, setPaperSize] = useState({ width: 1200, height: 700 });
   const paperRef = useRef<HTMLDivElement>(null);
+  const [connectionSource, setConnectionSource] = useState<string | null>(null);
 
   const {
     matches,
@@ -295,22 +299,37 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setNewMatchPosition({ x, y });
   };
 
+  const handleSelectMatchAsSource = (matchId: string) => {
+    if (connectionSource === matchId) {
+      // If clicking the same match again, cancel the connection
+      setConnectionSource(null);
+    } else if (connectionSource) {
+      // If we already have a source, this is the target
+      const updatedMatches = matches.map((match) => {
+        if (match.id === connectionSource) {
+          return { ...match, nextMatchId: matchId };
+        }
+        return match;
+      });
+
+      addToHistory(updatedMatches);
+      setMatches(updatedMatches);
+      setConnectionSource(null);
+    } else {
+      // This is the first match (source)
+      setConnectionSource(matchId);
+    }
+  };
+
   return (
     <>
       <Dialog
         open={open}
         onClose={handleClose}
-        maxWidth={false}
+        fullScreen
         PaperProps={{
           sx: {
-            width: DIALOG_WIDTH,
-            height: DIALOG_HEIGHT,
-            borderRadius: 3,
-            boxShadow: 8,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            p: 0,
+            background: (theme) => theme.palette.background.default,
           },
         }}
       >
@@ -319,7 +338,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             textAlign: "center",
             "&.MuiDialogTitle-root": {
               fontSize: "1rem",
-              padding: "8px 16px",
+              padding: "16px",
               minHeight: "auto",
             },
             fontWeight: 500,
@@ -337,25 +356,40 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
           <Box component="div" sx={{ typography: "subtitle1" }}>
             Create New Tournament
           </Box>
-          <TournamentToolbar
-            matchesCount={matches.length}
-            historyIndex={historyIndex}
-            onAddMatch={handleAddMatchClick}
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            onAutoArrange={autoArrangeMatches}
-            onClearAll={clearAllMatches}
-          />
+          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+            <TournamentToolbar
+              matchesCount={matches.length}
+              historyIndex={historyIndex}
+              onAddMatch={handleAddMatchClick}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              onAutoArrange={autoArrangeMatches}
+              onClearAll={clearAllMatches}
+            />
+            <IconButton
+              edge="end"
+              color="inherit"
+              onClick={handleClose}
+              aria-label="close"
+              sx={{
+                color: "text.primary",
+                "&:hover": {
+                  color: "primary.main",
+                },
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+          </Box>
         </DialogTitle>
         <DialogContent
           sx={{
             flex: 1,
             display: "flex",
             flexDirection: "column",
-            justifyContent: "flex-start",
             p: 2,
             overflowY: "auto",
-            background: (theme) => theme.palette.background.paper,
+            background: (theme) => theme.palette.background.default,
             "&.MuiDialogContent-root": {
               paddingTop: "16px",
             },
@@ -405,6 +439,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                 onClick={handleMatchCreation}
                 onMouseMove={handleMouseMove}
               >
+                <MatchConnections matches={matches} />
                 {isCreatingMatch && newMatchPosition && (
                   <Paper
                     sx={{
@@ -428,26 +463,30 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
                 {matches.map((match) => (
                   <Box
-                    draggable
                     key={match.id}
-                    onDragStart={() => {
-                      const team = match.team1 || match.team2;
-                      if (team) {
-                        handleDragStart(team);
-                      }
-                    }}
-                    onDragEnd={handleDragEnd}
+                    id={`match-${match.id}`}
+                    data-match-id={match.id}
+                    draggable
+                    onDragStart={handleMatchDragStart}
+                    onDragEnd={handleMatchDragEnd}
                   >
                     <MatchBox
                       match={match}
                       channelUsers={channelUsers}
-                      onDragStart={handleMatchDragStart}
-                      onDragEnd={handleMatchDragEnd}
+                      draggedParticipant={draggedParticipant}
+                      onDragStart={(e) => {
+                        const team = match.team1 || match.team2;
+                        if (team) handleDragStart(team);
+                      }}
+                      onDragEnd={handleDragEnd}
                       onDelete={() => removeMatch(match.id)}
                       onUpdate={(updates) => updateMatch(match.id, updates)}
-                      draggedParticipant={draggedParticipant}
                       parentWidth={paperSize.width}
                       parentHeight={paperSize.height}
+                      isSourceMatch={connectionSource === match.id}
+                      onSelectAsSource={() =>
+                        handleSelectMatchAsSource(match.id)
+                      }
                     />
                   </Box>
                 ))}

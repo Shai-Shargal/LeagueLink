@@ -30,6 +30,7 @@ export interface Match {
   score1?: number;
   score2?: number;
   winner?: DraggableParticipant | null;
+  nextMatchId?: string;
 }
 
 export interface Tournament {

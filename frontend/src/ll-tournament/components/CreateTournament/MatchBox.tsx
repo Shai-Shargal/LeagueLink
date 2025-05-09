@@ -13,6 +13,8 @@ interface MatchBoxProps {
   onUpdate: (updates: Partial<Match>) => void;
   parentWidth: number;
   parentHeight: number;
+  isSourceMatch: boolean;
+  onSelectAsSource: () => void;
 }
 
 const MATCH_BOX_WIDTH = 140;
@@ -28,6 +30,8 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
   onUpdate,
   parentWidth,
   parentHeight,
+  isSourceMatch,
+  onSelectAsSource,
 }) => {
   const theme = useTheme();
 
@@ -119,6 +123,9 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
           transform: "scale(1.03)",
           borderColor: "primary.main",
         },
+        border: isSourceMatch
+          ? `2px solid ${theme.palette.primary.main}`
+          : undefined,
       }}
       draggable
       onDragStart={(e) => {
@@ -126,6 +133,7 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         if (team) onDragStart(e);
       }}
       onDragEnd={onDragEnd}
+      onClick={onSelectAsSource}
     >
       <IconButton
         onClick={onDelete}
@@ -149,8 +157,6 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
       >
         VS
       </Box>
-
-      {/* שחקן שני */}
       {renderParticipantBox(match.team2, theme.palette.secondary.main, false)}
     </Paper>
   );
