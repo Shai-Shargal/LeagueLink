@@ -14,6 +14,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import CloseIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/material/IconButton";
+import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 
 import {
   CreateTournamentDialogProps,
@@ -337,11 +338,11 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
           sx={{
             textAlign: "center",
             "&.MuiDialogTitle-root": {
-              fontSize: "1rem",
+              fontSize: "1.25rem",
               padding: "16px",
               minHeight: "auto",
             },
-            fontWeight: 500,
+            fontWeight: 600,
             position: "sticky",
             top: 0,
             zIndex: 2,
@@ -353,8 +354,24 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             alignItems: "center",
           }}
         >
-          <Box component="div" sx={{ typography: "subtitle1" }}>
-            Create New Tournament
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <EmojiEventsIcon
+              sx={{
+                color: "primary.main",
+                fontSize: "1.75rem",
+              }}
+            />
+            <Box
+              component="div"
+              sx={{
+                typography: "h6",
+                fontWeight: 700,
+                color: "text.primary",
+                letterSpacing: "0.5px",
+              }}
+            >
+              Create New Tournament
+            </Box>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
             <TournamentToolbar
