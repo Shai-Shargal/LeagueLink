@@ -300,26 +300,52 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setNewMatchPosition({ x, y });
   };
 
+  // This is a partial update to CreateTournamentDialog.tsx
+  // Replace the handleSelectMatchAsSource function with this improved version:
+
   const handleSelectMatchAsSource = (matchId: string) => {
     if (connectionSource === matchId) {
       // If clicking the same match again, cancel the connection
       setConnectionSource(null);
     } else if (connectionSource) {
       // If we already have a source, this is the target
-      const updatedMatches = matches.map((match) => {
-        if (match.id === connectionSource) {
-          return { ...match, nextMatchId: matchId };
-        }
-        return match;
-      });
+      // First check if this would create a circular reference
+      const sourceMatch = matches.find((m) => m.id === connectionSource);
+      const targetMatch = matches.find((m) => m.id === matchId);
 
-      addToHistory(updatedMatches);
-      setMatches(updatedMatches);
+      if (sourceMatch && targetMatch) {
+        // Ensure the source round is before the target round (prevent backwards connections)
+        if (sourceMatch.round >= targetMatch.round) {
+          // Show error or toast here if desired
+          console.error(
+            "Cannot connect: Source round must be before target round"
+          );
+          setConnectionSource(null);
+          return;
+        }
+
+        // Update the connection
+        const updatedMatches = matches.map((match) => {
+          if (match.id === connectionSource) {
+            return { ...match, nextMatchId: matchId };
+          }
+          return match;
+        });
+
+        addToHistory(updatedMatches);
+        setMatches(updatedMatches);
+      }
+
       setConnectionSource(null);
     } else {
       // This is the first match (source)
       setConnectionSource(matchId);
     }
+  };
+
+  // Also add this function to clear connection mode when needed:
+  const clearConnectionMode = () => {
+    setConnectionSource(null);
   };
 
   return (

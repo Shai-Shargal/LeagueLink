@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Paper, Avatar, useTheme, IconButton } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import LinkIcon from "@mui/icons-material/Link";
 import { Match, DraggableParticipant } from "../../types";
 
 interface MatchBoxProps {
@@ -118,14 +119,15 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         justifyContent: "center",
         alignItems: "center",
         backgroundColor: "background.paper",
-        transition: "transform 0.2s ease-in-out",
+        transition: "transform 0.2s ease-in-out, border-color 0.3s ease",
         "&:hover": {
           transform: "scale(1.03)",
           borderColor: "primary.main",
         },
         border: isSourceMatch
           ? `2px solid ${theme.palette.primary.main}`
-          : undefined,
+          : `1px solid ${theme.palette.divider}`,
+        zIndex: 10, // Ensure match boxes are above connection lines
       }}
       draggable
       onDragStart={(e) => {
@@ -133,31 +135,56 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         if (team) onDragStart(e);
       }}
       onDragEnd={onDragEnd}
-      onClick={onSelectAsSource}
     >
+      <Box sx={{ position: "absolute", top: 4, left: 4 }}>
+        <IconButton
+          onClick={onSelectAsSource}
+          size="small"
+          sx={{
+            color: isSourceMatch ? "primary.main" : "text.secondary",
+            p: 0.5,
+            bgcolor: isSourceMatch ? "primary.light" : "transparent",
+            "&:hover": {
+              bgcolor: isSourceMatch ? "primary.light" : "action.hover",
+            },
+          }}
+        >
+          <LinkIcon fontSize="small" />
+        </IconButton>
+      </Box>
+
       <IconButton
-        onClick={onDelete}
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete();
+        }}
         sx={{
           position: "absolute",
           top: 4,
           right: 4,
           zIndex: 10,
+          p: 0.5,
         }}
+        size="small"
       >
         <DeleteIcon fontSize="small" />
       </IconButton>
-      {renderParticipantBox(match.team1, theme.palette.primary.main, true)}
-      <Box
-        sx={{
-          fontWeight: 700,
-          color: "text.secondary",
-          fontSize: 14,
-          my: 0.5,
-        }}
-      >
-        VS
+
+      <Box sx={{ width: "100%", pt: 1 }}>
+        {renderParticipantBox(match.team1, theme.palette.primary.main, true)}
+        <Box
+          sx={{
+            fontWeight: 700,
+            color: "text.secondary",
+            fontSize: 14,
+            my: 0.5,
+            textAlign: "center",
+          }}
+        >
+          VS
+        </Box>
+        {renderParticipantBox(match.team2, theme.palette.secondary.main, false)}
       </Box>
-      {renderParticipantBox(match.team2, theme.palette.secondary.main, false)}
     </Paper>
   );
 };
