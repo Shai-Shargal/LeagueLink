@@ -121,7 +121,7 @@ export interface CreateTournamentDialogProps {
   onClose: () => void;
   onSubmit: (tournament: any) => void;
   newTournament: any;
-  onTournamentChange: (updates: any) => void;
+  onTournamentChange: (field: string, value: string) => void;
   channelUsers: DraggableParticipant[];
   isCreating: boolean;
 }

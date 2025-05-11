@@ -24,6 +24,33 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
       onTournamentChange(field, event.target.value);
     };
 
+  const commonTextFieldProps = {
+    disabled: isCreating,
+    fullWidth: true,
+    sx: {
+      "& .MuiOutlinedInput-root": {
+        "& fieldset": {
+          borderColor: "rgba(255, 255, 255, 0.2)",
+        },
+        "&:hover fieldset": {
+          borderColor: "rgba(255, 255, 255, 0.3)",
+        },
+        "&.Mui-focused fieldset": {
+          borderColor: "primary.main",
+        },
+      },
+      "& .MuiInputLabel-root": {
+        color: "rgba(255, 255, 255, 0.7)",
+      },
+      "& .MuiInputBase-input": {
+        color: "white",
+      },
+      "& .MuiSvgIcon-root": {
+        color: "white",
+      },
+    },
+  };
+
   return (
     <Box sx={{ display: "flex", gap: 2 }}>
       <TextField
@@ -32,8 +59,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
         onChange={handleChange("name")}
         error={!!errors.name}
         helperText={errors.name}
-        disabled={isCreating}
-        fullWidth
+        {...commonTextFieldProps}
       />
       <TextField
         label="Location"
@@ -41,8 +67,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
         onChange={handleChange("location")}
         error={!!errors.location}
         helperText={errors.location}
-        disabled={isCreating}
-        fullWidth
+        {...commonTextFieldProps}
       />
       <TextField
         label="Date"
@@ -51,9 +76,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
         onChange={handleChange("date")}
         error={!!errors.date}
         helperText={errors.date}
-        disabled={isCreating}
         InputLabelProps={{ shrink: true }}
-        fullWidth
+        {...commonTextFieldProps}
       />
       <TextField
         label="Time"
@@ -62,9 +86,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
         onChange={handleChange("time")}
         error={!!errors.time}
         helperText={errors.time}
-        disabled={isCreating}
         InputLabelProps={{ shrink: true }}
-        fullWidth
+        {...commonTextFieldProps}
       />
     </Box>
   );

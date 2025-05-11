@@ -265,11 +265,11 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     setTournamentDetailsOpen(true);
   };
 
-  const handleTournamentChange = (updates: Partial<Tournament>) => {
-    console.log("Tournament change:", updates); // Debug log
+  const handleTournamentChange = (field: string, value: string) => {
+    console.log("Tournament change:", field, value); // Debug log
     setNewTournament((prev) => ({
       ...prev,
-      ...updates,
+      [field]: value,
     }));
   };
 
