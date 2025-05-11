@@ -108,20 +108,6 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
             },
           }}
         />
-        <TextField
-          label="Number of Rounds (Best of X)"
-          type="number"
-          value={newTournament.rounds || 5}
-          onChange={(e) => {
-            let val = parseInt(e.target.value);
-            if (isNaN(val) || val < 1) val = 1;
-            if (val > 9) val = 9;
-            if (val % 2 === 0) val = val - 1; // Ensure odd
-            onTournamentChange("rounds", val);
-          }}
-          inputProps={{ min: 1, max: 9, step: 2 }}
-          {...commonTextFieldProps}
-        />
       </Box>
     </LocalizationProvider>
   );

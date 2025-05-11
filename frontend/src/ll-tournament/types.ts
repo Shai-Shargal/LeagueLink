@@ -31,6 +31,7 @@ export interface Match {
   score2?: number;
   winner?: DraggableParticipant | null;
   nextMatchId?: string;
+  rounds?: number;
 }
 
 export interface Tournament {

@@ -128,6 +128,7 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
           ? `2px solid ${theme.palette.primary.main}`
           : `1px solid ${theme.palette.divider}`,
         zIndex: 10, // Ensure match boxes are above connection lines
+        cursor: "pointer",
       }}
       draggable
       onDragStart={(e) => {
@@ -135,24 +136,16 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         if (team) onDragStart(e);
       }}
       onDragEnd={onDragEnd}
+      onClick={(e) => {
+        // Prevent click from input or delete button from triggering connection
+        if (
+          (e.target as HTMLElement).tagName === "INPUT" ||
+          (e.target as HTMLElement).closest("button")
+        )
+          return;
+        onSelectAsSource();
+      }}
     >
-      <Box sx={{ position: "absolute", top: 4, left: 4 }}>
-        <IconButton
-          onClick={onSelectAsSource}
-          size="small"
-          sx={{
-            color: isSourceMatch ? "primary.main" : "text.secondary",
-            p: 0.5,
-            bgcolor: isSourceMatch ? "primary.light" : "transparent",
-            "&:hover": {
-              bgcolor: isSourceMatch ? "primary.light" : "action.hover",
-            },
-          }}
-        >
-          <LinkIcon fontSize="small" />
-        </IconButton>
-      </Box>
-
       <IconButton
         onClick={(e) => {
           e.stopPropagation();
@@ -184,6 +177,38 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
           VS
         </Box>
         {renderParticipantBox(match.team2, theme.palette.secondary.main, false)}
+        <Box
+          sx={{
+            mt: 1,
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <label style={{ fontSize: 12, marginRight: 6 }}>Best of</label>
+          <input
+            type="number"
+            min={1}
+            max={9}
+            step={2}
+            value={match.rounds || 3}
+            style={{
+              width: 40,
+              textAlign: "center",
+              borderRadius: 4,
+              border: "1px solid #ccc",
+              fontSize: 13,
+            }}
+            onChange={(e) => {
+              let val = parseInt(e.target.value);
+              if (isNaN(val) || val < 1) val = 1;
+              if (val > 9) val = 9;
+              if (val % 2 === 0) val = val - 1;
+              onUpdate({ rounds: val });
+            }}
+          />
+        </Box>
       </Box>
     </Paper>
   );

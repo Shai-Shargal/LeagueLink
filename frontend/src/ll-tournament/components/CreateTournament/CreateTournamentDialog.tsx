@@ -151,6 +151,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         score1: 0,
         score2: 0,
         winner: null,
+        rounds: match.rounds || 3,
       }));
 
       const tournamentData = {
@@ -299,6 +300,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         x: (round - 1) * ROUND_HORIZONTAL_GAP,
         y: y - INITIAL_TOP_MARGIN,
       },
+      rounds: 3, // Default best of 3
     };
 
     const updatedMatches = [...matches, newMatch];
@@ -316,29 +318,55 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setNewMatchPosition({ x, y });
   };
 
+  // Helper: Get all parent matches for a given match
+  const getParentMatches = (targetMatchId: string, matchesArr: Match[]) => {
+    return matchesArr.filter((m) => m.nextMatchId === targetMatchId);
+  };
+
+  // Helper: Recursively update rounds for a match and its downstream matches
+  const propagateRounds = (matchId: string, matchesArr: Match[]): Match[] => {
+    const parents = getParentMatches(matchId, matchesArr);
+    let newRound = 1;
+    if (parents.length > 0) {
+      newRound = Math.max(...parents.map((m) => m.round || 1)) + 1;
+    }
+    let updated = false;
+    const updatedMatches = matchesArr.map((m) => {
+      if (m.id === matchId && m.round !== newRound) {
+        updated = true;
+        return { ...m, round: newRound };
+      }
+      return m;
+    });
+    // If this match's round changed, propagate to its children
+    if (updated) {
+      const children = updatedMatches.filter((m) => m.nextMatchId === matchId);
+      let result = updatedMatches;
+      for (const child of children) {
+        result = propagateRounds(child.id, result);
+      }
+      return result;
+    }
+    return updatedMatches;
+  };
+
   const handleSelectMatchAsSource = (matchId: string) => {
     if (connectionSource === matchId) {
       setConnectionSource(null);
     } else if (connectionSource) {
-      const sourceMatch = matches.find((m: Match) => m.id === connectionSource);
-      const targetMatch = matches.find((m: Match) => m.id === matchId);
+      const sourceMatch = matches.find((m) => m.id === connectionSource);
+      const targetMatch = matches.find((m) => m.id === matchId);
 
       if (sourceMatch && targetMatch) {
-        if (sourceMatch.round >= targetMatch.round) {
-          console.error(
-            "Cannot connect: Source round must be before target round"
-          );
-          setConnectionSource(null);
-          return;
-        }
-
-        const updatedMatches = matches.map((match: Match) => {
+        // Allow connection regardless of round, but recalculate rounds
+        let updatedMatches = matches.map((match: Match) => {
           if (match.id === connectionSource) {
             return { ...match, nextMatchId: matchId };
           }
           return match;
         });
-
+        // Propagate round calculation for the target match and downstream
+        updatedMatches = propagateRounds(matchId, updatedMatches);
         addToHistory(updatedMatches);
         setMatches(updatedMatches);
       }
