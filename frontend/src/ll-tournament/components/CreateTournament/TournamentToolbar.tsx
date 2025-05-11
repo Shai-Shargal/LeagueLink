@@ -18,6 +18,7 @@ interface TournamentToolbarProps {
   matchesCount: number;
   historyIndex: number;
   onAddMatch: () => void;
+  onAddTeamMatch: () => void;
   onUndo: () => void;
   onRedo: () => void;
   onAutoArrange: () => void;
@@ -28,6 +29,7 @@ export const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
   matchesCount,
   historyIndex,
   onAddMatch,
+  onAddTeamMatch,
   onUndo,
   onRedo,
   onAutoArrange,
@@ -63,6 +65,26 @@ export const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
             }}
           >
             Add Match
+          </Button>
+        </Tooltip>
+        <Tooltip title="Add Team Match">
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<AddIcon />}
+            onClick={onAddTeamMatch}
+            sx={{
+              borderColor: "secondary.main",
+              color: "secondary.main",
+              "&:hover": {
+                borderColor: "secondary.dark",
+                backgroundColor: "rgba(6, 201, 240, 0.08)",
+              },
+            }}
+            draggable
+            onDragStart={(e) => e.dataTransfer.setData("type", "team-match")}
+          >
+            Add Team Match
           </Button>
         </Tooltip>
       </Box>

@@ -68,7 +68,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     x: number;
     y: number;
   } | null>(null);
-  const [newGuestUsername, setNewGuestUsername] = useState("");
   const [paperSize, setPaperSize] = useState({ width: 1200, height: 700 });
   const paperRef = useRef<HTMLDivElement>(null);
   const [connectionSource, setConnectionSource] = useState<string | null>(null);
@@ -194,18 +193,15 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     }
   };
 
-  const handleAddGuest = () => {
-    if (newGuestUsername.trim()) {
-      setGuestUsers([
-        ...guestUsers,
-        {
-          id: `guest_${newGuestUsername.trim()}`,
-          username: newGuestUsername.trim(),
-        },
-      ]);
-      setNewGuestUsername("");
-      setIsGuestDialogOpen(false);
-    }
+  const handleAddGuest = (guest: GuestUser) => {
+    setGuestUsers((prev) => [
+      ...prev,
+      {
+        id: `guest_${guest.username}`,
+        username: guest.username,
+      },
+    ]);
+    setIsGuestDialogOpen(false);
   };
 
   const handleRemoveGuest = (guestId: string) => {
@@ -240,6 +236,31 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
   const handleMatchDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    // Check if this is a team match drop from toolbar
+    const type = e.dataTransfer.getData("type");
+    if (type === "team-match") {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const round = 1;
+      const newMatch: Match = {
+        id: uuidv4(),
+        round: round,
+        matchNumber: matches.filter((m: Match) => m.round === round).length + 1,
+        teamType: "team",
+        team1: [],
+        team2: [],
+        position: {
+          x,
+          y,
+        },
+        rounds: 3,
+      };
+      const updatedMatches = [...matches, newMatch];
+      addToHistory(updatedMatches);
+      setMatches(updatedMatches);
+      return;
+    }
     if (!draggedMatch) return;
 
     const rect = e.currentTarget.getBoundingClientRect();
@@ -279,6 +300,27 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
   const handleAddMatchClick = () => {
     setIsCreatingMatch(true);
+  };
+
+  const handleAddTeamMatch = () => {
+    // Create a team match at a default position
+    const round = 1;
+    const newMatch: Match = {
+      id: uuidv4(),
+      round: round,
+      matchNumber: matches.filter((m: Match) => m.round === round).length + 1,
+      teamType: "team",
+      team1: [],
+      team2: [],
+      position: {
+        x: (round - 1) * ROUND_HORIZONTAL_GAP + 100,
+        y: matches.length * 120 + 100,
+      },
+      rounds: 3,
+    };
+    const updatedMatches = [...matches, newMatch];
+    addToHistory(updatedMatches);
+    setMatches(updatedMatches);
   };
 
   const handleMatchCreation = (e: React.MouseEvent) => {
@@ -439,6 +481,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               matchesCount={matches.length}
               historyIndex={historyIndex}
               onAddMatch={handleAddMatchClick}
+              onAddTeamMatch={handleAddTeamMatch}
               onUndo={handleUndo}
               onRedo={handleRedo}
               onAutoArrange={autoArrangeMatches}
@@ -546,17 +589,18 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                     id={`match-${match.id}`}
                     data-match-id={match.id}
                     draggable
-                    onDragStart={handleMatchDragStart}
+                    onDragStart={(e: React.DragEvent) =>
+                      handleMatchDragStart({
+                        currentTarget: { getAttribute: () => match.id },
+                      } as any)
+                    }
                     onDragEnd={handleMatchDragEnd}
                   >
                     <MatchBox
                       match={match}
                       channelUsers={channelUsers}
                       draggedParticipant={draggedParticipant}
-                      onDragStart={(e: React.DragEvent) => {
-                        const team = match.team1 || match.team2;
-                        if (team) handleDragStart(team);
-                      }}
+                      onDragStart={handleDragStart}
                       onDragEnd={handleDragEnd}
                       onDelete={() => removeMatch(match.id)}
                       onUpdate={(updates: MatchUpdate) =>

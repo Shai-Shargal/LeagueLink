@@ -25,8 +25,9 @@ export interface Match {
     x: number;
     y: number;
   };
-  team1: DraggableParticipant | null;
-  team2: DraggableParticipant | null;
+  teamType?: "solo" | "team";
+  team1: DraggableParticipant | DraggableParticipant[] | null;
+  team2: DraggableParticipant | DraggableParticipant[] | null;
   score1?: number;
   score2?: number;
   winner?: DraggableParticipant | null;
