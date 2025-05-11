@@ -37,9 +37,6 @@ export const tournamentService = {
           ? `${tournamentData.date}T${tournamentData.time}`
           : new Date().toISOString(),
       location: tournamentData.location,
-      maxParticipants: 32,
-      rules: "Standard tournament rules apply",
-      prizes: "Trophies for winners",
       participants:
         tournamentData.participants?.map((p) => ({
           userId: p.userId,
@@ -72,6 +69,9 @@ export const tournamentService = {
           score2: m.score2 || 0,
           winner: m.winner || null,
         })) || [],
+      matchConfig: tournamentData.matchConfig || {
+        rounds: 5, // Default to best of 5
+      },
     };
 
     console.log("Sending tournament data to backend:", backendData); // Debug log

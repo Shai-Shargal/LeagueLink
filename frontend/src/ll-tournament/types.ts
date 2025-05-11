@@ -54,6 +54,9 @@ export interface Tournament {
   createdAt: string;
   status: TournamentStatus;
   sportType: string;
+  matchConfig?: {
+    rounds: number;
+  };
 }
 
 export interface TournamentParticipant {
@@ -114,6 +117,7 @@ export interface DraggableParticipant {
   username: string;
   profilePicture?: string;
   status: ParticipantStatus;
+  isGuest?: boolean;
 }
 
 export interface CreateTournamentDialogProps {
@@ -121,7 +125,7 @@ export interface CreateTournamentDialogProps {
   onClose: () => void;
   onSubmit: (tournament: any) => void;
   newTournament: any;
-  onTournamentChange: (field: string, value: string) => void;
+  onTournamentChange: (field: string, value: string | number) => void;
   channelUsers: DraggableParticipant[];
   isCreating: boolean;
 }

@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, TextField } from "@mui/material";
 
 interface TournamentFormProps {
@@ -7,8 +6,9 @@ interface TournamentFormProps {
     location: string;
     date: string;
     time: string;
+    rounds?: number;
   };
-  onTournamentChange: (field: string, value: string) => void;
+  onTournamentChange: (field: string, value: string | number) => void;
   errors: Record<string, string>;
   isCreating: boolean;
 }
@@ -62,12 +62,13 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
         {...commonTextFieldProps}
       />
       <TextField
+        fullWidth
         label="Location"
-        value={newTournament.location}
-        onChange={handleChange("location")}
+        value={newTournament.location || ""}
+        onChange={(e) => onTournamentChange("location", e.target.value)}
         error={!!errors.location}
         helperText={errors.location}
-        {...commonTextFieldProps}
+        disabled={isCreating}
       />
       <TextField
         label="Date"
@@ -88,6 +89,15 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
         helperText={errors.time}
         InputLabelProps={{ shrink: true }}
         {...commonTextFieldProps}
+      />
+      <TextField
+        fullWidth
+        label="Number of Rounds (Best of X)"
+        type="number"
+        value={newTournament.rounds || 5}
+        onChange={(e) => onTournamentChange("rounds", parseInt(e.target.value))}
+        inputProps={{ min: 1, max: 9 }}
+        disabled={isCreating}
       />
     </Box>
   );
