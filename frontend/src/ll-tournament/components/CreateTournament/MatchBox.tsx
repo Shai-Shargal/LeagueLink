@@ -109,28 +109,52 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         position: "absolute",
         left,
         top,
-        minWidth: 340,
-        maxWidth: 480,
-        minHeight: 200,
-        p: 2,
-        borderRadius: 2,
-        boxShadow: 3,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "flex-start",
-        alignItems: "center",
-        backgroundColor:
-          match.teamType === "team" ? "transparent" : "background.paper",
-        transition: "transform 0.2s ease-in-out, border-color 0.3s ease",
-        "&:hover": {
-          transform: "scale(1.03)",
-          borderColor: match.teamType === "team" ? "primary.main" : undefined,
-        },
-        border: isSourceMatch
-          ? `2px solid ${theme.palette.primary.main}`
-          : `1px solid ${theme.palette.divider}`,
-        zIndex: 10,
-        cursor: "pointer",
+        ...(match.teamType === "team"
+          ? {
+              minWidth: 340,
+              maxWidth: 480,
+              minHeight: 200,
+              p: 2,
+              borderRadius: 2,
+              boxShadow: 3,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "flex-start",
+              alignItems: "center",
+              backgroundColor: "transparent",
+              transition: "transform 0.2s ease-in-out, border-color 0.3s ease",
+              "&:hover": {
+                transform: "scale(1.03)",
+                borderColor: "primary.main",
+              },
+              border: isSourceMatch
+                ? `2px solid ${theme.palette.primary.main}`
+                : `1px solid ${theme.palette.divider}`,
+              zIndex: 10,
+              cursor: "pointer",
+            }
+          : {
+              width: 140,
+              height: 132,
+              p: 1.5,
+              borderRadius: 2,
+              boxShadow: 3,
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: "background.paper",
+              transition: "transform 0.2s ease-in-out, border-color 0.3s ease",
+              "&:hover": {
+                transform: "scale(1.03)",
+                borderColor: "primary.main",
+              },
+              border: isSourceMatch
+                ? `2px solid ${theme.palette.primary.main}`
+                : `1px solid ${theme.palette.divider}`,
+              zIndex: 10,
+              cursor: "pointer",
+            }),
       }}
       draggable
       onDragStart={onDragStart}
