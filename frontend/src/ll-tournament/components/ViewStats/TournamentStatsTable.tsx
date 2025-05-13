@@ -10,7 +10,7 @@ import {
   Typography,
   Avatar,
 } from "@mui/material";
-import { ChannelUserStats } from "../../types";
+import { ChannelUserStats } from "@/ll-tournament/types";
 
 interface TournamentStatsTableProps {
   userStats: ChannelUserStats[];

@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography, Paper, Avatar } from "@mui/material";
 import { Person as PersonIcon } from "@mui/icons-material";
-import { Tournament, DraggableParticipant } from "../../types";
+import { Tournament, DraggableParticipant, Match } from "@/ll-tournament/types";
 
 // Constants for bracket layout
 const ROUND_HORIZONTAL_GAP = 100;
@@ -11,7 +11,7 @@ const BASE_BOX_HEIGHT = 100;
 
 interface TournamentBracketSectionProps {
   tournament: Tournament;
-  onUpdateMatch: (match: any) => void;
+  onUpdateMatch: (match: Match) => void;
 }
 
 const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
@@ -79,17 +79,17 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
       >
         {tournament.matches && tournament.matches.length > 0 ? (
           Object.entries(
-            tournament.matches.reduce(
-              (acc, match) => {
+            tournament.matches.reduce<{ [key: number]: Match[] }>(
+              (acc: { [key: number]: Match[] }, match: Match) => {
                 if (!acc[match.round]) {
                   acc[match.round] = [];
                 }
                 acc[match.round].push(match);
                 return acc;
               },
-              {} as { [key: number]: typeof tournament.matches }
+              {}
             )
-          ).map(([round, roundMatches]) => (
+          ).map(([round, roundMatches]: [string, Match[]]) => (
             <Box
               key={round}
               sx={{
@@ -100,7 +100,7 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                 minWidth: BASE_BOX_WIDTH,
               }}
             >
-              {roundMatches.map((match) => (
+              {roundMatches.map((match: Match) => (
                 <Paper
                   key={match.id}
                   elevation={1}

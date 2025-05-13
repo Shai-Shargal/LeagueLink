@@ -16,7 +16,7 @@ import {
   Settings as SettingsIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
-import { Tournament } from "../../types";
+import { Tournament } from "@/ll-tournament/types";
 
 interface TournamentListProps {
   tournaments: Tournament[];

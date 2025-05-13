@@ -14,7 +14,8 @@ import {
   ChannelUserStats,
   TournamentStatsConfig,
   ParticipantStatus,
-} from "../../types";
+  Match,
+} from "@/ll-tournament/types";
 import { tournamentService } from "../../services/tournamentService";
 import { authService } from "../../../services/api";
 import TournamentTabs from "../TournamentTabs";
@@ -267,19 +268,19 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
   const handleTournamentChange = (field: string, value: string) => {
     console.log("Tournament change:", field, value); // Debug log
-    setNewTournament((prev) => ({
+    setNewTournament((prev: Partial<Tournament>) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  const handleUpdateMatch = async (match: any) => {
+  const handleUpdateMatch = async (match: Match) => {
     if (!selectedTournament) return;
     try {
       // Update the match in the tournament
       const updatedTournament = {
         ...selectedTournament,
-        matches: selectedTournament.matches?.map((m) =>
+        matches: selectedTournament.matches?.map((m: Match) =>
           m.id === match.id ? match : m
         ) || [match],
       };

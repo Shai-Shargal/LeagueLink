@@ -51,7 +51,9 @@ const StatsConfigDialog: React.FC<StatsConfigDialogProps> = ({
                       ...statsConfig,
                       enabledStats: e.target.checked
                         ? [...statsConfig.enabledStats, stat]
-                        : statsConfig.enabledStats.filter((s) => s !== stat),
+                        : statsConfig.enabledStats.filter(
+                            (s: string) => s !== stat
+                          ),
                     };
                     onUpdateConfig(tournament.id, newConfig);
                   }}
