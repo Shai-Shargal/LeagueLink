@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Match } from "../../types";
+import { Match, BASE_BOX_WIDTH, BASE_BOX_HEIGHT } from "@/ll-tournament/types";
 import { Box } from "@mui/material";
 
 interface MatchConnectionsProps {
@@ -39,11 +39,11 @@ export const MatchConnections: React.FC<MatchConnectionsProps> = ({
     index: number
   ) => {
     // Calculate positions
-    const startX = startMatch.position.x + 70; // MATCH_BOX_WIDTH/2
-    const startY = startMatch.position.y; // Center of the match box
+    const startX = startMatch.position.x + BASE_BOX_WIDTH / 2;
+    const startY = startMatch.position.y + BASE_BOX_HEIGHT / 2;
 
-    const endX = endMatch.position.x - 70; // MATCH_BOX_WIDTH/2
-    const endY = endMatch.position.y; // Center of the match box
+    const endX = endMatch.position.x - BASE_BOX_WIDTH / 2;
+    const endY = endMatch.position.y + BASE_BOX_HEIGHT / 2;
 
     // Determine if this is a connection from top to bottom (like in a bracket)
     const isTopToBottom = startY < endY;

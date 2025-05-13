@@ -1,13 +1,18 @@
 import React from "react";
 import { Box, Typography, Paper, Avatar } from "@mui/material";
 import { Person as PersonIcon } from "@mui/icons-material";
-import { Tournament, DraggableParticipant, Match } from "@/ll-tournament/types";
+import {
+  Tournament,
+  DraggableParticipant,
+  Match,
+  BASE_BOX_WIDTH,
+  BASE_BOX_HEIGHT,
+  ROUND_HORIZONTAL_GAP,
+} from "@/ll-tournament/types";
+import { MatchConnections } from "../CreateTournament/MatchConnections";
 
 // Constants for bracket layout
-const ROUND_HORIZONTAL_GAP = 100;
 const MATCH_VERTICAL_GAP = 40;
-const BASE_BOX_WIDTH = 200;
-const BASE_BOX_HEIGHT = 100;
 
 interface TournamentBracketSectionProps {
   tournament: Tournament;
@@ -78,110 +83,115 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
         }}
       >
         {tournament.matches && tournament.matches.length > 0 ? (
-          Object.entries(
-            tournament.matches.reduce<{ [key: number]: Match[] }>(
-              (acc: { [key: number]: Match[] }, match: Match) => {
-                if (!acc[match.round]) {
-                  acc[match.round] = [];
-                }
-                acc[match.round].push(match);
-                return acc;
-              },
-              {}
-            )
-          ).map(([round, roundMatches]: [string, Match[]]) => (
-            <Box
-              key={round}
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                gap: MATCH_VERTICAL_GAP,
-                alignItems: "flex-start",
-                minWidth: BASE_BOX_WIDTH,
-              }}
-            >
-              {roundMatches.map((match: Match) => (
-                <Paper
-                  key={match.id}
-                  elevation={1}
-                  sx={{
-                    width: BASE_BOX_WIDTH,
-                    height: BASE_BOX_HEIGHT,
-                    display: "flex",
-                    flexDirection: "column",
-                    backgroundColor: "#242b3d",
-                    borderRadius: 1,
-                    position: "relative",
-                    overflow: "hidden",
-                    marginTop: match.position?.y ? `${match.position.y}px` : 0,
-                    "&::after": {
-                      content: '""',
-                      position: "absolute",
-                      right: -ROUND_HORIZONTAL_GAP,
-                      top: "50%",
-                      width: ROUND_HORIZONTAL_GAP,
-                      height: 2,
-                      backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    },
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      p: 2,
-                      height: "50%",
-                      borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-                    }}
-                  >
-                    <Avatar
-                      src={getParticipantProfilePicture(match.team1)}
-                      sx={{ width: 32, height: 32, mr: 1 }}
-                    >
-                      {!getParticipantProfilePicture(match.team1) && (
-                        <PersonIcon />
-                      )}
-                    </Avatar>
-                    <Typography
+          <>
+            <MatchConnections matches={tournament.matches} />
+            {Object.entries(
+              tournament.matches.reduce<{ [key: number]: Match[] }>(
+                (acc: { [key: number]: Match[] }, match: Match) => {
+                  if (!acc[match.round]) {
+                    acc[match.round] = [];
+                  }
+                  acc[match.round].push(match);
+                  return acc;
+                },
+                {}
+              )
+            ).map(([round, roundMatches]: [string, Match[]]) => (
+              <Box
+                key={round}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: MATCH_VERTICAL_GAP,
+                  alignItems: "flex-start",
+                  minWidth: BASE_BOX_WIDTH,
+                }}
+              >
+                {roundMatches.map((match: Match, matchIdx: number) => {
+                  // Fallback for missing or invalid position
+                  const hasPosition =
+                    match.position &&
+                    typeof match.position.x === "number" &&
+                    typeof match.position.y === "number";
+                  const fallbackTop =
+                    matchIdx * (BASE_BOX_HEIGHT + MATCH_VERTICAL_GAP);
+                  return (
+                    <Paper
+                      key={match.id}
+                      elevation={1}
                       sx={{
-                        flex: 1,
-                        color: "rgba(255, 255, 255, 0.9)",
-                        fontSize: "0.9rem",
+                        width: BASE_BOX_WIDTH,
+                        height: BASE_BOX_HEIGHT,
+                        display: "flex",
+                        flexDirection: "column",
+                        backgroundColor: "#242b3d",
+                        borderRadius: 1,
+                        position: "relative",
+                        overflow: "hidden",
+                        marginTop: hasPosition
+                          ? `${match.position.y}px`
+                          : `${fallbackTop}px`,
                       }}
                     >
-                      {renderParticipant(match.team1)}
-                    </Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      p: 2,
-                      height: "50%",
-                    }}
-                  >
-                    <Avatar
-                      src={getParticipantProfilePicture(match.team2)}
-                      sx={{ width: 32, height: 32, mr: 1 }}
-                    >
-                      {!getParticipantProfilePicture(match.team2) && (
-                        <PersonIcon />
-                      )}
-                    </Avatar>
-                    <Typography
-                      sx={{
-                        flex: 1,
-                        color: "rgba(255, 255, 255, 0.9)",
-                        fontSize: "0.9rem",
-                      }}
-                    >
-                      {renderParticipant(match.team2)}
-                    </Typography>
-                  </Box>
-                </Paper>
-              ))}
-            </Box>
-          ))
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          p: 2,
+                          height: "50%",
+                          borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+                        }}
+                      >
+                        <Avatar
+                          src={getParticipantProfilePicture(match.team1)}
+                          sx={{ width: 32, height: 32, mr: 1 }}
+                        >
+                          {!getParticipantProfilePicture(match.team1) && (
+                            <PersonIcon />
+                          )}
+                        </Avatar>
+                        <Typography
+                          sx={{
+                            flex: 1,
+                            color: "rgba(255, 255, 255, 0.9)",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {renderParticipant(match.team1)}
+                        </Typography>
+                      </Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          p: 2,
+                          height: "50%",
+                        }}
+                      >
+                        <Avatar
+                          src={getParticipantProfilePicture(match.team2)}
+                          sx={{ width: 32, height: 32, mr: 1 }}
+                        >
+                          {!getParticipantProfilePicture(match.team2) && (
+                            <PersonIcon />
+                          )}
+                        </Avatar>
+                        <Typography
+                          sx={{
+                            flex: 1,
+                            color: "rgba(255, 255, 255, 0.9)",
+                            fontSize: "0.9rem",
+                          }}
+                        >
+                          {renderParticipant(match.team2)}
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  );
+                })}
+              </Box>
+            ))}
+          </>
         ) : (
           <Typography
             sx={{
