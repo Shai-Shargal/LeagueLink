@@ -14,14 +14,14 @@ import {
   ChannelUserStats,
   TournamentStatsConfig,
   ParticipantStatus,
-} from "./types";
-import { tournamentService } from "./services/tournamentService";
-import { authService } from "../services/api";
-import TournamentTabs from "./components/TournamentTabs";
-import TournamentDetailsDialog from "./components/ViewTournament/TournamentDetailsDialog";
-import CreateTournamentDialog from "./components/CreateTournament/CreateTournamentDialog";
-import StatsConfigDialog from "./components/StatsConfigDialog";
-import UserProfileDialog from "./components/UserProfileDialog";
+} from "../../types";
+import { tournamentService } from "../../services/tournamentService";
+import { authService } from "../../../services/api";
+import TournamentTabs from "../TournamentTabs";
+import TournamentDetailsDialog from "./TournamentDetailsDialog";
+import CreateTournamentDialog from "../CreateTournament/CreateTournamentDialog";
+import StatsConfigDialog from "../ViewStats/StatsConfigDialog";
+import UserProfileDialog from "../UserProfileDialog";
 
 interface TournamentViewProps {
   onBack: () => void;

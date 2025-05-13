@@ -10,7 +10,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { Tournament, TournamentStatsConfig } from "../types";
+import { Tournament, TournamentStatsConfig } from "../../types";
 
 interface StatsConfigDialogProps {
   open: boolean;

@@ -6,7 +6,6 @@ import {
   Stack,
   IconButton,
   Tooltip,
-  Chip,
   Menu,
   MenuItem,
 } from "@mui/material";
@@ -107,21 +106,6 @@ export const TournamentList: React.FC<TournamentListProps> = ({
               <Typography>{tournament.location}</Typography>
             </Box>
           </Box>
-          {tournament.statsConfig && (
-            <Box sx={{ mt: 2 }}>
-              <Typography variant="subtitle2">Enabled Statistics:</Typography>
-              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mt: 1 }}>
-                {tournament.statsConfig.enabledStats.map((stat) => (
-                  <Chip
-                    key={`${tournament.id}-${stat}`}
-                    label={stat}
-                    size="small"
-                    sx={{ backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                  />
-                ))}
-              </Box>
-            </Box>
-          )}
         </Paper>
       ))}
 
