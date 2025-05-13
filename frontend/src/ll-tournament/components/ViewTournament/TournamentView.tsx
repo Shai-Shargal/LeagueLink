@@ -18,7 +18,7 @@ import {
 } from "@/ll-tournament/types";
 import { tournamentService } from "../../services/tournamentService";
 import { authService } from "../../../services/api";
-import TournamentTabs from "../TournamentTabs";
+import TournamentTabs from "../ViewStats/TournamentTabs";
 import TournamentDetailsDialog from "./TournamentDetailsDialog";
 import CreateTournamentDialog from "../CreateTournament/CreateTournamentDialog";
 import StatsConfigDialog from "../ViewStats/StatsConfigDialog";

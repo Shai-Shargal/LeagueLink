@@ -5,9 +5,9 @@ import {
   BarChart as StatsIcon,
   Add as AddIcon,
 } from "@mui/icons-material";
-import { Tournament, ChannelUserStats } from "../types";
-import TournamentStatsTable from "./ViewStats/TournamentStatsTable";
-import TournamentList from "./ViewTournament/TournamentList";
+import { Tournament, ChannelUserStats } from "../../types";
+import TournamentStatsTable from "./TournamentStatsTable";
+import TournamentList from "../ViewTournament/TournamentList";
 
 interface TournamentTabsProps {
   activeTab: number;
