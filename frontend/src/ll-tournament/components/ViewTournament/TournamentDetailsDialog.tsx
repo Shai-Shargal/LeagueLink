@@ -8,7 +8,7 @@ import {
   IconButton,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
-import { Tournament } from "../types";
+import { Tournament } from "../../types";
 import TournamentInfoSection from "./TournamentInfoSection";
 import TournamentBracketSection from "./TournamentBracketSection";
 
