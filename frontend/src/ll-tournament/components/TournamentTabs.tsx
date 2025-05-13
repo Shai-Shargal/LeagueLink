@@ -6,8 +6,8 @@ import {
   Add as AddIcon,
 } from "@mui/icons-material";
 import { Tournament, ChannelUserStats } from "../types";
-import TournamentStatsTable from "./TournamentStatsTable";
-import TournamentList from "./TournamentList";
+import TournamentStatsTable from "./ViewStats/TournamentStatsTable";
+import TournamentList from "./ViewTournament/TournamentList";
 
 interface TournamentTabsProps {
   activeTab: number;

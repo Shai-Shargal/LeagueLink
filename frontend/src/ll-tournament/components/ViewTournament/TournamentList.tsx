@@ -17,7 +17,7 @@ import {
   Settings as SettingsIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
-import { Tournament } from "../types";
+import { Tournament } from "../../types";
 
 interface TournamentListProps {
   tournaments: Tournament[];
@@ -66,7 +66,7 @@ export const TournamentList: React.FC<TournamentListProps> = ({
           key={tournament.id}
           sx={{
             p: 2,
-            backgroundColor: "rgba(255, 255, 255, 0.05)",
+            backgroundColor: "rgba(216, 22, 22, 0.05)",
             color: "white",
             cursor: "pointer",
             transition: "background 0.2s",
