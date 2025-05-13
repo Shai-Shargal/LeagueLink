@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Typography, Paper, Avatar } from "@mui/material";
 import { Person as PersonIcon } from "@mui/icons-material";
-import { Tournament } from "../../types";
+import { Tournament, DraggableParticipant } from "../../types";
 
 // Constants for bracket layout
 const ROUND_HORIZONTAL_GAP = 100;
@@ -17,6 +17,26 @@ interface TournamentBracketSectionProps {
 const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
   tournament,
 }) => {
+  const renderParticipant = (
+    participant: DraggableParticipant | DraggableParticipant[] | null
+  ) => {
+    if (!participant) return "TBD";
+    if (Array.isArray(participant)) {
+      return participant.length > 0 ? participant[0].username : "TBD";
+    }
+    return participant.username;
+  };
+
+  const getParticipantProfilePicture = (
+    participant: DraggableParticipant | DraggableParticipant[] | null
+  ) => {
+    if (!participant) return undefined;
+    if (Array.isArray(participant)) {
+      return participant.length > 0 ? participant[0].profilePicture : undefined;
+    }
+    return participant.profilePicture;
+  };
+
   return (
     <Box
       sx={{
@@ -115,10 +135,12 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                     }}
                   >
                     <Avatar
-                      src={match.team1?.avatar}
+                      src={getParticipantProfilePicture(match.team1)}
                       sx={{ width: 32, height: 32, mr: 1 }}
                     >
-                      {!match.team1?.avatar && <PersonIcon />}
+                      {!getParticipantProfilePicture(match.team1) && (
+                        <PersonIcon />
+                      )}
                     </Avatar>
                     <Typography
                       sx={{
@@ -127,7 +149,7 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                         fontSize: "0.9rem",
                       }}
                     >
-                      {match.team1?.username || "TBD"}
+                      {renderParticipant(match.team1)}
                     </Typography>
                   </Box>
                   <Box
@@ -139,10 +161,12 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                     }}
                   >
                     <Avatar
-                      src={match.team2?.profilePicture}
+                      src={getParticipantProfilePicture(match.team2)}
                       sx={{ width: 32, height: 32, mr: 1 }}
                     >
-                      {!match.team2?.profilePicture && <PersonIcon />}
+                      {!getParticipantProfilePicture(match.team2) && (
+                        <PersonIcon />
+                      )}
                     </Avatar>
                     <Typography
                       sx={{
@@ -151,7 +175,7 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                         fontSize: "0.9rem",
                       }}
                     >
-                      {match.team2?.username || "TBD"}
+                      {renderParticipant(match.team2)}
                     </Typography>
                   </Box>
                 </Paper>
