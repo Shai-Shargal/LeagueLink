@@ -28,7 +28,6 @@ import { Tournament } from "@/ll-tournament/types";
 
 interface TournamentListProps {
   tournaments: Tournament[];
-  onTournamentClick: (tournament: Tournament) => void;
   onDeleteTournament: (tournament: Tournament) => void;
   onCreateTournament: () => void;
   isAdmin: boolean;
@@ -36,7 +35,6 @@ interface TournamentListProps {
 
 export const TournamentList: React.FC<TournamentListProps> = ({
   tournaments,
-  onTournamentClick,
   onDeleteTournament,
   isAdmin,
 }) => {
@@ -187,7 +185,6 @@ export const TournamentList: React.FC<TournamentListProps> = ({
               },
               position: "relative",
             }}
-            onClick={() => onTournamentClick(tournament)}
           >
             {/* Tournament Header */}
             <Box

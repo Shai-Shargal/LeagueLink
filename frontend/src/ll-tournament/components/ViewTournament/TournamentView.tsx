@@ -142,12 +142,9 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         name: tournamentData.name,
         description: "Tournament created through the LeagueLink platform",
         channelId: channelId,
-        format: "single_elimination",
         startDate: tournamentData.startDate,
         location: tournamentData.location,
         maxParticipants: 32,
-        rules: "Standard tournament rules apply",
-        prizes: "Trophies for winners",
         participants: [
           ...initialParticipants,
           ...(tournamentData.participants || []),
@@ -159,10 +156,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
       const createdTournament = await tournamentService.createTournament(
         channelId,
-        {
-          ...backendData,
-          format: "single_elimination" as const,
-        }
+        backendData
       );
 
       setTournaments((prev) => [...prev, createdTournament]);
@@ -261,7 +255,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     }
   };
 
-  const handleTournamentChange = (field: string, value: string) => {
+  const handleTournamentChange = (field: string, value: string | number) => {
     console.log("Tournament change:", field, value); // Debug log
     setNewTournament((prev: Partial<Tournament>) => ({
       ...prev,
