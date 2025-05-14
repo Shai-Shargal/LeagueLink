@@ -614,4 +614,156 @@ router.post(
   }
 );
 
+// Get channel statistics
+router.get(
+  "/:channelId/stats",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const channel = await Channel.findById(req.params.channelId)
+        .populate("owner", "username profilePicture")
+        .populate("members", "username profilePicture")
+        .populate("admins", "username profilePicture");
+
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Channel not found",
+        });
+      }
+
+      // Check if user is a member
+      if (
+        !(channel.members as Types.ObjectId[]).some(
+          (memberId) => memberId.toString() === req.user.id
+        )
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to view channel statistics",
+        });
+      }
+
+      const stats = {
+        totalMembers: channel.members.length,
+        totalAdmins: channel.admins.length,
+        createdAt: channel.createdAt,
+        lastActivity: channel.updatedAt,
+      };
+
+      res.json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      logger.error("Get Channel Stats Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error fetching channel statistics",
+      });
+    }
+  }
+);
+
+// Search channels
+router.get("/search", protect, async (req: Request, res: Response) => {
+  try {
+    const { query } = req.query;
+
+    if (!query || typeof query !== "string") {
+      return res.status(400).json({
+        success: false,
+        message: "Search query is required",
+      });
+    }
+
+    const channels = await Channel.find({
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { description: { $regex: query, $options: "i" } },
+      ],
+    })
+      .populate("owner", "username profilePicture")
+      .populate("members", "username profilePicture")
+      .select("-passcode")
+      .limit(10);
+
+    res.json({
+      success: true,
+      data: channels,
+    });
+  } catch (error) {
+    logger.error("Search Channels Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error searching channels",
+    });
+  }
+});
+
+// Transfer channel ownership
+router.post(
+  "/:channelId/transfer/:userId",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const channel = await Channel.findById(req.params.channelId);
+
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Channel not found",
+        });
+      }
+
+      // Only current owner can transfer ownership
+      if ((channel.owner as Types.ObjectId).toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: "Only channel owner can transfer ownership",
+        });
+      }
+
+      const newOwnerId = new Types.ObjectId(req.params.userId);
+
+      // Check if new owner is a member
+      if (
+        !(channel.members as Types.ObjectId[]).some(
+          (memberId) => memberId.toString() === newOwnerId.toString()
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "New owner must be a member of the channel",
+        });
+      }
+
+      // Update channel ownership
+      channel.owner = newOwnerId;
+
+      // Add new owner to admins if not already an admin
+      if (
+        !(channel.admins as Types.ObjectId[]).some(
+          (adminId) => adminId.toString() === newOwnerId.toString()
+        )
+      ) {
+        channel.admins.push(newOwnerId);
+      }
+
+      await channel.save();
+
+      res.json({
+        success: true,
+        message: "Channel ownership transferred successfully",
+      });
+    } catch (error) {
+      logger.error("Transfer Ownership Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error transferring channel ownership",
+      });
+    }
+  }
+);
+
 export default router;
