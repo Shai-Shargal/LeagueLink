@@ -333,8 +333,20 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         round: round,
         matchNumber: matches.filter((m: Match) => m.round === round).length + 1,
         teamType: "team",
-        team1: [],
-        team2: [],
+        team1: {
+          type: "team",
+          id: uuidv4(),
+          isGuest: false,
+          score: 0,
+          players: [],
+        },
+        team2: {
+          type: "team",
+          id: uuidv4(),
+          isGuest: false,
+          score: 0,
+          players: [],
+        },
         position: {
           x,
           y,
@@ -346,7 +358,18 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
       setMatches(updatedMatches);
       return;
     }
-    if (!draggedMatch) return;
+
+    if (!draggedParticipant) return;
+
+    // Check if player is already in another match
+    if (isPlayerInAnyMatch(draggedParticipant.userId)) {
+      setNotification({
+        open: true,
+        message: "Player is already in another match",
+        severity: "error",
+      });
+      return;
+    }
 
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -364,7 +387,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     };
 
     const updatedMatches = matches.map((m: Match) =>
-      m.id === draggedMatch.id ? updatedMatch : m
+      m.id === draggedMatch?.id ? updatedMatch : m
     );
 
     addToHistory(updatedMatches);
@@ -402,7 +425,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setIsCreatingMatch(true);
   };
 
-  const handleAddTeamMatch = async () => {
+  const handleAddTeamMatch = () => {
     try {
       // Create a team match at a default position
       const round = 1;
@@ -413,14 +436,14 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         teamType: "team",
         team1: {
           type: "team",
-          id: newTournament.participants?.[0]?.userId || "",
+          id: uuidv4(),
           isGuest: false,
           score: 0,
           players: [],
         },
         team2: {
           type: "team",
-          id: newTournament.participants?.[1]?.userId || "",
+          id: uuidv4(),
           isGuest: false,
           score: 0,
           players: [],
@@ -432,31 +455,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         rounds: 3,
       };
 
-      // Send the new match to the server
-      const response = await fetch(`${API_BASE_URL}/matches`, {
-        method: "POST",
-        headers: {
-          ...getAuthHeaders(),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          tournament: newTournament._id,
-          round: newMatch.round,
-          matchNumber: newMatch.matchNumber,
-          teamType: newMatch.teamType,
-          bestOf: newMatch.rounds,
-          team1: newMatch.team1,
-          team2: newMatch.team2,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create match");
-      }
-
-      const data = await response.json();
-      const updatedMatch = { ...newMatch, id: data.data._id };
-      const updatedMatches = [...matches, updatedMatch];
+      const updatedMatches = [...matches, newMatch];
       addToHistory(updatedMatches);
       setMatches(updatedMatches);
 
@@ -469,8 +468,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
       console.error("Failed to create match:", error);
       setNotification({
         open: true,
-        message:
-          error instanceof Error ? error.message : "Failed to create match",
+        message: "Failed to create match",
         severity: "error",
       });
     }
@@ -580,16 +578,34 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setNotification({ ...notification, open: false });
   };
 
+  // Helper function to check if a player is already in a match
+  const isPlayerInMatch = (playerId: string, match: Match): boolean => {
+    if (match.teamType === "team") {
+      const team1Players = match.team1?.players || [];
+      const team2Players = match.team2?.players || [];
+      return [...team1Players, ...team2Players].some((p) => p.id === playerId);
+    } else {
+      return match.team1?.id === playerId || match.team2?.id === playerId;
+    }
+  };
+
+  // Helper function to check if a player is in any match
+  const isPlayerInAnyMatch = (playerId: string): boolean => {
+    return matches.some((match) => isPlayerInMatch(playerId, match));
+  };
+
   return (
     <>
       <Dialog
         open={open}
         onClose={handleClose}
-        fullScreen
+        maxWidth="xl"
+        fullWidth
         PaperProps={{
           sx: {
-            background: (theme) => theme.palette.background.default,
-            color: "white",
+            bgcolor: "background.default",
+            minHeight: "80vh",
+            maxHeight: "90vh",
           },
         }}
       >
@@ -745,13 +761,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                     key={match.id}
                     id={`match-${match.id}`}
                     data-match-id={match.id}
-                    draggable
-                    onDragStart={(e: React.DragEvent) =>
-                      handleMatchDragStart({
-                        currentTarget: { getAttribute: () => match.id },
-                      } as any)
-                    }
-                    onDragEnd={handleMatchDragEnd}
                   >
                     <MatchBox
                       match={match}
