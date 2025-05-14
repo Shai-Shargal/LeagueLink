@@ -48,42 +48,79 @@ export const tournamentService = {
           status: p.status,
         })) || [],
       matches:
-        tournamentData.matches?.map((m) => ({
-          round: m.round,
-          matchNumber: m.matchNumber,
-          team1: m.team1
-            ? {
-                type: "player",
-                id: m.team1.isGuest
-                  ? `guest_${m.team1.userId}`
-                  : m.team1.userId,
-                isGuest: m.team1.isGuest || false,
-                score: m.score1 || 0,
-              }
-            : {
-                type: "player",
-                id: "placeholder",
-                score: 0,
-              },
-          team2: m.team2
-            ? {
-                type: "player",
-                id: m.team2.isGuest
-                  ? `guest_${m.team2.userId}`
-                  : m.team2.userId,
-                isGuest: m.team2.isGuest || false,
-                score: m.score2 || 0,
-              }
-            : {
-                type: "player",
-                id: "placeholder",
-                score: 0,
-              },
-          position: m.position,
-          teamType: m.teamType || "1v1",
-          bestOf: m.rounds || 3,
-          status: "pending",
-        })) || [],
+        tournamentData.matches?.map((m) => {
+          console.log("Processing match:", m); // Debug log for each match
+          const transformedMatch = {
+            round: m.round,
+            matchNumber: m.matchNumber,
+            teamType: m.teamType || "1v1",
+            team1:
+              m.teamType === "team"
+                ? {
+                    type: "team",
+                    id:
+                      m.team1?.players?.[0]?.userId ||
+                      tournamentData.participants?.[0]?.userId,
+                    isGuest: false,
+                    score: m.score1 || 0,
+                    players: Array.isArray(m.team1?.players)
+                      ? m.team1.players.map((p) => ({
+                          id: p.userId,
+                          isGuest: p.isGuest || false,
+                        }))
+                      : [],
+                  }
+                : m.team1
+                  ? {
+                      type: "player",
+                      id: m.team1.isGuest
+                        ? `guest_${m.team1.userId}`
+                        : m.team1.userId,
+                      isGuest: m.team1.isGuest || false,
+                      score: m.score1 || 0,
+                    }
+                  : {
+                      type: "player",
+                      id: tournamentData.participants?.[0]?.userId,
+                      score: 0,
+                    },
+            team2:
+              m.teamType === "team"
+                ? {
+                    type: "team",
+                    id:
+                      m.team2?.players?.[0]?.userId ||
+                      tournamentData.participants?.[1]?.userId,
+                    isGuest: false,
+                    score: m.score2 || 0,
+                    players: Array.isArray(m.team2?.players)
+                      ? m.team2.players.map((p) => ({
+                          id: p.userId,
+                          isGuest: p.isGuest || false,
+                        }))
+                      : [],
+                  }
+                : m.team2
+                  ? {
+                      type: "player",
+                      id: m.team2.isGuest
+                        ? `guest_${m.team2.userId}`
+                        : m.team2.userId,
+                      isGuest: m.team2.isGuest || false,
+                      score: m.score2 || 0,
+                    }
+                  : {
+                      type: "player",
+                      id: tournamentData.participants?.[1]?.userId,
+                      score: 0,
+                    },
+            position: m.position,
+            rounds: m.rounds || 3,
+            status: "pending",
+          };
+          console.log("Transformed match:", transformedMatch); // Debug log for transformed match
+          return transformedMatch;
+        }) || [],
       matchConfig: tournamentData.matchConfig || {
         teamType: "1v1",
         bestOf: 3,
@@ -94,7 +131,10 @@ export const tournamentService = {
       },
     };
 
-    console.log("Sending tournament data to backend:", backendData); // Debug log
+    console.log(
+      "Sending tournament data to backend:",
+      JSON.stringify(backendData, null, 2)
+    ); // Detailed debug log
 
     const response = await fetch(`${API_BASE_URL}`, {
       method: "POST",
@@ -106,6 +146,7 @@ export const tournamentService = {
     });
 
     const data = await handleResponse(response);
+    console.log("Backend response:", data); // Debug log for backend response
     return data.data;
   },
 

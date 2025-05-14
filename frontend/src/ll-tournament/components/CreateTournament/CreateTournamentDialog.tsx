@@ -10,6 +10,7 @@ import {
   CircularProgress,
   Paper,
   Alert,
+  Snackbar,
 } from "@mui/material";
 import { v4 as uuidv4 } from "uuid";
 import CloseIcon from "@mui/icons-material/Close";
@@ -48,6 +49,15 @@ interface MatchUpdate {
   nextMatchId?: string;
 }
 
+const API_BASE_URL = "http://localhost:5000/api";
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem("token");
+  return {
+    Authorization: `Bearer ${token}`,
+  };
+};
+
 const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   open,
   onClose,
@@ -71,6 +81,15 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   const [paperSize, setPaperSize] = useState({ width: 1200, height: 700 });
   const paperRef = useRef<HTMLDivElement>(null);
   const [connectionSource, setConnectionSource] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const {
     matches,
@@ -352,12 +371,38 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setMatches(updatedMatches);
   };
 
-  const removeMatch = (matchId: string) => {
-    const updatedMatches = matches.filter(
-      (match: Match) => match.id !== matchId
-    );
-    addToHistory(updatedMatches);
-    setMatches(updatedMatches);
+  const removeMatch = async (matchId: string) => {
+    try {
+      // Delete the match from the server
+      const response = await fetch(`${API_BASE_URL}/matches/${matchId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete match");
+      }
+
+      const updatedMatches = matches.filter(
+        (match: Match) => match.id !== matchId
+      );
+      addToHistory(updatedMatches);
+      setMatches(updatedMatches);
+
+      setNotification({
+        open: true,
+        message: "Match deleted successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Failed to delete match:", error);
+      setNotification({
+        open: true,
+        message:
+          error instanceof Error ? error.message : "Failed to delete match",
+        severity: "error",
+      });
+    }
   };
 
   const handleMatchDragOver = (e: React.DragEvent) => {
@@ -368,25 +413,78 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setIsCreatingMatch(true);
   };
 
-  const handleAddTeamMatch = () => {
-    // Create a team match at a default position
-    const round = 1;
-    const newMatch: Match = {
-      id: uuidv4(),
-      round: round,
-      matchNumber: matches.filter((m: Match) => m.round === round).length + 1,
-      teamType: "team",
-      team1: [],
-      team2: [],
-      position: {
-        x: (round - 1) * ROUND_HORIZONTAL_GAP + 100,
-        y: matches.length * 120 + 100,
-      },
-      rounds: 3,
-    };
-    const updatedMatches = [...matches, newMatch];
-    addToHistory(updatedMatches);
-    setMatches(updatedMatches);
+  const handleAddTeamMatch = async () => {
+    try {
+      // Create a team match at a default position
+      const round = 1;
+      const newMatch: Match = {
+        id: uuidv4(),
+        round: round,
+        matchNumber: matches.filter((m: Match) => m.round === round).length + 1,
+        teamType: "team",
+        team1: {
+          type: "team",
+          id: newTournament.participants?.[0]?.userId || "",
+          isGuest: false,
+          score: 0,
+          players: [],
+        },
+        team2: {
+          type: "team",
+          id: newTournament.participants?.[1]?.userId || "",
+          isGuest: false,
+          score: 0,
+          players: [],
+        },
+        position: {
+          x: (round - 1) * ROUND_HORIZONTAL_GAP + 100,
+          y: matches.length * 120 + 100,
+        },
+        rounds: 3,
+      };
+
+      // Send the new match to the server
+      const response = await fetch(`${API_BASE_URL}/matches`, {
+        method: "POST",
+        headers: {
+          ...getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tournament: newTournament._id,
+          round: newMatch.round,
+          matchNumber: newMatch.matchNumber,
+          teamType: newMatch.teamType,
+          bestOf: newMatch.rounds,
+          team1: newMatch.team1,
+          team2: newMatch.team2,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create match");
+      }
+
+      const data = await response.json();
+      const updatedMatch = { ...newMatch, id: data.data._id };
+      const updatedMatches = [...matches, updatedMatch];
+      addToHistory(updatedMatches);
+      setMatches(updatedMatches);
+
+      setNotification({
+        open: true,
+        message: "Team match created successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      console.error("Failed to create match:", error);
+      setNotification({
+        open: true,
+        message:
+          error instanceof Error ? error.message : "Failed to create match",
+        severity: "error",
+      });
+    }
   };
 
   const handleMatchCreation = (e: React.MouseEvent) => {
@@ -487,6 +585,10 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
   const clearConnectionMode = () => {
     setConnectionSource(null);
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
 
   return (
@@ -737,6 +839,21 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         onClose={() => setIsGuestDialogOpen(false)}
         onAdd={handleAddGuest}
       />
+
+      <Snackbar
+        open={notification.open}
+        autoHideDuration={6000}
+        onClose={handleCloseNotification}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleCloseNotification}
+          severity={notification.severity}
+          sx={{ width: "100%" }}
+        >
+          {notification.message}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

@@ -30,6 +30,17 @@ router.post("/", protect, async (req: Request, res: Response) => {
       matchConfig,
     } = req.body;
 
+    console.log("Received tournament data:", {
+      name,
+      description,
+      channelId,
+      format,
+      startDate,
+      location,
+      matches: matches?.length,
+      matchConfig,
+    });
+
     // Check if user has permission to create tournament in channel
     const channel = await Channel.findById(channelId);
     if (!channel) {
@@ -84,34 +95,61 @@ router.post("/", protect, async (req: Request, res: Response) => {
         },
       });
 
+      console.log("Created tournament:", tournament._id);
+
       // Create matches for the tournament
       if (matches && matches.length > 0) {
+        console.log("Creating matches for tournament:", matches.length);
         const matchPromises = matches.map(async (matchData: any) => {
+          console.log("Processing match data:", matchData);
           const match = await Match.create({
             tournament: tournament._id,
             round: matchData.round,
             matchNumber: matchData.matchNumber,
-            teamType: matchConfig?.teamType || "1v1",
-            bestOf: matchConfig?.bestOf || 3,
+            teamType: matchData.teamType || matchConfig?.teamType || "1v1",
+            bestOf: matchData.rounds || matchConfig?.bestOf || 3,
             team1: {
               type: matchData.team1.type || "player",
-              id: matchData.team1.id,
+              id: new mongoose.Types.ObjectId(matchData.team1.id),
               isGuest: matchData.team1.isGuest || false,
               score: matchData.team1.score || 0,
+              players:
+                matchData.team1.players?.map((p: any) => ({
+                  id: new mongoose.Types.ObjectId(p.id),
+                  isGuest: p.isGuest || false,
+                })) || [],
             },
             team2: {
               type: matchData.team2.type || "player",
-              id: matchData.team2.id,
+              id: new mongoose.Types.ObjectId(matchData.team2.id),
               isGuest: matchData.team2.isGuest || false,
               score: matchData.team2.score || 0,
+              players:
+                matchData.team2.players?.map((p: any) => ({
+                  id: new mongoose.Types.ObjectId(p.id),
+                  isGuest: p.isGuest || false,
+                })) || [],
             },
             nextMatch: matchData.nextMatchId,
             status: "pending",
+            games: Array.from(
+              { length: matchData.rounds || matchConfig?.bestOf || 3 },
+              (_, i) => ({
+                gameNumber: i + 1,
+                status: "pending",
+                stats: {
+                  team1: [],
+                  team2: [],
+                },
+              })
+            ),
           });
+          console.log("Created match:", match._id);
           return match;
         });
 
-        await Promise.all(matchPromises);
+        const createdMatches = await Promise.all(matchPromises);
+        console.log("All matches created:", createdMatches.length);
       }
 
       // Add tournament to channel
@@ -127,13 +165,14 @@ router.post("/", protect, async (req: Request, res: Response) => {
         data: tournament,
       });
     } catch (err) {
+      console.error("Error creating tournament:", err);
       if (err instanceof Error) {
         throw new Error(`Failed to create tournament: ${err.message}`);
       }
       throw new Error("Failed to create tournament");
     }
   } catch (error) {
-    logger.error("Create Tournament Error:", error);
+    console.error("Create Tournament Error:", error);
     res.status(500).json({
       success: false,
       message:

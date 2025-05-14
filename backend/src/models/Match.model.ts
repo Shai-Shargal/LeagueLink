@@ -215,4 +215,19 @@ MatchSchema.index({ matchNumber: 1 });
 MatchSchema.index({ status: 1 });
 MatchSchema.index({ winner: 1 });
 
+// Add a pre-save hook to validate team matches
+MatchSchema.pre("save", function (next) {
+  if (this.teamType === "team") {
+    if (!this.team1.players || !this.team2.players) {
+      next(new Error("Team matches must have players arrays"));
+      return;
+    }
+    if (this.team1.players.length === 0 || this.team2.players.length === 0) {
+      next(new Error("Team matches must have at least one player per team"));
+      return;
+    }
+  }
+  next();
+});
+
 export const Match = mongoose.model<IMatch>("Match", MatchSchema);
