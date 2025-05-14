@@ -19,7 +19,6 @@ import {
 import { tournamentService } from "../../services/tournamentService";
 import { authService } from "../../../services/api";
 import TournamentTabs from "../ViewStats/TournamentTabs";
-import TournamentDetailsDialog from "./TournamentDetailsDialog";
 import CreateTournamentDialog from "../CreateTournament/CreateTournamentDialog";
 import StatsConfigDialog from "../ViewStats/StatsConfigDialog";
 import UserProfileDialog from "../UserProfileDialog";
@@ -69,7 +68,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const [userProfileOpen, setUserProfileOpen] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [tournamentDetailsOpen, setTournamentDetailsOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] =
     useState<Tournament | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -263,13 +261,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     }
   };
 
-  const handleTournamentClick = (tournament: Tournament) => {
-    console.log("Selected tournament:", tournament);
-    console.log("Tournament matches:", tournament.matches);
-    setSelectedTournament(tournament);
-    setTournamentDetailsOpen(true);
-  };
-
   const handleTournamentChange = (field: string, value: string) => {
     console.log("Tournament change:", field, value); // Debug log
     setNewTournament((prev: Partial<Tournament>) => ({
@@ -316,7 +307,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         tournaments={tournaments}
         isAdmin={isAdmin}
         onUserClick={handleUserClick}
-        onTournamentClick={handleTournamentClick}
         onDeleteTournament={handleDeleteTournament}
         onCreateTournament={() => setCreateDialogOpen(true)}
       />
@@ -355,13 +345,6 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         onClose={() => setUserProfileOpen(false)}
         user={selectedUser}
         loading={loadingProfile}
-      />
-
-      <TournamentDetailsDialog
-        open={tournamentDetailsOpen}
-        onClose={() => setTournamentDetailsOpen(false)}
-        tournament={selectedTournament}
-        onUpdateMatch={handleUpdateMatch}
       />
 
       {/* Delete Confirmation Dialog */}
