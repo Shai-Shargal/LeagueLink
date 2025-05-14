@@ -2,6 +2,26 @@ import axios from "axios";
 import { API_URL } from "../config";
 
 const channelService = {
+  // Get user's channels
+  getMyChannels: async () => {
+    const response = await axios.get(`${API_URL}/channels/my-channels`);
+    return response.data;
+  },
+
+  // Find channel by name
+  findChannelByName: async (name: string) => {
+    const response = await axios.get(
+      `${API_URL}/channels/find/${encodeURIComponent(name)}`
+    );
+    return response.data;
+  },
+
+  // List all public channels
+  listPublicChannels: async () => {
+    const response = await axios.get(`${API_URL}/channels`);
+    return response.data;
+  },
+
   // Get channel statistics
   getChannelStats: async (channelId: string) => {
     const response = await axios.get(`${API_URL}/channels/${channelId}/stats`);
