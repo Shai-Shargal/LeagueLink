@@ -147,6 +147,18 @@ export const authService = {
     return response.data;
   },
 
+  deleteAccount: async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await api.delete("/users", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
   // Channel methods
   getMyChannels: async () => {
     try {

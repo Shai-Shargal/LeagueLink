@@ -12,6 +12,11 @@ import {
   IconButton,
   Tooltip,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Divider,
 } from "@mui/material";
 import { Delete as DeleteIcon } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
@@ -56,6 +61,9 @@ const ProfileEditor: React.FC = () => {
   const [newSport, setNewSport] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     fetchUser();
@@ -147,6 +155,23 @@ const ProfileEditor: React.FC = () => {
         ...user,
         favoriteSports: [...user.favoriteSports, sport.emoji],
       });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") {
+      setDeleteError("Please type DELETE to confirm");
+      return;
+    }
+
+    try {
+      await authService.deleteAccount();
+      // Clear local storage and redirect to login
+      localStorage.removeItem("token");
+      navigate("/login");
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      setDeleteError("Failed to delete account. Please try again.");
     }
   };
 
@@ -359,8 +384,116 @@ const ProfileEditor: React.FC = () => {
               {saving ? "Saving..." : "Save Changes"}
             </Button>
           </Box>
+
+          <Divider sx={{ borderColor: "rgba(198, 128, 227, 0.2)", my: 4 }} />
+
+          {/* Danger Zone */}
+          <Box>
+            <Typography variant="h6" sx={{ color: "#ef4444", mb: 2 }}>
+              Danger Zone
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ color: "rgba(255, 255, 255, 0.7)", mb: 2 }}
+            >
+              Once you delete your account, there is no going back. Please be
+              certain.
+            </Typography>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => setDeleteDialogOpen(true)}
+              sx={{
+                borderColor: "#ef4444",
+                color: "#ef4444",
+                "&:hover": {
+                  borderColor: "#dc2626",
+                  backgroundColor: "rgba(239, 68, 68, 0.1)",
+                },
+              }}
+            >
+              Delete Account
+            </Button>
+          </Box>
         </Stack>
       </Paper>
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setDeleteConfirmText("");
+          setDeleteError("");
+        }}
+        PaperProps={{
+          sx: {
+            backgroundColor: "rgba(15, 23, 42, 0.95)",
+            border: "1px solid rgba(198, 128, 227, 0.2)",
+            backdropFilter: "blur(10px)",
+            color: "white",
+          },
+        }}
+      >
+        <DialogTitle sx={{ color: "#ef4444" }}>Delete Account</DialogTitle>
+        <DialogContent>
+          <Typography sx={{ mb: 2 }}>
+            This action cannot be undone. This will permanently delete your
+            account and remove all associated data.
+          </Typography>
+          <Typography sx={{ mb: 2 }}>
+            Please type <strong>DELETE</strong> to confirm.
+          </Typography>
+          <TextField
+            fullWidth
+            value={deleteConfirmText}
+            onChange={(e) => {
+              setDeleteConfirmText(e.target.value);
+              setDeleteError("");
+            }}
+            error={!!deleteError}
+            helperText={deleteError}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "rgba(198, 128, 227, 0.4)",
+                },
+                color: "#fff",
+              },
+              "& .MuiInputLabel-root": {
+                color: "rgba(198, 128, 227, 0.7)",
+              },
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setDeleteDialogOpen(false);
+              setDeleteConfirmText("");
+              setDeleteError("");
+            }}
+            sx={{ color: "rgba(198, 128, 227, 0.7)" }}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteAccount}
+            color="error"
+            variant="contained"
+            disabled={deleteConfirmText !== "DELETE"}
+            sx={{
+              backgroundColor: "#ef4444",
+              "&:hover": {
+                backgroundColor: "#dc2626",
+              },
+            }}
+          >
+            Delete Account
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

@@ -4,6 +4,7 @@ import { protect } from "../middleware/auth.middleware.js";
 import { Channel } from "../models/Channel.model.js";
 import { User } from "../models/User.model.js";
 import { logger } from "../utils/logger.js";
+import mongoose, { Types } from "mongoose";
 
 const router = express.Router();
 
@@ -180,10 +181,11 @@ router.put(
       }
 
       // Check if user is channel owner or admin
-      const isAdmin = channel.admins.some(
+      const isAdmin = (channel.admins as Types.ObjectId[]).some(
         (adminId) => adminId.toString() === req.user.id.toString()
       );
-      const isOwner = channel.owner.toString() === req.user.id.toString();
+      const isOwner =
+        (channel.owner as Types.ObjectId).toString() === req.user.id.toString();
 
       if (!isAdmin && !isOwner) {
         return res.status(403).json({
@@ -232,7 +234,7 @@ router.delete("/:channelId", protect, async (req: Request, res: Response) => {
     }
 
     // Only channel owner can delete the channel
-    if (channel.owner.toString() !== req.user.id) {
+    if ((channel.owner as Types.ObjectId).toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to delete channel",
@@ -298,7 +300,7 @@ router.post(
       }
 
       // Check if user is the owner
-      if (channel.owner.toString() === req.user.id) {
+      if ((channel.owner as Types.ObjectId).toString() === req.user.id) {
         return res.status(403).json({
           success: false,
           message: "Channel owner cannot leave the channel",
@@ -314,12 +316,12 @@ router.post(
       }
 
       // Remove user from members array
-      channel.members = channel.members.filter(
+      channel.members = (channel.members as Types.ObjectId[]).filter(
         (memberId) => memberId.toString() !== req.user.id
       );
 
       // Remove user from admins array if they were an admin
-      channel.admins = channel.admins.filter(
+      channel.admins = (channel.admins as Types.ObjectId[]).filter(
         (adminId) => adminId.toString() !== req.user.id
       );
 
@@ -339,6 +341,274 @@ router.post(
       res.status(500).json({
         success: false,
         message: "Error leaving channel",
+      });
+    }
+  }
+);
+
+// List all public channels
+router.get("/", protect, async (req: Request, res: Response) => {
+  try {
+    const channels = await Channel.find()
+      .populate("owner", "username profilePicture")
+      .populate("members", "username profilePicture")
+      .populate("admins", "username profilePicture")
+      .select("-passcode"); // Don't send passcode to client
+
+    res.json({
+      success: true,
+      data: channels,
+    });
+  } catch (error) {
+    logger.error("List Channels Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error listing channels",
+    });
+  }
+});
+
+// Update channel passcode
+router.patch(
+  "/:channelId/passcode",
+  protect,
+  [body("passcode").trim().isLength({ min: 6 })],
+  async (req: Request, res: Response) => {
+    try {
+      const channel = await Channel.findById(req.params.channelId);
+
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Channel not found",
+        });
+      }
+
+      // Only owner can change passcode
+      if ((channel.owner as Types.ObjectId).toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: "Only channel owner can change passcode",
+        });
+      }
+
+      channel.passcode = req.body.passcode;
+      await channel.save();
+
+      res.json({
+        success: true,
+        message: "Channel passcode updated successfully",
+      });
+    } catch (error) {
+      logger.error("Update Channel Passcode Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating channel passcode",
+      });
+    }
+  }
+);
+
+// Promote member to admin
+router.post(
+  "/:channelId/promote/:userId",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const channel = await Channel.findById(req.params.channelId);
+
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Channel not found",
+        });
+      }
+
+      // Only owner can promote members
+      if ((channel.owner as Types.ObjectId).toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: "Only channel owner can promote members",
+        });
+      }
+
+      const userId = new Types.ObjectId(req.params.userId);
+
+      // Check if user is a member
+      if (
+        !(channel.members as Types.ObjectId[]).some(
+          (memberId) => memberId.toString() === userId.toString()
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "User is not a member of this channel",
+        });
+      }
+
+      // Check if user is already an admin
+      if (
+        (channel.admins as Types.ObjectId[]).some(
+          (adminId) => adminId.toString() === userId.toString()
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "User is already an admin",
+        });
+      }
+
+      channel.admins.push(userId);
+      await channel.save();
+
+      res.json({
+        success: true,
+        message: "Member promoted to admin successfully",
+      });
+    } catch (error) {
+      logger.error("Promote Member Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error promoting member",
+      });
+    }
+  }
+);
+
+// Demote admin to member
+router.post(
+  "/:channelId/demote/:userId",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const channel = await Channel.findById(req.params.channelId);
+
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Channel not found",
+        });
+      }
+
+      // Only owner can demote admins
+      if ((channel.owner as Types.ObjectId).toString() !== req.user.id) {
+        return res.status(403).json({
+          success: false,
+          message: "Only channel owner can demote admins",
+        });
+      }
+
+      const userId = new Types.ObjectId(req.params.userId);
+
+      // Check if user is an admin
+      if (
+        !(channel.admins as Types.ObjectId[]).some(
+          (adminId) => adminId.toString() === userId.toString()
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "User is not an admin of this channel",
+        });
+      }
+
+      // Remove user from admins array
+      channel.admins = (channel.admins as Types.ObjectId[]).filter(
+        (adminId) => adminId.toString() !== userId.toString()
+      );
+      await channel.save();
+
+      res.json({
+        success: true,
+        message: "Admin demoted to member successfully",
+      });
+    } catch (error) {
+      logger.error("Demote Admin Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error demoting admin",
+      });
+    }
+  }
+);
+
+// Kick member from channel
+router.post(
+  "/:channelId/kick/:userId",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const channel = await Channel.findById(req.params.channelId);
+
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Channel not found",
+        });
+      }
+
+      // Only owner or admins can kick members
+      const isAdmin = (channel.admins as Types.ObjectId[]).some(
+        (adminId) => adminId.toString() === req.user.id
+      );
+      const isOwner =
+        (channel.owner as Types.ObjectId).toString() === req.user.id;
+
+      if (!isAdmin && !isOwner) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to kick members",
+        });
+      }
+
+      const userId = new Types.ObjectId(req.params.userId);
+
+      // Cannot kick the owner
+      if ((channel.owner as Types.ObjectId).toString() === userId.toString()) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot kick the channel owner",
+        });
+      }
+
+      // Check if user is a member
+      if (
+        !(channel.members as Types.ObjectId[]).some(
+          (memberId) => memberId.toString() === userId.toString()
+        )
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "User is not a member of this channel",
+        });
+      }
+
+      // Remove user from members array
+      channel.members = (channel.members as Types.ObjectId[]).filter(
+        (memberId) => memberId.toString() !== userId.toString()
+      );
+
+      // Remove user from admins array if they were an admin
+      channel.admins = (channel.admins as Types.ObjectId[]).filter(
+        (adminId) => adminId.toString() !== userId.toString()
+      );
+
+      await channel.save();
+
+      // Remove channel from user's channels array
+      await User.findByIdAndUpdate(userId, {
+        $pull: { channels: channel._id },
+      });
+
+      res.json({
+        success: true,
+        message: "Member kicked successfully",
+      });
+    } catch (error) {
+      logger.error("Kick Member Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error kicking member",
       });
     }
   }
