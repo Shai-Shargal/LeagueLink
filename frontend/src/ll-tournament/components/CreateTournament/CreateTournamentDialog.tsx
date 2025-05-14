@@ -371,18 +371,8 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     setMatches(updatedMatches);
   };
 
-  const removeMatch = async (matchId: string) => {
+  const removeMatch = (matchId: string) => {
     try {
-      // Delete the match from the server
-      const response = await fetch(`${API_BASE_URL}/matches/${matchId}`, {
-        method: "DELETE",
-        headers: getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete match");
-      }
-
       const updatedMatches = matches.filter(
         (match: Match) => match.id !== matchId
       );
@@ -398,8 +388,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
       console.error("Failed to delete match:", error);
       setNotification({
         open: true,
-        message:
-          error instanceof Error ? error.message : "Failed to delete match",
+        message: "Failed to delete match",
         severity: "error",
       });
     }
