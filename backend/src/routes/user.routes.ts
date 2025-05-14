@@ -291,7 +291,6 @@ router.get(
 router.delete("/", protect, async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.user.id);
-
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -299,84 +298,17 @@ router.delete("/", protect, async (req: Request, res: Response) => {
       });
     }
 
-    // Delete user's profile picture if exists
-    if (user.profilePicture) {
-      // TODO: Implement file deletion from storage
-      // This would require implementing a file storage service
-    }
-
-    // Handle channels owned by the user
-    const ownedChannels = await Channel.find({ owner: user._id });
-
-    for (const channel of ownedChannels) {
-      try {
-        if (channel.members.length === 1) {
-          // If user is the only member, delete the channel
-          await Channel.findByIdAndDelete(channel._id);
-          logger.info(
-            `Deleted channel ${channel._id} as it had only one member`
-          );
-        } else {
-          // Find a new owner (first admin or first member)
-          const newOwner =
-            channel.admins.find(
-              (adminId) =>
-                adminId && adminId.toString() !== user._id?.toString()
-            ) ||
-            channel.members.find(
-              (memberId) =>
-                memberId && memberId.toString() !== user._id?.toString()
-            );
-
-          if (newOwner) {
-            // Update channel ownership
-            channel.owner = newOwner;
-            // Add new owner to admins if not already there
-            if (
-              !channel.admins.some(
-                (adminId) =>
-                  adminId && adminId.toString() === newOwner.toString()
-              )
-            ) {
-              channel.admins.push(newOwner);
-            }
-            await channel.save();
-            logger.info(
-              `Transferred ownership of channel ${channel._id} to user ${newOwner}`
-            );
-          } else {
-            // If no suitable new owner found, delete the channel
-            await Channel.findByIdAndDelete(channel._id);
-            logger.info(
-              `Deleted channel ${channel._id} as no suitable new owner was found`
-            );
-          }
-        }
-      } catch (channelError) {
-        logger.error(
-          `Error handling channel ${channel._id} during user deletion:`,
-          channelError
-        );
-        // Continue with other channels even if one fails
-        continue;
-      }
-    }
-
-    // Remove user from all channels they are a member of
+    // Remove user from all channels
     await Channel.updateMany(
       { members: user._id },
       { $pull: { members: user._id, admins: user._id } }
     );
 
-    // Remove user from all tournaments they are participating in
-    await Tournament.updateMany(
-      { participants: user._id },
-      { $pull: { participants: user._id } }
-    );
+    // Delete user's tournaments
+    await Tournament.deleteMany({ organizer: user._id });
 
-    // Delete the user account
+    // Delete user
     await user.deleteOne();
-    logger.info(`Successfully deleted user account ${user._id}`);
 
     res.json({
       success: true,

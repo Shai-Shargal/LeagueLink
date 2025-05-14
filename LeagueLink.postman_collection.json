@@ -204,6 +204,65 @@
               "path": ["api", "channels"]
             }
           }
+        },
+        {
+          "name": "Get Channel",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/channels/{{channel_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "channels", "{{channel_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Channel",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Channel Name\",\n    \"description\": \"Updated description\",\n    \"passcode\": \"newpasscode\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/channels/{{channel_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "channels", "{{channel_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Channel",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/channels/{{channel_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "channels", "{{channel_id}}"]
+            }
+          }
         }
       ]
     },
@@ -236,6 +295,48 @@
           }
         },
         {
+          "name": "Get Tournament",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tournaments/{{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tournaments", "{{tournament_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Tournament",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Updated Tournament Name\",\n    \"description\": \"Updated tournament description\",\n    \"startDate\": \"2024-04-01T00:00:00.000Z\",\n    \"status\": \"in-progress\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tournaments/{{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tournaments", "{{tournament_id}}"]
+            }
+          }
+        },
+        {
           "name": "Delete Tournament",
           "request": {
             "method": "DELETE",
@@ -249,6 +350,95 @@
               "raw": "{{base_url}}/api/tournaments/{{tournament_id}}",
               "host": ["{{base_url}}"],
               "path": ["api", "tournaments", "{{tournament_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Matches",
+      "item": [
+        {
+          "name": "Create Match",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"tournamentId\": \"{{tournament_id}}\",\n    \"player1Id\": \"{{player1_id}}\",\n    \"player2Id\": \"{{player2_id}}\",\n    \"scheduledTime\": \"2024-03-20T15:00:00.000Z\",\n    \"status\": \"scheduled\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches"]
+            }
+          }
+        },
+        {
+          "name": "Get Match",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/matches/{{match_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "{{match_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Match",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"scheduledTime\": \"2024-03-21T15:00:00.000Z\",\n    \"status\": \"in-progress\",\n    \"score\": {\n        \"player1\": 2,\n        \"player2\": 1\n    }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/matches/{{match_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "{{match_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Match",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/matches/{{match_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "matches", "{{match_id}}"]
             }
           }
         }
@@ -268,12 +458,27 @@
     },
     {
       "key": "channel_id",
-      "value": "your_channel_id_here",
+      "value": "channel_id_here",
       "type": "string"
     },
     {
       "key": "tournament_id",
-      "value": "your_tournament_id_here",
+      "value": "tournament_id_here",
+      "type": "string"
+    },
+    {
+      "key": "match_id",
+      "value": "match_id_here",
+      "type": "string"
+    },
+    {
+      "key": "player1_id",
+      "value": "player1_id_here",
+      "type": "string"
+    },
+    {
+      "key": "player2_id",
+      "value": "player2_id_here",
       "type": "string"
     }
   ]

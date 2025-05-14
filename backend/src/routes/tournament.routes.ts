@@ -343,7 +343,80 @@ router.get(
   }
 );
 
-// Delete tournament and its matches
+// Update tournament
+router.put("/:id", protect, async (req: Request, res: Response) => {
+  try {
+    const tournament = await Tournament.findById(req.params.id);
+
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: "Tournament not found",
+      });
+    }
+
+    // Check if user is tournament organizer or channel admin
+    const channel = await Channel.findById(tournament.channel);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        message: "Associated channel not found",
+      });
+    }
+
+    const isAdmin = channel.admins.includes(req.user.id);
+    const isOrganizer = tournament.organizer.toString() === req.user.id;
+
+    if (!isAdmin && !isOrganizer) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update tournament",
+      });
+    }
+
+    const {
+      name,
+      description,
+      format,
+      startDate,
+      location,
+      maxParticipants,
+      rules,
+      prizes,
+      status,
+      statsConfig,
+      matchConfig,
+    } = req.body;
+
+    // Update tournament fields
+    if (name) tournament.name = name;
+    if (description) tournament.description = description;
+    if (format) tournament.format = format;
+    if (startDate) tournament.startDate = new Date(startDate);
+    if (location) tournament.location = location;
+    if (maxParticipants) tournament.maxParticipants = maxParticipants;
+    if (rules) tournament.rules = rules;
+    if (prizes) tournament.prizes = prizes;
+    if (status) tournament.status = status;
+    if (statsConfig) tournament.statsConfig = statsConfig;
+    if (matchConfig) tournament.matchConfig = matchConfig;
+
+    await tournament.save();
+
+    res.json({
+      success: true,
+      data: tournament,
+    });
+  } catch (error) {
+    logger.error("Update Tournament Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating tournament",
+    });
+  }
+});
+
+// Delete tournament
 router.delete("/:id", protect, async (req: Request, res: Response) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
@@ -355,19 +428,22 @@ router.delete("/:id", protect, async (req: Request, res: Response) => {
       });
     }
 
-    // Check if user has permission to delete tournament
+    // Check if user is tournament organizer or channel admin
     const channel = await Channel.findById(tournament.channel);
     if (!channel) {
       return res.status(404).json({
         success: false,
-        message: "Channel not found",
+        message: "Associated channel not found",
       });
     }
 
-    if (!channel.admins.includes(req.user.id)) {
+    const isAdmin = channel.admins.includes(req.user.id);
+    const isOrganizer = tournament.organizer.toString() === req.user.id;
+
+    if (!isAdmin && !isOrganizer) {
       return res.status(403).json({
         success: false,
-        message: "Not authorized to delete this tournament",
+        message: "Not authorized to delete tournament",
       });
     }
 
@@ -375,17 +451,16 @@ router.delete("/:id", protect, async (req: Request, res: Response) => {
     await Match.deleteMany({ tournament: tournament._id });
 
     // Remove tournament from channel
-    channel.tournaments = channel.tournaments.filter(
-      (t: mongoose.Types.ObjectId) => t.toString() !== tournament._id.toString()
-    );
-    await channel.save();
+    await Channel.findByIdAndUpdate(tournament.channel, {
+      $pull: { tournaments: tournament._id },
+    });
 
     // Delete tournament
     await tournament.deleteOne();
 
     res.json({
       success: true,
-      message: "Tournament and its matches deleted successfully",
+      message: "Tournament deleted successfully",
     });
   } catch (error) {
     logger.error("Delete Tournament Error:", error);

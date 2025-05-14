@@ -230,4 +230,35 @@ MatchSchema.pre("save", function (next) {
   next();
 });
 
+// Add a pre-delete hook to handle cleanup
+MatchSchema.pre(
+  "deleteOne",
+  { document: true, query: false },
+  async function (next) {
+    try {
+      // Find all matches that reference this match as their nextMatch
+      const matchesToUpdate = await this.model("Match").find({
+        nextMatch: this._id,
+      });
+
+      // Update those matches to remove the reference
+      if (matchesToUpdate.length > 0) {
+        await this.model("Match").updateMany(
+          { nextMatch: this._id },
+          { $set: { nextMatch: null } }
+        );
+      }
+
+      // Remove match from tournament
+      await this.model("Tournament").findByIdAndUpdate(this.tournament, {
+        $pull: { matches: this._id },
+      });
+
+      next();
+    } catch (error: any) {
+      next(error as Error);
+    }
+  }
+);
+
 export const Match = mongoose.model<IMatch>("Match", MatchSchema);

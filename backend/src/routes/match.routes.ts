@@ -4,6 +4,7 @@ import { Match } from "../models/Match.model.js";
 import { Tournament } from "../models/Tournament.model.js";
 import { logger } from "../utils/logger.js";
 import mongoose from "mongoose";
+import { Channel } from "../models/Channel.model.js";
 
 const router = express.Router();
 
@@ -250,14 +251,115 @@ router.post("/", protect, async (req: Request, res: Response) => {
   }
 });
 
-// Delete match
-router.delete("/:id", protect, async (req: Request, res: Response) => {
+// Update match
+router.put("/:matchId", protect, async (req: Request, res: Response) => {
   try {
-    const match = await Match.findById(req.params.id);
+    const match = await Match.findById(req.params.matchId);
     if (!match) {
       return res.status(404).json({
         success: false,
         message: "Match not found",
+      });
+    }
+
+    // Check if user is tournament organizer or channel admin
+    const tournament = await Tournament.findById(match.tournament);
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: "Associated tournament not found",
+      });
+    }
+
+    const channel = await Channel.findById(tournament.channel);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        message: "Associated channel not found",
+      });
+    }
+
+    const isAdmin = channel.admins.includes(req.user.id);
+    const isOrganizer = tournament.organizer.toString() === req.user.id;
+
+    if (!isAdmin && !isOrganizer) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to update match",
+      });
+    }
+
+    const {
+      round,
+      matchNumber,
+      teamType,
+      bestOf,
+      team1,
+      team2,
+      nextMatch,
+      status,
+    } = req.body;
+
+    // Update match fields
+    if (round !== undefined) match.round = round;
+    if (matchNumber !== undefined) match.matchNumber = matchNumber;
+    if (teamType) match.teamType = teamType;
+    if (bestOf) match.bestOf = bestOf;
+    if (team1) match.team1 = team1;
+    if (team2) match.team2 = team2;
+    if (nextMatch) match.nextMatch = new mongoose.Types.ObjectId(nextMatch);
+    if (status) match.status = status;
+
+    await match.save();
+
+    res.json({
+      success: true,
+      data: match,
+    });
+  } catch (error) {
+    logger.error("Update Match Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating match",
+    });
+  }
+});
+
+// Delete match
+router.delete("/:matchId", protect, async (req: Request, res: Response) => {
+  try {
+    const match = await Match.findById(req.params.matchId);
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        message: "Match not found",
+      });
+    }
+
+    // Check if user is tournament organizer or channel admin
+    const tournament = await Tournament.findById(match.tournament);
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: "Associated tournament not found",
+      });
+    }
+
+    const channel = await Channel.findById(tournament.channel);
+    if (!channel) {
+      return res.status(404).json({
+        success: false,
+        message: "Associated channel not found",
+      });
+    }
+
+    const isAdmin = channel.admins.includes(req.user.id);
+    const isOrganizer = tournament.organizer.toString() === req.user.id;
+
+    if (!isAdmin && !isOrganizer) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete match",
       });
     }
 
@@ -266,7 +368,7 @@ router.delete("/:id", protect, async (req: Request, res: Response) => {
       $pull: { matches: match._id },
     });
 
-    // Delete the match
+    // Delete match
     await match.deleteOne();
 
     res.json({

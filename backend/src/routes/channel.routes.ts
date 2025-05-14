@@ -285,25 +285,40 @@ router.get("/find/:name", protect, async (req: Request, res: Response) => {
   }
 });
 
-// Leave a channel
+// Get all channels
+router.get("/", protect, async (req: Request, res: Response) => {
+  try {
+    const channels = await Channel.find()
+      .populate("owner", "username profilePicture")
+      .populate("members", "username profilePicture")
+      .populate("admins", "username profilePicture")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: channels,
+    });
+  } catch (error) {
+    logger.error("Get All Channels Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching channels",
+    });
+  }
+});
+
+// Leave channel
 router.post(
   "/:channelId/leave",
   protect,
   async (req: Request, res: Response) => {
     try {
       const channel = await Channel.findById(req.params.channelId);
+
       if (!channel) {
         return res.status(404).json({
           success: false,
           message: "Channel not found",
-        });
-      }
-
-      // Check if user is the owner
-      if ((channel.owner as Types.ObjectId).toString() === req.user.id) {
-        return res.status(403).json({
-          success: false,
-          message: "Channel owner cannot leave the channel",
         });
       }
 
@@ -315,19 +330,26 @@ router.post(
         });
       }
 
-      // Remove user from members array
+      // If user is the owner, they cannot leave (must delete or transfer ownership)
+      if ((channel.owner as Types.ObjectId).toString() === req.user.id) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Channel owner cannot leave. Transfer ownership or delete the channel instead.",
+        });
+      }
+
+      // Remove user from members and admins
       channel.members = (channel.members as Types.ObjectId[]).filter(
         (memberId) => memberId.toString() !== req.user.id
       );
-
-      // Remove user from admins array if they were an admin
       channel.admins = (channel.admins as Types.ObjectId[]).filter(
         (adminId) => adminId.toString() !== req.user.id
       );
 
       await channel.save();
 
-      // Remove channel from user's channels array
+      // Remove channel from user's channels
       await User.findByIdAndUpdate(req.user.id, {
         $pull: { channels: channel._id },
       });

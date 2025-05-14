@@ -75,7 +75,7 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         top,
         width: CARD_WIDTH,
         height: CARD_HEIGHT,
-        borderRadius: BORDER_RADIUS,
+        borderRadius: 0,
         boxShadow: 4,
         background: "#23293a",
         border: isSourceMatch

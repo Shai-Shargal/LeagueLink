@@ -1,3 +1,5 @@
+import type { Team } from "./types/index";
+
 export interface TournamentStructure {
   groups: number;
   participantsPerGroup: number;
@@ -26,8 +28,8 @@ export interface Match {
     y: number;
   };
   teamType?: "solo" | "team";
-  team1: DraggableParticipant | DraggableParticipant[] | null;
-  team2: DraggableParticipant | DraggableParticipant[] | null;
+  team1: Team | null;
+  team2: Team | null;
   score1?: number;
   score2?: number;
   winner?: DraggableParticipant | null;
