@@ -8,6 +8,7 @@ import { logger } from "./utils/logger.js";
 import userRoutes from "./routes/user.routes.js";
 import channelRoutes from "./routes/channel.routes.js";
 import tournamentRoutes from "./routes/tournament.routes.js";
+import matchRoutes from "./routes/match.routes.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import authRoutes from "./routes/auth.routes.js";
 
@@ -41,6 +42,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/channels", channelRoutes);
 app.use("/api/tournaments", tournamentRoutes);
+app.use("/api/matches", matchRoutes);
 
 // Error handling middleware
 app.use(errorHandler);
