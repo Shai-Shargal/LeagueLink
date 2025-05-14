@@ -24,7 +24,7 @@ import {
   MoreVert as MoreVertIcon,
   SportsTennis as SportsIcon,
 } from "@mui/icons-material";
-import { Tournament } from "@/ll-tournament/types";
+import { Tournament } from "../types";
 
 interface TournamentListProps {
   tournaments: Tournament[];

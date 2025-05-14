@@ -15,7 +15,7 @@ import {
   TournamentStatsConfig,
   ParticipantStatus,
   Match,
-} from "@/ll-tournament/types";
+} from "../../types";
 import { tournamentService } from "../../services/tournamentService";
 import { authService } from "../../../services/api";
 import TournamentTabs from "../ViewStats/TournamentTabs";
