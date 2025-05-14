@@ -13,6 +13,9 @@ const getAuthHeaders = () => {
 const handleResponse = async (response: Response) => {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
+    if (response.status === 404) {
+      throw new Error(errorData.message || "Resource not found");
+    }
     throw new Error(
       errorData.message || `HTTP error! status: ${response.status}`
     );

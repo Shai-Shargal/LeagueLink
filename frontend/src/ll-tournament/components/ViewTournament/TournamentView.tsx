@@ -72,6 +72,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const [tournamentDetailsOpen, setTournamentDetailsOpen] = useState(false);
   const [tournamentToDelete, setTournamentToDelete] =
     useState<Tournament | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
@@ -247,15 +248,18 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       return;
     }
     try {
-      const response = await tournamentService.deleteTournament(
-        tournamentToDelete.id
-      );
-      console.log("Delete response:", response);
+      await tournamentService.deleteTournament(tournamentToDelete.id);
       setDeleteDialogOpen(false);
       setTournamentToDelete(null);
       await loadData(); // Wait for data to reload
     } catch (error) {
       console.error("Failed to delete tournament:", error);
+      // Show error to user
+      setError(
+        error instanceof Error ? error.message : "Failed to delete tournament"
+      );
+      setDeleteDialogOpen(false);
+      setTournamentToDelete(null);
     }
   };
 
@@ -387,6 +391,17 @@ const TournamentView: React.FC<TournamentViewProps> = ({
           <Button onClick={handleConfirmDelete} color="error">
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Error Dialog */}
+      <Dialog open={!!error} onClose={() => setError(null)}>
+        <DialogTitle>Error</DialogTitle>
+        <DialogContent>
+          <Typography color="error">{error}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setError(null)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Box>
