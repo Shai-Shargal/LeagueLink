@@ -234,6 +234,23 @@
               "path": ["api", "tournaments"]
             }
           }
+        },
+        {
+          "name": "Delete Tournament",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tournaments/{{tournament_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tournaments", "{{tournament_id}}"]
+            }
+          }
         }
       ]
     }
@@ -252,6 +269,11 @@
     {
       "key": "channel_id",
       "value": "your_channel_id_here",
+      "type": "string"
+    },
+    {
+      "key": "tournament_id",
+      "value": "your_tournament_id_here",
       "type": "string"
     }
   ]

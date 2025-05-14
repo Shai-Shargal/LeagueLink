@@ -50,27 +50,44 @@ export const tournamentService = {
           matchNumber: m.matchNumber,
           team1: m.team1
             ? {
-                userId: m.team1.userId,
-                username: m.team1.username,
+                type: "player",
+                id: m.team1.isGuest
+                  ? `guest_${m.team1.userId}`
+                  : m.team1.userId,
                 isGuest: m.team1.isGuest || false,
-                status: m.team1.status,
+                score: m.score1 || 0,
               }
-            : null,
+            : {
+                type: "player",
+                id: "placeholder",
+                score: 0,
+              },
           team2: m.team2
             ? {
-                userId: m.team2.userId,
-                username: m.team2.username,
+                type: "player",
+                id: m.team2.isGuest
+                  ? `guest_${m.team2.userId}`
+                  : m.team2.userId,
                 isGuest: m.team2.isGuest || false,
-                status: m.team2.status,
+                score: m.score2 || 0,
               }
-            : null,
+            : {
+                type: "player",
+                id: "placeholder",
+                score: 0,
+              },
           position: m.position,
-          score1: m.score1 || 0,
-          score2: m.score2 || 0,
-          winner: m.winner || null,
+          teamType: m.teamType || "1v1",
+          bestOf: m.rounds || 3,
+          status: "pending",
         })) || [],
       matchConfig: tournamentData.matchConfig || {
-        rounds: 5, // Default to best of 5
+        teamType: "1v1",
+        bestOf: 3,
+        stats: {
+          enabled: ["score"],
+          custom: [],
+        },
       },
     };
 
@@ -251,6 +268,23 @@ export const tournamentService = {
         method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(stats),
+      }
+    );
+    return handleResponse(response);
+  },
+
+  // Match operations
+  async updateMatchBestOf(
+    tournamentId: string,
+    matchId: string,
+    bestOf: number
+  ) {
+    const response = await fetch(
+      `${API_BASE_URL}/${tournamentId}/matches/${matchId}/best-of`,
+      {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ bestOf }),
       }
     );
     return handleResponse(response);

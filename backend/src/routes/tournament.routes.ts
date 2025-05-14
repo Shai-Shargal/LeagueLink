@@ -6,6 +6,7 @@ import { Channel } from "../models/Channel.model.js";
 import { logger } from "../utils/logger.js";
 import mongoose from "mongoose";
 import { User } from "../models/User.model.js";
+import { Match } from "../models/Match.model.js";
 
 const router = express.Router();
 
@@ -26,6 +27,7 @@ router.post("/", protect, async (req: Request, res: Response) => {
       matches,
       status,
       statsConfig,
+      matchConfig,
     } = req.body;
 
     // Check if user has permission to create tournament in channel
@@ -72,7 +74,45 @@ router.post("/", protect, async (req: Request, res: Response) => {
           enabledStats: ["wins", "losses", "winRate"],
           customStats: [],
         },
+        matchConfig: matchConfig || {
+          teamType: "1v1",
+          bestOf: 3,
+          stats: {
+            enabled: ["score"],
+            custom: [],
+          },
+        },
       });
+
+      // Create matches for the tournament
+      if (matches && matches.length > 0) {
+        const matchPromises = matches.map(async (matchData: any) => {
+          const match = await Match.create({
+            tournament: tournament._id,
+            round: matchData.round,
+            matchNumber: matchData.matchNumber,
+            teamType: matchConfig?.teamType || "1v1",
+            bestOf: matchConfig?.bestOf || 3,
+            team1: {
+              type: matchData.team1.type || "player",
+              id: matchData.team1.id,
+              isGuest: matchData.team1.isGuest || false,
+              score: matchData.team1.score || 0,
+            },
+            team2: {
+              type: matchData.team2.type || "player",
+              id: matchData.team2.id,
+              isGuest: matchData.team2.isGuest || false,
+              score: matchData.team2.score || 0,
+            },
+            nextMatch: matchData.nextMatchId,
+            status: "pending",
+          });
+          return match;
+        });
+
+        await Promise.all(matchPromises);
+      }
 
       // Add tournament to channel
       if (channel.tournaments) {
@@ -264,7 +304,7 @@ router.get(
   }
 );
 
-// Delete tournament
+// Delete tournament and its matches
 router.delete("/:id", protect, async (req: Request, res: Response) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
@@ -292,6 +332,9 @@ router.delete("/:id", protect, async (req: Request, res: Response) => {
       });
     }
 
+    // Delete all matches associated with the tournament
+    await Match.deleteMany({ tournament: tournament._id });
+
     // Remove tournament from channel
     channel.tournaments = channel.tournaments.filter(
       (t: mongoose.Types.ObjectId) => t.toString() !== tournament._id.toString()
@@ -303,7 +346,7 @@ router.delete("/:id", protect, async (req: Request, res: Response) => {
 
     res.json({
       success: true,
-      message: "Tournament deleted successfully",
+      message: "Tournament and its matches deleted successfully",
     });
   } catch (error) {
     logger.error("Delete Tournament Error:", error);
@@ -313,5 +356,76 @@ router.delete("/:id", protect, async (req: Request, res: Response) => {
     });
   }
 });
+
+// Update tournament match configuration
+router.patch(
+  "/:tournamentId/match-config",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const { matchConfig } = req.body;
+      const tournament = await Tournament.findByIdAndUpdate(
+        req.params.tournamentId,
+        { matchConfig },
+        { new: true }
+      );
+
+      if (!tournament) {
+        return res.status(404).json({
+          success: false,
+          message: "Tournament not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        data: tournament,
+      });
+    } catch (error) {
+      logger.error("Update Tournament Match Config Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating tournament match configuration",
+      });
+    }
+  }
+);
+
+// Update match bestOf
+router.patch(
+  "/:tournamentId/matches/:matchId/best-of",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const { bestOf } = req.body;
+      const match = await Match.findOneAndUpdate(
+        {
+          tournament: req.params.tournamentId,
+          _id: req.params.matchId,
+        },
+        { bestOf },
+        { new: true }
+      );
+
+      if (!match) {
+        return res.status(404).json({
+          success: false,
+          message: "Match not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        data: match,
+      });
+    } catch (error) {
+      logger.error("Update Match BestOf Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating match best of",
+      });
+    }
+  }
+);
 
 export default router;

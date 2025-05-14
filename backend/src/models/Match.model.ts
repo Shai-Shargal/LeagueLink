@@ -15,10 +15,12 @@ export interface IMatch extends Document {
     stats: {
       team1: {
         player: mongoose.Types.ObjectId;
+        isGuest?: boolean;
         stats: Record<string, number>;
       }[];
       team2: {
         player: mongoose.Types.ObjectId;
+        isGuest?: boolean;
         stats: Record<string, number>;
       }[];
     };
@@ -26,11 +28,13 @@ export interface IMatch extends Document {
   team1: {
     type: "player" | "team";
     id: mongoose.Types.ObjectId;
+    isGuest?: boolean;
     score: number;
   };
   team2: {
     type: "player" | "team";
     id: mongoose.Types.ObjectId;
+    isGuest?: boolean;
     score: number;
   };
   nextMatch: mongoose.Types.ObjectId | null;
@@ -97,6 +101,10 @@ const MatchSchema = new Schema<IMatch>(
                 ref: "User",
                 required: true,
               },
+              isGuest: {
+                type: Boolean,
+                default: false,
+              },
               stats: {
                 type: Map,
                 of: Number,
@@ -110,6 +118,10 @@ const MatchSchema = new Schema<IMatch>(
                 type: Schema.Types.ObjectId,
                 ref: "User",
                 required: true,
+              },
+              isGuest: {
+                type: Boolean,
+                default: false,
               },
               stats: {
                 type: Map,
@@ -132,6 +144,10 @@ const MatchSchema = new Schema<IMatch>(
         refPath: "team1.type",
         required: true,
       },
+      isGuest: {
+        type: Boolean,
+        default: false,
+      },
       score: {
         type: Number,
         default: 0,
@@ -147,6 +163,10 @@ const MatchSchema = new Schema<IMatch>(
         type: Schema.Types.ObjectId,
         refPath: "team2.type",
         required: true,
+      },
+      isGuest: {
+        type: Boolean,
+        default: false,
       },
       score: {
         type: Number,

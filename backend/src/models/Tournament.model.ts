@@ -35,6 +35,18 @@ export interface ITournament extends Document {
     enabledStats: string[];
     customStats: any[];
   };
+  matchConfig: {
+    teamType: "1v1" | "team";
+    bestOf: number;
+    stats: {
+      enabled: string[];
+      custom: Array<{
+        name: string;
+        type: "number" | "boolean" | "text";
+        required: boolean;
+      }>;
+    };
+  };
 }
 
 const tournamentParticipantSchema = new Schema({
@@ -118,6 +130,38 @@ const tournamentSchema = new Schema<ITournament>(
       customStats: {
         type: [Schema.Types.Mixed],
         default: [],
+      },
+    },
+    matchConfig: {
+      teamType: {
+        type: String,
+        enum: ["1v1", "team"],
+        default: "1v1",
+      },
+      bestOf: {
+        type: Number,
+        default: 3,
+        min: 1,
+      },
+      stats: {
+        enabled: {
+          type: [String],
+          default: ["score"],
+        },
+        custom: [
+          {
+            name: String,
+            type: {
+              type: String,
+              enum: ["number", "boolean", "text"],
+              default: "number",
+            },
+            required: {
+              type: Boolean,
+              default: false,
+            },
+          },
+        ],
       },
     },
   },

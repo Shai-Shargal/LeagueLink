@@ -35,6 +35,19 @@ export interface Match {
   rounds?: number;
 }
 
+export interface MatchConfig {
+  teamType: "1v1" | "team";
+  bestOf: number;
+  stats: {
+    enabled: string[];
+    custom: Array<{
+      name: string;
+      type: "number" | "boolean" | "text";
+      required: boolean;
+    }>;
+  };
+}
+
 export interface Tournament {
   id: string;
   name: string;
@@ -56,9 +69,7 @@ export interface Tournament {
   createdAt: string;
   status: TournamentStatus;
   sportType: string;
-  matchConfig?: {
-    rounds: number;
-  };
+  matchConfig: MatchConfig;
 }
 
 export interface TournamentParticipant {
@@ -120,6 +131,7 @@ export interface DraggableParticipant {
   profilePicture?: string;
   status: ParticipantStatus;
   isGuest?: boolean;
+  teamName?: string;
 }
 
 export interface CreateTournamentDialogProps {
