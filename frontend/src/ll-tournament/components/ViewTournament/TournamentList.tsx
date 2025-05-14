@@ -146,7 +146,7 @@ export const TournamentList: React.FC<TournamentListProps> = ({
       case "swiss":
         return "linear-gradient(135deg, rgba(27, 40, 56, 0.7) 0%, rgba(30, 50, 70, 0.9) 100%)";
       default:
-        return "linear-gradient(135deg, rgba(20, 30, 48, 0.7) 0%, rgba(36, 59, 85, 0.9) 100%)";
+        return "linear-gradient(135deg, rgba(57, 11, 45, 0.7) 0%, rgba(122, 53, 121, 0.9) 100%)";
     }
   };
 

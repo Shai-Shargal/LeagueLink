@@ -102,34 +102,54 @@ router.post("/", protect, async (req: Request, res: Response) => {
         console.log("Creating matches for tournament:", matches.length);
         const matchPromises = matches.map(async (matchData: any) => {
           console.log("Processing match data:", matchData);
+          let team1User = null;
+          let team2User = null;
+          if (matchData.team1 && matchData.team1.id) {
+            team1User = await User.findById(matchData.team1.id);
+          }
+          if (matchData.team2 && matchData.team2.id) {
+            team2User = await User.findById(matchData.team2.id);
+          }
           const match = await Match.create({
             tournament: tournament._id,
             round: matchData.round,
             matchNumber: matchData.matchNumber,
             teamType: matchData.teamType || matchConfig?.teamType || "1v1",
             bestOf: matchData.rounds || matchConfig?.bestOf || 3,
-            team1: {
-              type: matchData.team1.type || "player",
-              id: new mongoose.Types.ObjectId(matchData.team1.id),
-              isGuest: matchData.team1.isGuest || false,
-              score: matchData.team1.score || 0,
-              players:
-                matchData.team1.players?.map((p: any) => ({
-                  id: new mongoose.Types.ObjectId(p.id),
-                  isGuest: p.isGuest || false,
-                })) || [],
-            },
-            team2: {
-              type: matchData.team2.type || "player",
-              id: new mongoose.Types.ObjectId(matchData.team2.id),
-              isGuest: matchData.team2.isGuest || false,
-              score: matchData.team2.score || 0,
-              players:
-                matchData.team2.players?.map((p: any) => ({
-                  id: new mongoose.Types.ObjectId(p.id),
-                  isGuest: p.isGuest || false,
-                })) || [],
-            },
+            team1: matchData.team1
+              ? {
+                  type: matchData.team1.type || "player",
+                  id: matchData.team1.id
+                    ? new mongoose.Types.ObjectId(matchData.team1.id)
+                    : undefined,
+                  isGuest: matchData.team1.isGuest || false,
+                  score: matchData.team1.score || 0,
+                  username: team1User ? team1User.username : "Unknown",
+                  profilePicture: team1User ? team1User.profilePicture : "",
+                  players:
+                    matchData.team1.players?.map((p: any) => ({
+                      id: new mongoose.Types.ObjectId(p.id),
+                      isGuest: p.isGuest || false,
+                    })) || [],
+                }
+              : null,
+            team2: matchData.team2
+              ? {
+                  type: matchData.team2.type || "player",
+                  id: matchData.team2.id
+                    ? new mongoose.Types.ObjectId(matchData.team2.id)
+                    : undefined,
+                  isGuest: matchData.team2.isGuest || false,
+                  score: matchData.team2.score || 0,
+                  username: team2User ? team2User.username : "Unknown",
+                  profilePicture: team2User ? team2User.profilePicture : "",
+                  players:
+                    matchData.team2.players?.map((p: any) => ({
+                      id: new mongoose.Types.ObjectId(p.id),
+                      isGuest: p.isGuest || false,
+                    })) || [],
+                }
+              : null,
             nextMatch: matchData.nextMatchId,
             status: "pending",
             games: Array.from(
@@ -213,7 +233,28 @@ router.get("/:id", protect, async (req: Request, res: Response) => {
     const tournament = await Tournament.findById(req.params.id)
       .populate("organizer", "username")
       .populate("participants", "username")
-      .populate("channel", "name");
+      .populate("channel", "name")
+      .populate({
+        path: "matches",
+        populate: [
+          {
+            path: "team1.id",
+            select: "username profilePicture",
+          },
+          {
+            path: "team2.id",
+            select: "username profilePicture",
+          },
+          {
+            path: "team1.players.id",
+            select: "username profilePicture",
+          },
+          {
+            path: "team2.players.id",
+            select: "username profilePicture",
+          },
+        ],
+      });
 
     if (!tournament) {
       return res.status(404).json({
