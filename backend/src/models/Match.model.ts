@@ -30,12 +30,20 @@ export interface IMatch extends Document {
     id: mongoose.Types.ObjectId;
     isGuest?: boolean;
     score: number;
+    players?: Array<{
+      id: mongoose.Types.ObjectId;
+      isGuest?: boolean;
+    }>;
   };
   team2: {
     type: "player" | "team";
     id: mongoose.Types.ObjectId;
     isGuest?: boolean;
     score: number;
+    players?: Array<{
+      id: mongoose.Types.ObjectId;
+      isGuest?: boolean;
+    }>;
   };
   nextMatch: mongoose.Types.ObjectId | null;
   createdAt: Date;
@@ -60,7 +68,7 @@ const MatchSchema = new Schema<IMatch>(
     teamType: {
       type: String,
       enum: ["1v1", "team"],
-      required: true,
+      default: "1v1",
     },
     status: {
       type: String,
@@ -69,20 +77,16 @@ const MatchSchema = new Schema<IMatch>(
     },
     winner: {
       type: Schema.Types.ObjectId,
-      refPath: "team1.type",
+      ref: "User",
       default: null,
     },
     bestOf: {
       type: Number,
-      required: true,
-      min: 1,
+      default: 3,
     },
     games: [
       {
-        gameNumber: {
-          type: Number,
-          required: true,
-        },
+        gameNumber: Number,
         status: {
           type: String,
           enum: ["pending", "in_progress", "completed"],
@@ -90,7 +94,7 @@ const MatchSchema = new Schema<IMatch>(
         },
         winner: {
           type: Schema.Types.ObjectId,
-          refPath: "team1.type",
+          ref: "User",
           default: null,
         },
         stats: {
@@ -99,7 +103,6 @@ const MatchSchema = new Schema<IMatch>(
               player: {
                 type: Schema.Types.ObjectId,
                 ref: "User",
-                required: true,
               },
               isGuest: {
                 type: Boolean,
@@ -117,7 +120,6 @@ const MatchSchema = new Schema<IMatch>(
               player: {
                 type: Schema.Types.ObjectId,
                 ref: "User",
-                required: true,
               },
               isGuest: {
                 type: Boolean,
@@ -141,7 +143,6 @@ const MatchSchema = new Schema<IMatch>(
       },
       id: {
         type: Schema.Types.ObjectId,
-        refPath: "team1.type",
         required: true,
       },
       isGuest: {
@@ -152,6 +153,18 @@ const MatchSchema = new Schema<IMatch>(
         type: Number,
         default: 0,
       },
+      players: [
+        {
+          id: {
+            type: Schema.Types.ObjectId,
+            required: true,
+          },
+          isGuest: {
+            type: Boolean,
+            default: false,
+          },
+        },
+      ],
     },
     team2: {
       type: {
@@ -161,7 +174,6 @@ const MatchSchema = new Schema<IMatch>(
       },
       id: {
         type: Schema.Types.ObjectId,
-        refPath: "team2.type",
         required: true,
       },
       isGuest: {
@@ -172,6 +184,18 @@ const MatchSchema = new Schema<IMatch>(
         type: Number,
         default: 0,
       },
+      players: [
+        {
+          id: {
+            type: Schema.Types.ObjectId,
+            required: true,
+          },
+          isGuest: {
+            type: Boolean,
+            default: false,
+          },
+        },
+      ],
     },
     nextMatch: {
       type: Schema.Types.ObjectId,
@@ -184,11 +208,10 @@ const MatchSchema = new Schema<IMatch>(
   }
 );
 
-// Indexes for better query performance
-MatchSchema.index(
-  { tournament: 1, round: 1, matchNumber: 1 },
-  { unique: true }
-);
+// Add indexes for better query performance
+MatchSchema.index({ tournament: 1 });
+MatchSchema.index({ round: 1 });
+MatchSchema.index({ matchNumber: 1 });
 MatchSchema.index({ status: 1 });
 MatchSchema.index({ winner: 1 });
 

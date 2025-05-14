@@ -140,18 +140,79 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         parseInt(minutes)
       );
 
-      const formattedMatches = matches.map((match: Match) => ({
-        id: match.id,
-        round: match.round,
-        matchNumber: match.matchNumber,
-        team1: match.team1 ? { userId: match.team1.userId } : null,
-        team2: match.team2 ? { userId: match.team2.userId } : null,
-        position: match.position,
-        score1: 0,
-        score2: 0,
-        winner: null,
-        rounds: match.rounds || 3,
-      }));
+      const formattedMatches = matches.map((match: Match) => {
+        // Handle team matches
+        if (match.teamType === "team") {
+          return {
+            id: match.id,
+            round: match.round,
+            matchNumber: match.matchNumber,
+            teamType: "team",
+            team1: {
+              type: "team",
+              id: Array.isArray(match.team1)
+                ? match.team1[0]?.userId
+                : match.team1?.userId,
+              isGuest: Array.isArray(match.team1)
+                ? match.team1[0]?.isGuest
+                : match.team1?.isGuest,
+              score: 0,
+              players: Array.isArray(match.team1)
+                ? match.team1.map((p) => ({
+                    id: p.userId,
+                    isGuest: p.isGuest || false,
+                  }))
+                : [],
+            },
+            team2: {
+              type: "team",
+              id: Array.isArray(match.team2)
+                ? match.team2[0]?.userId
+                : match.team2?.userId,
+              isGuest: Array.isArray(match.team2)
+                ? match.team2[0]?.isGuest
+                : match.team2?.isGuest,
+              score: 0,
+              players: Array.isArray(match.team2)
+                ? match.team2.map((p) => ({
+                    id: p.userId,
+                    isGuest: p.isGuest || false,
+                  }))
+                : [],
+            },
+            position: match.position,
+            rounds: match.rounds || 3,
+            status: "pending",
+          };
+        }
+
+        // Handle regular matches
+        return {
+          id: match.id,
+          round: match.round,
+          matchNumber: match.matchNumber,
+          teamType: "1v1",
+          team1: match.team1
+            ? {
+                type: "player",
+                id: match.team1.userId,
+                isGuest: match.team1.isGuest || false,
+                score: 0,
+              }
+            : null,
+          team2: match.team2
+            ? {
+                type: "player",
+                id: match.team2.userId,
+                isGuest: match.team2.isGuest || false,
+                score: 0,
+              }
+            : null,
+          position: match.position,
+          rounds: match.rounds || 3,
+          status: "pending",
+        };
+      });
 
       const tournamentData = {
         name: newTournament.name,
@@ -171,7 +232,12 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         ],
         matches: formattedMatches,
         matchConfig: {
-          rounds: newTournament.rounds || 5,
+          teamType: "1v1",
+          bestOf: newTournament.rounds || 3,
+          stats: {
+            enabled: ["score"],
+            custom: [],
+          },
         },
       };
 
