@@ -34,12 +34,9 @@ export const tournamentService = {
       name: tournamentData.name,
       description: tournamentData.description || "",
       channelId: channelId,
-      format: tournamentData.format || "single_elimination",
       startDate: tournamentData.startDate,
       location: tournamentData.location || "Online",
       maxParticipants: tournamentData.maxParticipants || 32,
-      rules: tournamentData.rules || "Standard tournament rules apply",
-      prizes: tournamentData.prizes || "Trophies for winners",
       matches:
         tournamentData.matches?.map((m) => {
           console.log("Processing match:", m); // Debug log for each match
@@ -119,12 +116,9 @@ export const tournamentService = {
         name: tournament.name,
         description: tournament.description,
         channelId: tournament.channel,
-        format: tournament.format,
         startDate: tournament.startDate,
         location: tournament.location,
         maxParticipants: tournament.maxParticipants,
-        rules: tournament.rules,
-        prizes: tournament.prizes,
         status: tournament.status,
         statsConfig: tournament.statsConfig,
         matchConfig: tournament.matchConfig,

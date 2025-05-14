@@ -22,12 +22,9 @@ export interface ITournament extends Document {
   description: string;
   channel: mongoose.Types.ObjectId | IChannel;
   organizer: mongoose.Types.ObjectId | IUser;
-  format: string;
   startDate: Date;
   location: string;
   maxParticipants: number;
-  rules: string;
-  prizes: string;
   participants: ITournamentParticipant[];
   matches: IMatch[];
   status: string;
@@ -84,11 +81,6 @@ const tournamentSchema = new Schema<ITournament>(
       ref: "User",
       required: true,
     },
-    format: {
-      type: String,
-      enum: ["single_elimination", "double_elimination", "round_robin"],
-      default: "single_elimination",
-    },
     startDate: {
       type: Date,
       required: true,
@@ -100,14 +92,6 @@ const tournamentSchema = new Schema<ITournament>(
     maxParticipants: {
       type: Number,
       default: 32,
-    },
-    rules: {
-      type: String,
-      default: "Standard tournament rules apply",
-    },
-    prizes: {
-      type: String,
-      default: "Trophies for winners",
     },
     participants: {
       type: [tournamentParticipantSchema],

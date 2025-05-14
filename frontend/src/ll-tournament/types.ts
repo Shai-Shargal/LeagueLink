@@ -55,11 +55,8 @@ export interface Tournament {
   name: string;
   description?: string;
   channelId: string;
-  format: "single_elimination" | "double_elimination" | "round_robin";
   startDate: string;
   maxParticipants: number;
-  rules?: string;
-  prizes?: string;
   participants: TournamentParticipant[];
   statsConfig: TournamentStatsConfig;
   structure?: TournamentStructure;
