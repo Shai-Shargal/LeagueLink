@@ -8,7 +8,7 @@ import {
   BASE_BOX_WIDTH,
   BASE_BOX_HEIGHT,
   ROUND_HORIZONTAL_GAP,
-} from "@/ll-tournament/types";
+} from "../../types";
 
 // Constants for bracket layout
 const MATCH_VERTICAL_GAP = 40;
@@ -20,6 +20,7 @@ interface TournamentBracketSectionProps {
 
 const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
   tournament,
+  onUpdateMatch,
 }) => {
   const renderParticipant = (
     participant: DraggableParticipant | DraggableParticipant[] | null
@@ -39,6 +40,35 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
       return participant.length > 0 ? participant[0].profilePicture : undefined;
     }
     return participant.profilePicture;
+  };
+
+  // Group matches by round
+  const matchesByRound = (tournament.matches || []).reduce<{
+    [key: number]: Match[];
+  }>((acc: { [key: number]: Match[] }, match: Match) => {
+    if (!acc[match.round]) {
+      acc[match.round] = [];
+    }
+    acc[match.round].push(match);
+    return acc;
+  }, {});
+
+  // Sort matches within each round by matchNumber
+  Object.keys(matchesByRound).forEach((round) => {
+    matchesByRound[Number(round)].sort(
+      (a: Match, b: Match) => a.matchNumber - b.matchNumber
+    );
+  });
+
+  const convertTeamToParticipant = (team: any): DraggableParticipant | null => {
+    if (!team) return null;
+    return {
+      id: team.id || team.userId,
+      userId: team.id || team.userId,
+      username: team.username || "Unknown",
+      status: team.status || "PENDING",
+      profilePicture: team.profilePicture,
+    };
   };
 
   return (
@@ -81,19 +111,8 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
           minWidth: "fit-content",
         }}
       >
-        {tournament.matches && tournament.matches.length > 0 ? (
-          Object.entries(
-            tournament.matches.reduce<{ [key: number]: Match[] }>(
-              (acc: { [key: number]: Match[] }, match: Match) => {
-                if (!acc[match.round]) {
-                  acc[match.round] = [];
-                }
-                acc[match.round].push(match);
-                return acc;
-              },
-              {}
-            )
-          ).map(([round, roundMatches]: [string, Match[]]) => (
+        {Object.entries(matchesByRound).map(
+          ([round, roundMatches]: [string, Match[]]) => (
             <Box
               key={round}
               sx={{
@@ -139,12 +158,14 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                     }}
                   >
                     <Avatar
-                      src={getParticipantProfilePicture(match.team1)}
+                      src={getParticipantProfilePicture(
+                        convertTeamToParticipant(match.team1)
+                      )}
                       sx={{ width: 32, height: 32, mr: 1 }}
                     >
-                      {!getParticipantProfilePicture(match.team1) && (
-                        <PersonIcon />
-                      )}
+                      {!getParticipantProfilePicture(
+                        convertTeamToParticipant(match.team1)
+                      ) && <PersonIcon />}
                     </Avatar>
                     <Typography
                       sx={{
@@ -153,8 +174,19 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                         fontSize: "0.9rem",
                       }}
                     >
-                      {renderParticipant(match.team1)}
+                      {renderParticipant(convertTeamToParticipant(match.team1))}
                     </Typography>
+                    {match.score1 !== undefined && (
+                      <Typography
+                        sx={{
+                          color: "rgba(255, 255, 255, 0.9)",
+                          fontSize: "0.9rem",
+                          ml: 1,
+                        }}
+                      >
+                        {match.score1}
+                      </Typography>
+                    )}
                   </Box>
                   <Box
                     sx={{
@@ -165,12 +197,14 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                     }}
                   >
                     <Avatar
-                      src={getParticipantProfilePicture(match.team2)}
+                      src={getParticipantProfilePicture(
+                        convertTeamToParticipant(match.team2)
+                      )}
                       sx={{ width: 32, height: 32, mr: 1 }}
                     >
-                      {!getParticipantProfilePicture(match.team2) && (
-                        <PersonIcon />
-                      )}
+                      {!getParticipantProfilePicture(
+                        convertTeamToParticipant(match.team2)
+                      ) && <PersonIcon />}
                     </Avatar>
                     <Typography
                       sx={{
@@ -179,25 +213,24 @@ const TournamentBracketSection: React.FC<TournamentBracketSectionProps> = ({
                         fontSize: "0.9rem",
                       }}
                     >
-                      {renderParticipant(match.team2)}
+                      {renderParticipant(convertTeamToParticipant(match.team2))}
                     </Typography>
+                    {match.score2 !== undefined && (
+                      <Typography
+                        sx={{
+                          color: "rgba(255, 255, 255, 0.9)",
+                          fontSize: "0.9rem",
+                          ml: 1,
+                        }}
+                      >
+                        {match.score2}
+                      </Typography>
+                    )}
                   </Box>
                 </Paper>
               ))}
             </Box>
-          ))
-        ) : (
-          <Typography
-            sx={{
-              color: "rgba(255, 255, 255, 0.7)",
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-            }}
-          >
-            No matches in this tournament
-          </Typography>
+          )
         )}
       </Box>
     </Box>
