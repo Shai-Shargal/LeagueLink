@@ -1,33 +1,41 @@
 export type ParticipantStatus = "guest" | "member" | "admin";
 
 export interface DraggableParticipant {
-  id: string;
   userId: string;
   username: string;
-  status: string;
-  isGuest?: boolean;
+  isGuest: boolean;
+  type: "player" | "team";
+  id: string;
+  players?: { id: string; isGuest: boolean }[];
 }
 
 export interface Team {
-  type: "team" | "player";
+  type: "player" | "team";
   id: string;
   isGuest: boolean;
   score: number;
-  players?: DraggableParticipant[];
+  players?: { id: string; isGuest: boolean }[];
 }
 
 export interface Match {
   id: string;
   round: number;
   matchNumber: number;
-  teamType: "team" | "1v1";
+  teamType: "1v1" | "team";
   team1: Team | null;
   team2: Team | null;
   position: { x: number; y: number };
   rounds: number;
-  status?: "pending" | "in_progress" | "completed";
-  winner?: DraggableParticipant | null;
-  nextMatchId?: string;
+  status?: string;
+  winner?: string;
+  games?: Array<{
+    gameNumber: number;
+    status: string;
+    stats: {
+      team1: any[];
+      team2: any[];
+    };
+  }>;
 }
 
 export interface MatchUpdate {

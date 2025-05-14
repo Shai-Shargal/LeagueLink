@@ -57,9 +57,9 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
         }}
       >
         <Box sx={{ flex: 1 }}></Box>
-        <Typography variant="h6" sx={{ fontSize: "1.1rem" }}>
+        <span style={{ fontSize: "1.1rem", fontWeight: 600 }}>
           {tournament?.name}
-        </Typography>
+        </span>
         <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
           <IconButton onClick={onClose} sx={{ color: "white", padding: "4px" }}>
             <CloseIcon sx={{ fontSize: "1.2rem" }} />

@@ -2,14 +2,13 @@ import React from "react";
 import {
   Box,
   Paper,
+  Typography,
+  IconButton,
   Avatar,
   useTheme,
-  IconButton,
-  Typography,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
-import LinkIcon from "@mui/icons-material/Link";
-import { Match, DraggableParticipant, Team } from "../../types";
+import { Match, DraggableParticipant } from "../../types";
 
 interface MatchBoxProps {
   match: Match;
@@ -25,9 +24,9 @@ interface MatchBoxProps {
   onSelectAsSource?: () => void;
 }
 
-const MATCH_BOX_WIDTH = 140;
-const MATCH_BOX_HEIGHT = 60;
-const PADDING = 16 * 2;
+const CARD_WIDTH = 160;
+const CARD_HEIGHT = 110;
+const BORDER_RADIUS = 16;
 
 export const MatchBox: React.FC<MatchBoxProps> = ({
   match,
@@ -44,45 +43,29 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
 }) => {
   const theme = useTheme();
 
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (!draggedParticipant) return;
+  let left = match.position.x - CARD_WIDTH / 2;
+  let top = match.position.y - CARD_HEIGHT / 2;
+  if (left < 0) left = 0;
+  if (top < 0) top = 0;
+  if (left + CARD_WIDTH > parentWidth) left = parentWidth - CARD_WIDTH;
+  if (top + CARD_HEIGHT > parentHeight) top = parentHeight - CARD_HEIGHT;
 
-    const team = e.currentTarget.getAttribute("data-team");
-    if (!team) return;
-
-    const updatedMatch = { ...match };
-    if (team === "team1") {
-      updatedMatch.team1 = {
-        type: "player",
-        id: draggedParticipant.userId,
-        isGuest: draggedParticipant.isGuest || false,
-        score: 0,
-      };
-    } else if (team === "team2") {
-      updatedMatch.team2 = {
-        type: "player",
-        id: draggedParticipant.userId,
-        isGuest: draggedParticipant.isGuest || false,
-        score: 0,
-      };
+  // Helper to get participant info
+  const getParticipant = (team: any) => {
+    if (!team) return null;
+    if (team.type === "team" && team.players && team.players.length > 0) {
+      // Show first player as representative
+      const user = channelUsers.find((u) => u.userId === team.players[0].id);
+      return user || null;
     }
-
-    onUpdate(updatedMatch);
+    if (team.type === "player") {
+      return channelUsers.find((u) => u.userId === team.id) || null;
+    }
+    return null;
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  let left = match.position.x - MATCH_BOX_WIDTH / 2;
-  let top = match.position.y - MATCH_BOX_HEIGHT / 2;
-  if (left < PADDING / 2) left = PADDING / 2;
-  if (top < PADDING / 2) top = PADDING / 2;
-  if (left + MATCH_BOX_WIDTH > parentWidth - PADDING / 2)
-    left = parentWidth - PADDING / 2 - MATCH_BOX_WIDTH;
-  if (top + MATCH_BOX_HEIGHT > parentHeight - PADDING / 2)
-    top = parentHeight - PADDING / 2 - MATCH_BOX_HEIGHT;
+  const topParticipant = getParticipant(match.team1);
+  const bottomParticipant = getParticipant(match.team2);
 
   return (
     <Paper
@@ -90,141 +73,187 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         position: "absolute",
         left,
         top,
-        ...(match.teamType === "team"
-          ? {
-              minWidth: 340,
-              maxWidth: 480,
-              minHeight: 200,
-              p: 2,
-              borderRadius: 2,
-              boxShadow: 3,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "flex-start",
-              alignItems: "center",
-              backgroundColor: "transparent",
-              transition: "transform 0.2s ease-in-out, border-color 0.3s ease",
-              "&:hover": {
-                transform: "scale(1.03)",
-                borderColor: "primary.main",
-              },
-              border: isSourceMatch
-                ? `2px solid ${theme.palette.primary.main}`
-                : `1px solid ${theme.palette.divider}`,
-              zIndex: 10,
-              cursor: "pointer",
-            }
-          : {
-              width: 140,
-              height: 132,
-              p: 1.5,
-              borderRadius: 2,
-              boxShadow: 3,
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "center",
-              alignItems: "center",
-              backgroundColor: "background.paper",
-              transition: "transform 0.2s ease-in-out, border-color 0.3s ease",
-              "&:hover": {
-                transform: "scale(1.03)",
-                borderColor: "primary.main",
-              },
-              border: isSourceMatch
-                ? `2px solid ${theme.palette.primary.main}`
-                : `1px solid ${theme.palette.divider}`,
-              zIndex: 10,
-              cursor: "pointer",
-            }),
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        borderRadius: BORDER_RADIUS,
+        boxShadow: 4,
+        background: "#23293a",
+        border: isSourceMatch
+          ? `2px solid ${theme.palette.primary.main}`
+          : `2px solid #353b4b`,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "space-between",
+        p: 0,
       }}
       draggable
       onClick={onSelectAsSource}
     >
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-        <Typography variant="subtitle2">Match {match.matchNumber}</Typography>
-        <Box>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-          >
-            <DeleteIcon fontSize="small" />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSelectAsSource?.();
-            }}
-          >
-            <LinkIcon fontSize="small" />
-          </IconButton>
-        </Box>
-      </Box>
-
+      {/* Top participant pill */}
       <Box
+        data-team="team1"
+        onDrop={(e) => {
+          e.preventDefault();
+          if (!draggedParticipant) return;
+          onUpdate({
+            team1: {
+              type: "player",
+              id: draggedParticipant.userId,
+              isGuest: draggedParticipant.isGuest || false,
+              score: 0,
+            },
+          });
+        }}
+        onDragOver={(e) => e.preventDefault()}
         sx={{
+          width: "80%",
+          minHeight: 26,
+          background: topParticipant ? "#4f46e5" : "#23293a",
+          color: topParticipant ? "#fff" : "#bdbdbd",
+          borderRadius: 99,
+          border: "2px dashed",
+          borderColor: topParticipant ? "#a5b4fc" : "#bdbdbd",
           display: "flex",
-          flexDirection: "column",
-          gap: 1,
+          alignItems: "center",
+          justifyContent: "space-between",
+          px: 1.2,
+          py: 0.2,
+          fontWeight: 700,
+          mt: 1.2,
+          mb: 0.5,
         }}
       >
-        <Box
-          data-team="team1"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
+        <Typography
+          variant="subtitle2"
+          fontWeight={700}
           sx={{
-            p: 1,
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 1,
-            minHeight: 40,
-            backgroundColor: match.team1 ? "action.hover" : "transparent",
+            color: topParticipant ? "#fff" : "#a5b4fc",
+            fontStyle: "italic",
+            fontSize: 13,
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            minWidth: 0,
           }}
         >
-          {match.team1 ? (
-            <Typography variant="body2">
-              {match.team1.type === "team"
-                ? `Team ${match.team1.players?.length || 0} players`
-                : channelUsers.find((u) => u.userId === match.team1?.id)
-                    ?.username || "Unknown"}
-            </Typography>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              Drop player here
-            </Typography>
-          )}
-        </Box>
-
-        <Box
-          data-team="team2"
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
+          {topParticipant ? topParticipant.username : "TBD"}
+        </Typography>
+        <IconButton
+          size="small"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete();
+          }}
+          sx={{ color: topParticipant ? "#fff" : "#a5b4fc", p: 0.2 }}
+        >
+          <DeleteIcon fontSize="small" />
+        </IconButton>
+      </Box>
+      {/* VS */}
+      <Box sx={{ width: "100%", textAlign: "center", py: 0.1, minHeight: 14 }}>
+        <Typography
+          variant="subtitle2"
+          fontWeight={700}
+          sx={{ color: "#bdbdbd", letterSpacing: 2, fontSize: 12 }}
+        >
+          VS
+        </Typography>
+      </Box>
+      {/* Bottom participant pill */}
+      <Box
+        data-team="team2"
+        onDrop={(e) => {
+          e.preventDefault();
+          if (!draggedParticipant) return;
+          onUpdate({
+            team2: {
+              type: "player",
+              id: draggedParticipant.userId,
+              isGuest: draggedParticipant.isGuest || false,
+              score: 0,
+            },
+          });
+        }}
+        onDragOver={(e) => e.preventDefault()}
+        sx={{
+          width: "80%",
+          minHeight: 26,
+          background: bottomParticipant ? "#a21caf" : "#23293a",
+          color: bottomParticipant ? "#fff" : "#bdbdbd",
+          borderRadius: 99,
+          border: "2px dashed",
+          borderColor: bottomParticipant ? "#f0abfc" : "#bdbdbd",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          px: 1.2,
+          py: 0.2,
+          fontWeight: 700,
+          mt: 0.5,
+          mb: 1.2,
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          fontWeight={700}
           sx={{
-            p: 1,
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 1,
-            minHeight: 40,
-            backgroundColor: match.team2 ? "action.hover" : "transparent",
+            color: bottomParticipant ? "#fff" : "#f0abfc",
+            fontStyle: "italic",
+            fontSize: 13,
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            overflow: "hidden",
+            minWidth: 0,
           }}
         >
-          {match.team2 ? (
-            <Typography variant="body2">
-              {match.team2.type === "team"
-                ? `Team ${match.team2.players?.length || 0} players`
-                : channelUsers.find((u) => u.userId === match.team2?.id)
-                    ?.username || "Unknown"}
-            </Typography>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              Drop player here
-            </Typography>
-          )}
-        </Box>
+          {bottomParticipant ? bottomParticipant.username : "TBD"}
+        </Typography>
+      </Box>
+      {/* Best of */}
+      <Box
+        sx={{
+          width: "100%",
+          textAlign: "center",
+          py: 0.2,
+          background: "transparent",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 0.5,
+        }}
+      >
+        <Typography variant="caption" sx={{ color: "#fff", fontSize: 12 }}>
+          Best of
+        </Typography>
+        <select
+          value={match.rounds || 3}
+          onChange={(e) => {
+            const val = Number(e.target.value);
+            onUpdate({ rounds: val });
+          }}
+          style={{
+            width: 36,
+            marginLeft: 4,
+            borderRadius: 6,
+            border: "1px solid #bdbdbd",
+            background: "#23293a",
+            color: "#fff",
+            textAlign: "center",
+            fontSize: 12,
+            outline: "none",
+            padding: "2px 0",
+          }}
+        >
+          {[1, 3, 5, 7, 9].map((num) => (
+            <option key={num} value={num}>
+              {num}
+            </option>
+          ))}
+        </select>
       </Box>
     </Paper>
   );
 };
+
+export default MatchBox;
