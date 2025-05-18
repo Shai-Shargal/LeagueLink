@@ -1,23 +1,39 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { ITournamentParticipant } from "./Tournament.model.js";
 
 export interface IMatch extends Document {
   tournament: mongoose.Types.ObjectId;
   round: number;
   matchNumber: number;
-  status: "pending" | "in_progress" | "completed";
-  winner: mongoose.Types.ObjectId | null;
+  position: {
+    x: number;
+    y: number;
+  };
   bestOf: number;
   team1: {
-    players: ITournamentParticipant[];
+    players: Array<{
+      userId: string;
+      username: string;
+    }>;
+    isGuest: boolean;
     score: number;
   };
   team2: {
-    players: ITournamentParticipant[];
+    players: Array<{
+      userId: string;
+      username: string;
+    }>;
+    isGuest: boolean;
     score: number;
   };
-  stats: Record<string, any>;
-  nextMatch: mongoose.Types.ObjectId | null;
+  nextMatchId: mongoose.Types.ObjectId | null;
+  stats: {
+    scores?: Array<{
+      team1: number;
+      team2: number;
+    }>;
+    [key: string]: any;
+  };
+  status: "pending" | "in_progress" | "completed";
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,15 +53,15 @@ const MatchSchema = new Schema<IMatch>(
       type: Number,
       required: true,
     },
-    status: {
-      type: String,
-      enum: ["pending", "in_progress", "completed"],
-      default: "pending",
-    },
-    winner: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      default: null,
+    position: {
+      x: {
+        type: Number,
+        required: true,
+      },
+      y: {
+        type: Number,
+        required: true,
+      },
     },
     bestOf: {
       type: Number,
@@ -61,12 +77,20 @@ const MatchSchema = new Schema<IMatch>(
     team1: {
       players: [
         {
-          userId: String,
-          username: String,
-          isGuest: Boolean,
-          status: String,
+          userId: {
+            type: String,
+            required: true,
+          },
+          username: {
+            type: String,
+            required: true,
+          },
         },
       ],
+      isGuest: {
+        type: Boolean,
+        default: false,
+      },
       score: {
         type: Number,
         default: 0,
@@ -75,25 +99,38 @@ const MatchSchema = new Schema<IMatch>(
     team2: {
       players: [
         {
-          userId: String,
-          username: String,
-          isGuest: Boolean,
-          status: String,
+          userId: {
+            type: String,
+            required: true,
+          },
+          username: {
+            type: String,
+            required: true,
+          },
         },
       ],
+      isGuest: {
+        type: Boolean,
+        default: false,
+      },
       score: {
         type: Number,
         default: 0,
       },
     },
+    nextMatchId: {
+      type: Schema.Types.ObjectId,
+      ref: "Match",
+      default: null,
+    },
     stats: {
       type: Schema.Types.Mixed,
       default: {},
     },
-    nextMatch: {
-      type: Schema.Types.ObjectId,
-      ref: "Match",
-      default: null,
+    status: {
+      type: String,
+      enum: ["pending", "in_progress", "completed"],
+      default: "pending",
     },
   },
   {
@@ -106,16 +143,7 @@ MatchSchema.index({ tournament: 1 });
 MatchSchema.index({ round: 1 });
 MatchSchema.index({ matchNumber: 1 });
 MatchSchema.index({ status: 1 });
-MatchSchema.index({ winner: 1 });
-
-// Add a pre-save hook to validate team matches
-MatchSchema.pre("save", function (next) {
-  if (this.team1.players.length === 0 || this.team2.players.length === 0) {
-    next(new Error("Both teams must have at least one player"));
-    return;
-  }
-  next();
-});
+MatchSchema.index({ nextMatchId: 1 });
 
 // Add a pre-delete hook to handle cleanup
 MatchSchema.pre(
@@ -123,23 +151,18 @@ MatchSchema.pre(
   { document: true, query: false },
   async function (next) {
     try {
-      // Find all matches that reference this match as their nextMatch
+      // Find all matches that reference this match as their nextMatchId
       const matchesToUpdate = await this.model("Match").find({
-        nextMatch: this._id,
+        nextMatchId: this._id,
       });
 
       // Update those matches to remove the reference
       if (matchesToUpdate.length > 0) {
         await this.model("Match").updateMany(
-          { nextMatch: this._id },
-          { $set: { nextMatch: null } }
+          { nextMatchId: this._id },
+          { $set: { nextMatchId: null } }
         );
       }
-
-      // Remove match from tournament
-      await this.model("Tournament").findByIdAndUpdate(this.tournament, {
-        $pull: { matches: this._id },
-      });
 
       next();
     } catch (error: any) {

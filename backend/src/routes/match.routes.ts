@@ -13,11 +13,8 @@ router.get("/:matchId", protect, async (req: Request, res: Response) => {
   try {
     const match = await Match.findById(req.params.matchId)
       .populate("tournament")
-      .populate("team1.id")
-      .populate("team2.id")
-      .populate("winner")
-      .populate("games.stats.team1.player")
-      .populate("games.stats.team2.player");
+      .populate("team1.players.userId")
+      .populate("team2.players.userId");
 
     if (!match) {
       return res.status(404).json({
@@ -91,15 +88,19 @@ router.patch(
       }
 
       // Update match stats
-      if (team1Stats) match.stats.team1 = team1Stats;
-      if (team2Stats) match.stats.team2 = team2Stats;
+      if (!match.stats.scores) {
+        match.stats.scores = [];
+      }
 
-      // Update match scores
+      // Add or update game score
+      const gameIndex = parseInt(gameNumber) - 1;
       if (winner) {
         if (winner.toString() === match.team1.players[0].userId.toString()) {
           match.team1.score += 1;
+          match.stats.scores[gameIndex] = { team1: 1, team2: 0 };
         } else {
           match.team2.score += 1;
+          match.stats.scores[gameIndex] = { team1: 0, team2: 1 };
         }
       }
 
@@ -110,11 +111,8 @@ router.patch(
         match.team2.score >= gamesNeededToWin
       ) {
         match.status = "completed";
-        match.winner = new mongoose.Types.ObjectId(
-          match.team1.score > match.team2.score
-            ? match.team1.players[0].userId
-            : match.team2.players[0].userId
-        );
+      } else {
+        match.status = "in_progress";
       }
 
       await match.save();
@@ -140,9 +138,8 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const matches = await Match.find({ tournament: req.params.tournamentId })
-        .populate("team1.id")
-        .populate("team2.id")
-        .populate("winner")
+        .populate("team1.players.userId")
+        .populate("team2.players.userId")
         .sort({ round: 1, matchNumber: 1 });
 
       res.json({
@@ -278,7 +275,7 @@ router.put("/:matchId", protect, async (req: Request, res: Response) => {
       });
     }
 
-    const { round, matchNumber, bestOf, team1, team2, nextMatch, status } =
+    const { round, matchNumber, bestOf, team1, team2, nextMatchId, status } =
       req.body;
 
     // Update match fields
@@ -287,7 +284,8 @@ router.put("/:matchId", protect, async (req: Request, res: Response) => {
     if (bestOf) match.bestOf = bestOf;
     if (team1) match.team1 = team1;
     if (team2) match.team2 = team2;
-    if (nextMatch) match.nextMatch = new mongoose.Types.ObjectId(nextMatch);
+    if (nextMatchId)
+      match.nextMatchId = new mongoose.Types.ObjectId(nextMatchId);
     if (status) match.status = status;
 
     await match.save();
@@ -372,9 +370,8 @@ router.get("/", protect, async (req: Request, res: Response) => {
       filter.status = req.query.status;
     }
     const matches = await Match.find(filter)
-      .populate("team1.id")
-      .populate("team2.id")
-      .populate("winner")
+      .populate("team1.players.userId")
+      .populate("team2.players.userId")
       .sort({ createdAt: -1 });
     res.json({ success: true, data: matches });
   } catch (error) {
@@ -392,15 +389,12 @@ router.get(
       const playerId = req.params.playerId;
       const matches = await Match.find({
         $or: [
-          { "team1.id": playerId },
-          { "team2.id": playerId },
           { "team1.players.id": playerId },
           { "team2.players.id": playerId },
         ],
       })
-        .populate("team1.id")
-        .populate("team2.id")
-        .populate("winner")
+        .populate("team1.players.userId")
+        .populate("team2.players.userId")
         .sort({ createdAt: -1 });
       res.json({ success: true, data: matches });
     } catch (error) {
@@ -418,9 +412,8 @@ router.patch("/:id", protect, async (req: Request, res: Response) => {
     const match = await Match.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
     })
-      .populate("team1.id")
-      .populate("team2.id")
-      .populate("winner");
+      .populate("team1.players.userId")
+      .populate("team2.players.userId");
     if (!match) {
       return res
         .status(404)
@@ -469,60 +462,74 @@ router.post(
         });
       }
 
-      // Create all matches without nextMatchId first
+      // Create a map to store frontend IDs to MongoDB IDs
+      const idMap = new Map();
+
+      // First pass: Create all matches without nextMatchId
       const createdMatches = await Promise.all(
-        matches.map(
-          async (matchData: {
-            round: number;
-            matchNumber: number;
-            bestOf: number;
-            team1: { players: any[] };
-            team2: { players: any[] };
-            position: number;
-          }) => {
-            const match = await Match.create({
-              tournament: tournamentId,
-              round: matchData.round,
-              matchNumber: matchData.matchNumber,
-              bestOf: matchData.bestOf,
-              team1: {
-                players: matchData.team1.players || [],
-                score: 0,
-              },
-              team2: {
-                players: matchData.team2.players || [],
-                score: 0,
-              },
-              position: matchData.position,
-              stats: {},
-            });
-
-            // Add match to tournament
-            await Tournament.findByIdAndUpdate(tournamentId, {
-              $push: { matches: match._id },
-            });
-
-            return match;
+        matches.map(async (matchData: any) => {
+          // Validate required fields
+          if (
+            !matchData.round ||
+            !matchData.matchNumber ||
+            !matchData.position ||
+            !matchData.bestOf
+          ) {
+            throw new Error(
+              "Missing required match fields: round, matchNumber, position, and bestOf are required"
+            );
           }
-        )
+
+          // Validate bestOf is odd
+          if (matchData.bestOf % 2 === 0) {
+            throw new Error("bestOf must be an odd number");
+          }
+
+          const match = await Match.create({
+            tournament: tournamentId,
+            round: matchData.round,
+            matchNumber: matchData.matchNumber,
+            position: matchData.position,
+            bestOf: matchData.bestOf,
+            team1: {
+              players: matchData.team1.players.map((p: any) => ({
+                userId: p.userId,
+                username: p.username || "",
+              })),
+              isGuest: matchData.team1.isGuest || false,
+              score: 0,
+            },
+            team2: {
+              players: matchData.team2.players.map((p: any) => ({
+                userId: p.userId,
+                username: p.username || "",
+              })),
+              isGuest: matchData.team2.isGuest || false,
+              score: 0,
+            },
+            status: "pending",
+            stats: {
+              scores: [],
+            },
+          });
+
+          // Store the mapping between frontend ID and MongoDB ID
+          if (matchData.id) {
+            idMap.set(matchData.id, match._id);
+          }
+
+          return match;
+        })
       );
 
-      // Create a map of frontend IDs to MongoDB IDs
-      const idMap = new Map(
-        matches.map((match: { id: string }, index: number) => [
-          match.id,
-          createdMatches[index]._id,
-        ])
-      );
-
-      // Update matches with nextMatchId relationships
+      // Second pass: Update nextMatchId relationships
       await Promise.all(
         createdMatches.map(async (match, index) => {
           const originalMatch = matches[index];
           if (originalMatch.nextMatchId) {
             const nextMatchId = idMap.get(originalMatch.nextMatchId);
             if (nextMatchId) {
-              match.nextMatch = nextMatchId;
+              match.nextMatchId = nextMatchId;
               await match.save();
             }
           }
@@ -537,7 +544,8 @@ router.post(
       logger.error("Bulk Create Matches Error:", error);
       res.status(500).json({
         success: false,
-        message: "Error creating matches",
+        message:
+          error instanceof Error ? error.message : "Error creating matches",
       });
     }
   }
@@ -550,7 +558,7 @@ router.patch(
   async (req: Request, res: Response) => {
     try {
       const { matchId } = req.params;
-      const { stats, team1Score, team2Score, winner } = req.body;
+      const { stats, team1Score, team2Score } = req.body;
 
       const match = await Match.findById(matchId);
       if (!match) {
@@ -600,11 +608,6 @@ router.patch(
         match.team2.score = team2Score;
       }
 
-      // Update winner if provided
-      if (winner) {
-        match.winner = winner;
-      }
-
       // Check if match is completed based on bestOf
       const gamesNeededToWin = Math.ceil(match.bestOf / 2);
       if (
@@ -612,14 +615,6 @@ router.patch(
         match.team2.score >= gamesNeededToWin
       ) {
         match.status = "completed";
-        if (!match.winner) {
-          match.winner =
-            match.team1.score > match.team2.score
-              ? match.team1.players[0].userId
-              : match.team2.players[0].userId;
-        }
-      } else {
-        match.status = "in_progress";
       }
 
       await match.save();

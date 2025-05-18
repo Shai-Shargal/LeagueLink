@@ -141,6 +141,8 @@ export interface CreateTournamentDialogProps {
   onTournamentChange: (field: string, value: string | number) => void;
   channelUsers: DraggableParticipant[];
   isCreating: boolean;
+  isEditing?: boolean;
+  existingTournament?: Tournament;
 }
 
 export const DIALOG_WIDTH = 1200;

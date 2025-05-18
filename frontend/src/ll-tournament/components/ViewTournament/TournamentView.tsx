@@ -43,6 +43,7 @@ interface UserProfileData {
 }
 
 const TournamentView: React.FC<TournamentViewProps> = ({
+  onBack,
   channelId,
   isAdmin,
   channelUsers,
@@ -71,6 +72,25 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const [tournamentToDelete, setTournamentToDelete] =
     useState<Tournament | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [editingTournament, setEditingTournament] = useState<Tournament | null>(
+    null
+  );
+
+  const fetchTournaments = async () => {
+    try {
+      const fetchedTournaments =
+        await tournamentService.getChannelTournaments(channelId);
+      setTournaments(fetchedTournaments);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch tournaments"
+      );
+    }
+  };
+
+  useEffect(() => {
+    fetchTournaments();
+  }, [channelId]);
 
   useEffect(() => {
     loadData();
@@ -121,65 +141,46 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     }
   };
 
+  const handleEditTournament = (tournament: Tournament) => {
+    setEditingTournament(tournament);
+    setNewTournament({
+      name: tournament.name,
+      description: tournament.description,
+      location: tournament.location,
+      date: new Date(tournament.startDate).toISOString().split("T")[0],
+      time: new Date(tournament.startDate).toTimeString().slice(0, 5),
+    });
+    setCreateDialogOpen(true);
+  };
+
   const handleCreateTournament = async (tournamentData: any) => {
-    setIsCreating(true);
     try {
-      const initialParticipants = channelUsers.map((user) => ({
-        id: user.id,
-        userId: user.id,
-        username: user.username,
-        status: ParticipantStatus.PENDING,
-        stats: {
-          wins: 0,
-          losses: 0,
-          winRate: 0,
-        },
-      }));
-
-      console.log("Creating tournament with data:", tournamentData);
-
-      const backendData = {
-        name: tournamentData.name,
-        description: "Tournament created through the LeagueLink platform",
-        channelId: channelId,
-        startDate: tournamentData.startDate,
-        location: tournamentData.location,
-        maxParticipants: 32,
-        participants: [
-          ...initialParticipants,
-          ...(tournamentData.participants || []),
-        ],
-        matches: tournamentData.matches || [],
-      };
-
-      console.log("Sending tournament data to backend:", backendData);
-
-      const createdTournament = await tournamentService.createTournament(
-        channelId,
-        backendData
-      );
-
-      setTournaments((prev) => [...prev, createdTournament]);
-      setNewTournament({});
+      setIsCreating(true);
+      if (editingTournament) {
+        // Update existing tournament
+        await tournamentService.updateTournament(
+          editingTournament.id,
+          tournamentData
+        );
+      } else {
+        // Create new tournament
+        await tournamentService.createTournament(channelId, tournamentData);
+      }
+      await fetchTournaments();
       setCreateDialogOpen(false);
-      setIsCreating(false);
-    } catch (error) {
-      console.error("Failed to create tournament:", error);
+      setEditingTournament(null);
+      setNewTournament({});
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+    } finally {
       setIsCreating(false);
     }
   };
 
   const handleCloseCreateDialog = () => {
-    if (!isCreating) {
-      setCreateDialogOpen(false);
-      setNewTournament({
-        name: "",
-        date: "",
-        time: "",
-        location: "",
-        statsConfig: defaultStatsConfig,
-      });
-    }
+    setCreateDialogOpen(false);
+    setEditingTournament(null);
+    setNewTournament({});
   };
 
   const handleUpdateStatsConfig = async (
@@ -255,7 +256,10 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     }
   };
 
-  const handleTournamentChange = (field: string, value: string | number) => {
+  const handleTournamentChange = async (
+    field: string,
+    value: string | number
+  ) => {
     console.log("Tournament change:", field, value); // Debug log
     setNewTournament((prev: Partial<Tournament>) => ({
       ...prev,
@@ -302,6 +306,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         isAdmin={isAdmin}
         onUserClick={handleUserClick}
         onDeleteTournament={handleDeleteTournament}
+        onEditTournament={handleEditTournament}
         onCreateTournament={() => setCreateDialogOpen(true)}
       />
 
@@ -311,20 +316,16 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         onSubmit={handleCreateTournament}
         newTournament={newTournament}
         onTournamentChange={handleTournamentChange}
-        channelUsers={channelUsers.map(
-          (user: {
-            id: string;
-            username: string;
-            profilePicture?: string;
-          }) => ({
-            id: user.id,
-            userId: user.id,
-            username: user.username,
-            profilePicture: user.profilePicture,
-            status: ParticipantStatus.PENDING,
-          })
-        )}
+        channelUsers={channelUsers.map((user) => ({
+          id: user.id,
+          userId: user.id,
+          username: user.username,
+          profilePicture: user.profilePicture,
+          status: ParticipantStatus.PENDING,
+        }))}
         isCreating={isCreating}
+        isEditing={!!editingTournament}
+        existingTournament={editingTournament || undefined}
       />
 
       <StatsConfigDialog

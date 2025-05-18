@@ -17,7 +17,6 @@ export interface ITournament extends Document {
   startDate: Date;
   location: string;
   participants: ITournamentParticipant[];
-  matches: mongoose.Types.ObjectId[];
 }
 
 const tournamentParticipantSchema = new Schema({
@@ -59,12 +58,6 @@ const tournamentSchema = new Schema<ITournament>(
       type: [tournamentParticipantSchema],
       default: [],
     },
-    matches: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Match",
-      },
-    ],
   },
   {
     timestamps: true,

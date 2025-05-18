@@ -14,13 +14,21 @@ import { Match } from "../models/Match.model.js";
 
 const router = express.Router();
 
-// Create a new tournament
+// Create new tournament
 router.post("/", protect, async (req: Request, res: Response) => {
   try {
-    const { name, description, channelId, startDate, location, participants } =
-      req.body;
+    const { name, description, channelId, startDate, location } = req.body;
 
-    // Check if user has permission to create tournament in channel
+    // Validate required fields
+    if (!name || !channelId || !startDate || !location) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Missing required fields: name, channelId, startDate, and location are required",
+      });
+    }
+
+    // Validate channel exists and user has permission
     const channel = await Channel.findById(channelId);
     if (!channel) {
       return res.status(404).json({
@@ -29,23 +37,15 @@ router.post("/", protect, async (req: Request, res: Response) => {
       });
     }
 
-    if (!channel.admins.includes(req.user.id)) {
+    const isAdmin = channel.admins.includes(req.user.id);
+    if (!isAdmin) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to create tournaments in this channel",
       });
     }
 
-    // Validate required fields
-    if (!name || !startDate || !location) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Missing required fields: name, startDate, and location are required",
-      });
-    }
-
-    // Create tournament
+    // Create tournament with only the essential fields
     const tournament = await Tournament.create({
       name,
       description: description || "",
@@ -53,13 +53,7 @@ router.post("/", protect, async (req: Request, res: Response) => {
       organizer: req.user.id,
       startDate: new Date(startDate),
       location,
-      participants: participants || [],
-      matches: [], // Initialize empty matches array
-    });
-
-    // Add tournament to channel
-    await Channel.findByIdAndUpdate(channelId, {
-      $push: { tournaments: tournament._id },
+      participants: [],
     });
 
     res.status(201).json({
@@ -107,28 +101,7 @@ router.get("/:id", protect, async (req: Request, res: Response) => {
     const tournament = await Tournament.findById(req.params.id)
       .populate("organizer", "username")
       .populate("participants", "username")
-      .populate("channel", "name")
-      .populate({
-        path: "matches",
-        populate: [
-          {
-            path: "team1.id",
-            select: "username profilePicture",
-          },
-          {
-            path: "team2.id",
-            select: "username profilePicture",
-          },
-          {
-            path: "team1.players.id",
-            select: "username profilePicture",
-          },
-          {
-            path: "team2.players.id",
-            select: "username profilePicture",
-          },
-        ],
-      });
+      .populate("channel", "name");
 
     if (!tournament) {
       return res.status(404).json({
@@ -137,9 +110,18 @@ router.get("/:id", protect, async (req: Request, res: Response) => {
       });
     }
 
+    // Get all matches for this tournament
+    const matches = await Match.find({ tournament: tournament._id }).sort({
+      round: 1,
+      matchNumber: 1,
+    });
+
     res.json({
       success: true,
-      data: tournament,
+      data: {
+        ...tournament.toObject(),
+        matches,
+      },
     });
   } catch (error) {
     logger.error("Get Tournament Error:", error);

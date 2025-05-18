@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 import CloseIcon from "@mui/icons-material/Close";
 import IconButton from "@mui/material/IconButton";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
+import { Typography } from "@mui/material";
 
 import {
   CreateTournamentDialogProps,
@@ -27,6 +28,7 @@ import {
   ROUND_HORIZONTAL_GAP,
   INITIAL_TOP_MARGIN,
   GuestUser,
+  Tournament,
 } from "../../types";
 import { useMatchHistory } from "../../hooks/useMatchHistory";
 import { TournamentForm } from "./TournamentForm";
@@ -66,6 +68,8 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   onTournamentChange,
   channelUsers,
   isCreating,
+  isEditing = false,
+  existingTournament,
 }: CreateTournamentDialogProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [guestUsers, setGuestUsers] = useState<GuestUser[]>([]);
@@ -111,6 +115,28 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
       });
     }
   }, [open, matches.length]);
+
+  useEffect(() => {
+    if (isEditing && existingTournament) {
+      // Initialize form with existing tournament data
+      onTournamentChange("name", existingTournament.name);
+      onTournamentChange("description", existingTournament.description || "");
+      onTournamentChange("location", existingTournament.location);
+
+      // Format date and time from startDate
+      const startDate = new Date(existingTournament.startDate);
+      const formattedDate = startDate.toISOString().split("T")[0];
+      const formattedTime = startDate.toTimeString().slice(0, 5);
+
+      onTournamentChange("date", formattedDate);
+      onTournamentChange("time", formattedTime);
+
+      // Initialize matches if they exist
+      if (existingTournament.matches) {
+        setMatches(existingTournament.matches);
+      }
+    }
+  }, [isEditing, existingTournament]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -159,113 +185,36 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         parseInt(minutes)
       );
 
-      const formattedMatches = matches.map((match: Match) => {
-        // Handle team matches
-        if (match.teamType === "team") {
-          return {
-            id: match.id,
-            round: match.round,
-            matchNumber: match.matchNumber,
-            teamType: "team",
-            team1: {
-              type: "team",
-              id: Array.isArray(match.team1)
-                ? match.team1[0]?.userId
-                : match.team1?.userId,
-              isGuest: Array.isArray(match.team1)
-                ? match.team1[0]?.isGuest
-                : match.team1?.isGuest,
-              score: 0,
-              players: Array.isArray(match.team1)
-                ? match.team1.map((p) => ({
-                    id: p.userId,
-                    isGuest: p.isGuest || false,
-                  }))
-                : [],
-            },
-            team2: {
-              type: "team",
-              id: Array.isArray(match.team2)
-                ? match.team2[0]?.userId
-                : match.team2?.userId,
-              isGuest: Array.isArray(match.team2)
-                ? match.team2[0]?.isGuest
-                : match.team2?.isGuest,
-              score: 0,
-              players: Array.isArray(match.team2)
-                ? match.team2.map((p) => ({
-                    id: p.userId,
-                    isGuest: p.isGuest || false,
-                  }))
-                : [],
-            },
-            position: match.position,
-            rounds: match.rounds || 3,
-            status: "pending",
-          };
-        }
-
-        // Handle regular matches
-        return {
+      const tournamentData = {
+        ...newTournament,
+        startDate: formattedDate.toISOString(),
+        matches: matches.map((match: Match) => ({
           id: match.id,
           round: match.round,
           matchNumber: match.matchNumber,
-          teamType: "1v1",
-          team1: match.team1
-            ? {
-                type: "player",
-                id: match.team1.userId,
-                isGuest: match.team1.isGuest || false,
-                score: 0,
-              }
-            : null,
-          team2: match.team2
-            ? {
-                type: "player",
-                id: match.team2.userId,
-                isGuest: match.team2.isGuest || false,
-                score: 0,
-              }
-            : null,
+          teamType: match.teamType,
+          team1: match.team1,
+          team2: match.team2,
+          score1: match.score1,
+          score2: match.score2,
+          winner: match.winner,
+          nextMatchId: match.nextMatchId,
           position: match.position,
-          rounds: match.rounds || 3,
-          status: "pending",
-        };
-      });
-
-      const tournamentData = {
-        name: newTournament.name,
-        location: newTournament.location,
-        startDate: formattedDate.toISOString(),
-        format: "single elimination",
-        participants: [
-          ...(newTournament.participants || []),
-          ...guestUsers.map((guest: GuestUser) => ({
-            id: `guest_${guest.username}`,
-            userId: `guest_${guest.username}`,
-            username: guest.username,
-            status: "PENDING",
-            stats: {},
-            isGuest: true,
-          })),
-        ],
-        matches: formattedMatches,
-        matchConfig: {
-          teamType: "1v1",
-          bestOf: newTournament.rounds || 3,
-          stats: {
-            enabled: ["score"],
-            custom: [],
-          },
-        },
+        })),
       };
 
-      await onSubmit(tournamentData);
-      onClose();
+      if (isEditing && existingTournament) {
+        tournamentData.id = existingTournament.id;
+      }
+
+      onSubmit(tournamentData);
+      handleClose();
     } catch (error) {
-      console.error("Error creating tournament:", error);
-      setErrors({
-        name: "Failed to create tournament. Please try again.",
+      console.error("Error submitting tournament:", error);
+      setNotification({
+        open: true,
+        message: "Error submitting tournament. Please try again.",
+        severity: "error",
       });
     }
   };
@@ -646,7 +595,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                 letterSpacing: "0.5px",
               }}
             >
-              Create New Tournament
+              {isEditing ? "Edit Tournament" : "Create New Tournament"}
             </Box>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -827,7 +776,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             }}
             startIcon={isCreating ? <CircularProgress size={20} /> : null}
           >
-            Create Tournament
+            {isEditing ? "Update Tournament" : "Create Tournament"}
           </Button>
         </DialogActions>
       </Dialog>

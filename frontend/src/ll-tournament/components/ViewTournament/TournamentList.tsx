@@ -23,12 +23,14 @@ import {
   People as PeopleIcon,
   MoreVert as MoreVertIcon,
   SportsTennis as SportsIcon,
+  Edit as EditIcon,
 } from "@mui/icons-material";
 import { Tournament } from "../types";
 
 interface TournamentListProps {
   tournaments: Tournament[];
   onDeleteTournament: (tournament: Tournament) => void;
+  onEditTournament: (tournament: Tournament) => void;
   onCreateTournament: () => void;
   isAdmin: boolean;
 }
@@ -36,6 +38,7 @@ interface TournamentListProps {
 export const TournamentList: React.FC<TournamentListProps> = ({
   tournaments,
   onDeleteTournament,
+  onEditTournament,
   isAdmin,
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -62,6 +65,11 @@ export const TournamentList: React.FC<TournamentListProps> = ({
       onDeleteTournament(selectedTournament);
     }
     handleMenuClose();
+  };
+
+  const handleEdit = (event: React.MouseEvent, tournament: Tournament) => {
+    event.stopPropagation();
+    onEditTournament(tournament);
   };
 
   // Format date in a more readable way
@@ -239,14 +247,34 @@ export const TournamentList: React.FC<TournamentListProps> = ({
               </Box>
 
               {isAdmin && (
-                <Tooltip title="Tournament Options">
-                  <IconButton
-                    onClick={(event) => handleMenuClick(event, tournament)}
-                    sx={{ color: "white" }}
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
-                </Tooltip>
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <Tooltip title="Edit Tournament">
+                    <IconButton
+                      onClick={(event) => handleEdit(event, tournament)}
+                      sx={{
+                        color: "white",
+                        "&:hover": {
+                          backgroundColor: "rgba(255,255,255,0.1)",
+                        },
+                      }}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Tournament Options">
+                    <IconButton
+                      onClick={(event) => handleMenuClick(event, tournament)}
+                      sx={{
+                        color: "white",
+                        "&:hover": {
+                          backgroundColor: "rgba(255,255,255,0.1)",
+                        },
+                      }}
+                    >
+                      <MoreVertIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
               )}
             </Box>
 
