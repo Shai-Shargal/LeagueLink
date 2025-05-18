@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { MatchBox } from "../../ll-tournament/components/CreateTournament/MatchBox";
+import { MatchBox } from "../../ll-tournament/components/EditTournament/MatchBox";
 import { ParticipantStatus } from "../../ll-tournament/types";
 
 const meta: Meta<typeof MatchBox> = {

@@ -155,13 +155,65 @@ export const DIALOG_WIDTH = 1200;
 export const DIALOG_HEIGHT = 800;
 export const SIDEBAR_WIDTH = 300;
 export const GAMES_AREA_HEIGHT = 600;
-export const BASE_BOX_WIDTH = 200;
-export const BASE_BOX_HEIGHT = 100;
+export const BASE_BOX_WIDTH = 160;
+export const BASE_BOX_HEIGHT = 110;
 export const ROUND_HORIZONTAL_GAP = 250;
 export const INITIAL_TOP_MARGIN = 50;
 
 export enum ParticipantStatus {
-  PENDING = "PENDING",
-  CONFIRMED = "CONFIRMED",
-  DECLINED = "DECLINED",
+  PENDING = "pending",
+  CONFIRMED = "confirmed",
+  DECLINED = "declined",
+}
+
+export interface Position {
+  x: number;
+  y: number;
+}
+
+export interface Player {
+  id: string;
+  isGuest: boolean;
+}
+
+export interface Team {
+  type: "team";
+  id: string;
+  isGuest: boolean;
+  score: number;
+  players: Player[];
+}
+
+export interface PlayerTeam {
+  type: "player";
+  id: string;
+  isGuest: boolean;
+  score: number;
+}
+
+export type TeamType = Team | PlayerTeam | null;
+
+export interface Match {
+  id: string;
+  position: Position;
+  team1: TeamType;
+  team2: TeamType;
+  rounds: number;
+  teamType: "solo" | "team";
+  nextMatchId?: string;
+  round?: number;
+  matchNumber?: number;
+}
+
+export interface Tournament {
+  id: string;
+  name: string;
+  description?: string;
+  format?: string;
+  date?: string;
+  startDate?: string;
+  location?: string;
+  participantsCount?: number;
+  completed?: boolean;
+  matches: Match[];
 }

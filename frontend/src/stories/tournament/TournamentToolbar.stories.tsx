@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { TournamentToolbar } from "../../ll-tournament/components/CreateTournament/TournamentToolbar";
+import { TournamentToolbar } from "../../ll-tournament/components/EditTournament/TournamentToolbar";
 
 const meta: Meta<typeof TournamentToolbar> = {
   title: "Tournament/TournamentToolbar",

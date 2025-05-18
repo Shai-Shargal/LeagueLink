@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { TournamentParticipants } from "../../ll-tournament/components/CreateTournament/TournamentParticipants";
+import { TournamentParticipants } from "../../ll-tournament/components/EditTournament/TournamentParticipants";
 import { ParticipantStatus } from "../../ll-tournament/types";
 
 const meta: Meta<typeof TournamentParticipants> = {
