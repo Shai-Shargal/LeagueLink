@@ -64,6 +64,7 @@ export const MatchConnections: React.FC<MatchConnectionsProps> = ({
           width: "100%",
           height: "100%",
           pointerEvents: "none",
+          zIndex: 2,
         }}
       >
         <svg

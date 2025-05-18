@@ -22,6 +22,7 @@ import TournamentTabs from "../ViewStats/TournamentTabs";
 import CreateTournamentDialog from "../CreateTournament/CreateTournamentDialog";
 import StatsConfigDialog from "../ViewStats/StatsConfigDialog";
 import UserProfileDialog from "../UserProfileDialog";
+import EditTournament from "../EditTournament/EditTournament";
 
 interface TournamentViewProps {
   onBack: () => void;
@@ -50,6 +51,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState(0);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editTournamentOpen, setEditTournamentOpen] = useState(false);
   const [statsConfigDialogOpen, setStatsConfigDialogOpen] = useState(false);
   const [selectedTournament, setSelectedTournament] =
     useState<Tournament | null>(null);
@@ -143,14 +145,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
   const handleEditTournament = (tournament: Tournament) => {
     setEditingTournament(tournament);
-    setNewTournament({
-      name: tournament.name,
-      description: tournament.description,
-      location: tournament.location,
-      date: new Date(tournament.startDate).toISOString().split("T")[0],
-      time: new Date(tournament.startDate).toTimeString().slice(0, 5),
-    });
-    setCreateDialogOpen(true);
+    setEditTournamentOpen(true);
   };
 
   const handleCreateTournament = async (tournamentData: any) => {
@@ -309,6 +304,45 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         onEditTournament={handleEditTournament}
         onCreateTournament={() => setCreateDialogOpen(true)}
       />
+
+      {editTournamentOpen && editingTournament && (
+        <EditTournament
+          tournament={editingTournament}
+          channelUsers={channelUsers.map((user) => ({
+            ...user,
+            userId: user.id,
+            status: ParticipantStatus.PENDING,
+          }))}
+          onClose={() => {
+            setEditTournamentOpen(false);
+            setEditingTournament(null);
+          }}
+          onSave={async (updatedTournament) => {
+            try {
+              await tournamentService.updateTournament(editingTournament.id, {
+                ...updatedTournament,
+                name: updatedTournament.name || editingTournament.name,
+                description:
+                  updatedTournament.description ||
+                  editingTournament.description,
+                location:
+                  updatedTournament.location || editingTournament.location,
+                startDate:
+                  updatedTournament.startDate || editingTournament.startDate,
+              });
+              await loadData();
+              setEditTournamentOpen(false);
+              setEditingTournament(null);
+            } catch (error) {
+              setError(
+                error instanceof Error
+                  ? error.message
+                  : "Failed to update tournament"
+              );
+            }
+          }}
+        />
+      )}
 
       <CreateTournamentDialog
         open={createDialogOpen}

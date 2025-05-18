@@ -1,5 +1,12 @@
 import React, { useState, useCallback } from "react";
-import { Box, Paper, Button, Typography } from "@mui/material";
+import {
+  Box,
+  Paper,
+  Button,
+  Typography,
+  Dialog,
+  DialogContent,
+} from "@mui/material";
 import { MatchBox } from "./MatchBox";
 import { MatchConnectionManager } from "./MatchConnectionManager";
 import { MatchConnections } from "./MatchConnections";
@@ -167,6 +174,32 @@ export const EditTournament: React.FC<EditTournamentProps> = ({
     );
   };
 
+  // Handle connection mode toggle
+  const handleConnectionModeToggle = () => {
+    setIsConnectionMode(!isConnectionMode);
+    setSourceMatch(null);
+  };
+
+  // Handle match selection for connection
+  const handleMatchSelect = (match: Match) => {
+    if (!isConnectionMode) return;
+
+    if (!sourceMatch) {
+      setSourceMatch(match);
+    } else if (sourceMatch.id !== match.id) {
+      // Create connection between matches
+      const updatedMatches = matches.map((m) => {
+        if (m.id === sourceMatch.id) {
+          return { ...m, nextMatchId: match.id };
+        }
+        return m;
+      });
+      setMatches(updatedMatches);
+      addToHistory(updatedMatches);
+      setSourceMatch(null);
+    }
+  };
+
   // Handle save
   const handleSave = () => {
     const updatedTournament: Tournament = {
@@ -177,133 +210,170 @@ export const EditTournament: React.FC<EditTournamentProps> = ({
   };
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        bgcolor: "#1a1a1a",
-        color: "white",
+    <Dialog
+      open={true}
+      onClose={onClose}
+      maxWidth="xl"
+      fullWidth
+      PaperProps={{
+        sx: {
+          height: "90vh",
+          maxHeight: "90vh",
+          bgcolor: "#1a1a1a",
+          color: "white",
+        },
       }}
     >
-      {/* Header with save button */}
-      <Box
-        sx={{
-          p: 2,
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          borderBottom: "1px solid rgba(255,255,255,0.1)",
-          bgcolor: "#23293a",
-        }}
-      >
-        <Typography variant="h6" sx={{ color: "white" }}>
-          Edit Tournament: {tournament.name}
-        </Typography>
-        <Box>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleSave}
-            sx={{ mr: 1 }}
-          >
-            Save Changes
-          </Button>
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={onClose}
-            sx={{ color: "white", borderColor: "white" }}
-          >
-            Cancel
-          </Button>
-        </Box>
-      </Box>
-
-      {/* Main content */}
-      <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
-        {/* Left sidebar with participants */}
+      <DialogContent sx={{ p: 0, height: "100%" }}>
         <Box
           sx={{
-            width: 300,
-            p: 2,
-            borderRight: "1px solid rgba(255,255,255,0.1)",
-            bgcolor: "#23293a",
-            overflowY: "auto",
-          }}
-        >
-          <TournamentParticipants
-            channelUsers={channelUsers}
-            guestUsers={guestUsers}
-            draggedParticipant={draggedParticipant}
-            onDragStart={setDraggedParticipant}
-            onDragEnd={() => setDraggedParticipant(null)}
-            onAddGuest={handleAddGuest}
-            onRemoveGuest={handleRemoveGuest}
-          />
-        </Box>
-
-        {/* Main content area */}
-        <Box
-          sx={{
-            flex: 1,
             display: "flex",
             flexDirection: "column",
+            height: "100%",
             bgcolor: "#1a1a1a",
+            color: "white",
           }}
         >
-          {/* Toolbar */}
-          <Box sx={{ p: 2, bgcolor: "#23293a" }}>
-            <TournamentToolbar
-              matchesCount={matches.length}
-              historyIndex={historyIndex}
-              onAddMatch={handleAddMatch}
-              onAddTeamMatch={handleAddTeamMatch}
-              onUndo={handleUndo}
-              onRedo={handleRedo}
-              onAutoArrange={handleAutoArrange}
-              onClearAll={handleClearAll}
-            />
-          </Box>
-
-          {/* Tournament canvas */}
+          {/* Header with save button */}
           <Box
-            ref={containerRef}
             sx={{
-              flex: 1,
-              position: "relative",
-              overflow: "hidden",
-              bgcolor: "#1a1a1a",
+              p: 2,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              bgcolor: "#23293a",
             }}
           >
-            {/* Match connections */}
-            <MatchConnections matches={matches} />
+            <Typography variant="h6" sx={{ color: "white" }}>
+              Edit Tournament: {tournament.name}
+            </Typography>
+            <Box>
+              <Button
+                variant={isConnectionMode ? "contained" : "outlined"}
+                color="primary"
+                onClick={handleConnectionModeToggle}
+                sx={{ mr: 1 }}
+              >
+                {isConnectionMode ? "Exit Connection Mode" : "Connect Matches"}
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSave}
+                sx={{ mr: 1 }}
+              >
+                Save Changes
+              </Button>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={onClose}
+                sx={{ color: "white", borderColor: "white" }}
+              >
+                Cancel
+              </Button>
+            </Box>
+          </Box>
 
-            {/* Match boxes */}
-            {matches.map((match) => (
-              <MatchBox
-                key={match.id}
-                match={match}
+          {/* Main content */}
+          <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+            {/* Left sidebar with participants */}
+            <Box
+              sx={{
+                width: 300,
+                p: 2,
+                borderRight: "1px solid rgba(255,255,255,0.1)",
+                bgcolor: "#23293a",
+                overflowY: "auto",
+                flexShrink: 0,
+                zIndex: 2,
+                position: "relative",
+              }}
+            >
+              <TournamentParticipants
                 channelUsers={channelUsers}
+                guestUsers={guestUsers}
                 draggedParticipant={draggedParticipant}
                 onDragStart={setDraggedParticipant}
                 onDragEnd={() => setDraggedParticipant(null)}
-                onDelete={() => handleMatchDelete(match.id)}
-                onUpdate={(updates) => handleMatchUpdate(match.id, updates)}
-                parentWidth={containerDimensions.width}
-                parentHeight={containerDimensions.height}
-                isSourceMatch={sourceMatch?.id === match.id}
-                onSelectAsSource={() => {
-                  if (isConnectionMode) {
-                    setSourceMatch(match);
-                  }
-                }}
+                onAddGuest={handleAddGuest}
+                onRemoveGuest={handleRemoveGuest}
               />
-            ))}
+            </Box>
+
+            {/* Main content area */}
+            <Box
+              sx={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                bgcolor: "#1a1a1a",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {/* Toolbar */}
+              <Box
+                sx={{
+                  p: 2,
+                  bgcolor: "#23293a",
+                  flexShrink: 0,
+                  zIndex: 2,
+                  position: "relative",
+                }}
+              >
+                <TournamentToolbar
+                  matchesCount={matches.length}
+                  historyIndex={historyIndex}
+                  onAddMatch={handleAddMatch}
+                  onAddTeamMatch={handleAddTeamMatch}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  onAutoArrange={handleAutoArrange}
+                  onClearAll={handleClearAll}
+                />
+              </Box>
+
+              {/* Tournament canvas */}
+              <Box
+                ref={containerRef}
+                sx={{
+                  flex: 1,
+                  position: "relative",
+                  overflow: "hidden",
+                  bgcolor: "#1a1a1a",
+                  marginLeft: 0,
+                  paddingLeft: 0,
+                  zIndex: 1,
+                }}
+              >
+                {/* Match boxes */}
+                {matches.map((match) => (
+                  <MatchBox
+                    key={match.id}
+                    match={match}
+                    channelUsers={channelUsers}
+                    draggedParticipant={draggedParticipant}
+                    onDragStart={setDraggedParticipant}
+                    onDragEnd={() => setDraggedParticipant(null)}
+                    onDelete={() => handleMatchDelete(match.id)}
+                    onUpdate={(updates) => handleMatchUpdate(match.id, updates)}
+                    parentWidth={containerDimensions.width}
+                    parentHeight={containerDimensions.height}
+                    isSourceMatch={sourceMatch?.id === match.id}
+                    onSelectAsSource={() => handleMatchSelect(match)}
+                  />
+                ))}
+
+                {/* Match connections */}
+                <MatchConnections matches={matches} />
+              </Box>
+            </Box>
           </Box>
         </Box>
-      </Box>
-    </Box>
+      </DialogContent>
+    </Dialog>
   );
 };
 

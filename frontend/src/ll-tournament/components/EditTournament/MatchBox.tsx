@@ -45,12 +45,18 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
 }) => {
   const theme = useTheme();
 
+  // Calculate position with boundaries
   let left = match.position.x - CARD_WIDTH / 2;
   let top = match.position.y - CARD_HEIGHT / 2;
-  if (left < 0) left = 0;
-  if (top < 0) top = 0;
-  if (left + CARD_WIDTH > parentWidth) left = parentWidth - CARD_WIDTH;
-  if (top + CARD_HEIGHT > parentHeight) top = parentHeight - CARD_HEIGHT;
+
+  // Ensure the box stays within the container boundaries
+  const minLeft = 0;
+  const maxLeft = parentWidth - CARD_WIDTH;
+  const minTop = 0;
+  const maxTop = parentHeight - CARD_HEIGHT;
+
+  left = Math.max(minLeft, Math.min(maxLeft, left));
+  top = Math.max(minTop, Math.min(maxTop, top));
 
   // Helper to get participant info
   const getParticipant = (team: any) => {
@@ -242,6 +248,7 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
           p: 0,
           cursor: isDragging ? "grabbing" : "grab",
           userSelect: "none",
+          zIndex: 3,
         }}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
@@ -629,6 +636,7 @@ export const MatchBox: React.FC<MatchBoxProps> = ({
         p: 0,
         cursor: isDragging ? "grabbing" : "grab",
         userSelect: "none",
+        zIndex: 3,
       }}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
