@@ -1,50 +1,22 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { ITournamentParticipant } from "./Tournament.model.js";
 
 export interface IMatch extends Document {
   tournament: mongoose.Types.ObjectId;
   round: number;
   matchNumber: number;
-  teamType: "1v1" | "team";
   status: "pending" | "in_progress" | "completed";
   winner: mongoose.Types.ObjectId | null;
   bestOf: number;
-  games: Array<{
-    gameNumber: number;
-    status: "pending" | "in_progress" | "completed";
-    winner: mongoose.Types.ObjectId | null;
-    stats: {
-      team1: {
-        player: mongoose.Types.ObjectId;
-        isGuest?: boolean;
-        stats: Record<string, number>;
-      }[];
-      team2: {
-        player: mongoose.Types.ObjectId;
-        isGuest?: boolean;
-        stats: Record<string, number>;
-      }[];
-    };
-  }>;
   team1: {
-    type: "player" | "team";
-    id: mongoose.Types.ObjectId;
-    isGuest?: boolean;
+    players: ITournamentParticipant[];
     score: number;
-    players?: Array<{
-      id: mongoose.Types.ObjectId;
-      isGuest?: boolean;
-    }>;
   };
   team2: {
-    type: "player" | "team";
-    id: mongoose.Types.ObjectId;
-    isGuest?: boolean;
+    players: ITournamentParticipant[];
     score: number;
-    players?: Array<{
-      id: mongoose.Types.ObjectId;
-      isGuest?: boolean;
-    }>;
   };
+  stats: Record<string, any>;
   nextMatch: mongoose.Types.ObjectId | null;
   createdAt: Date;
   updatedAt: Date;
@@ -65,11 +37,6 @@ const MatchSchema = new Schema<IMatch>(
       type: Number,
       required: true,
     },
-    teamType: {
-      type: String,
-      enum: ["1v1", "team"],
-      default: "1v1",
-    },
     status: {
       type: String,
       enum: ["pending", "in_progress", "completed"],
@@ -82,120 +49,46 @@ const MatchSchema = new Schema<IMatch>(
     },
     bestOf: {
       type: Number,
-      default: 3,
+      required: true,
+      validate: {
+        validator: function (v: number) {
+          return v % 2 === 1 && v >= 1;
+        },
+        message: (props) =>
+          `${props.value} is not a valid bestOf value. Must be an odd number greater than or equal to 1.`,
+      },
     },
-    games: [
-      {
-        gameNumber: Number,
-        status: {
-          type: String,
-          enum: ["pending", "in_progress", "completed"],
-          default: "pending",
-        },
-        winner: {
-          type: Schema.Types.ObjectId,
-          ref: "User",
-          default: null,
-        },
-        stats: {
-          team1: [
-            {
-              player: {
-                type: Schema.Types.ObjectId,
-                ref: "User",
-              },
-              isGuest: {
-                type: Boolean,
-                default: false,
-              },
-              stats: {
-                type: Map,
-                of: Number,
-                default: {},
-              },
-            },
-          ],
-          team2: [
-            {
-              player: {
-                type: Schema.Types.ObjectId,
-                ref: "User",
-              },
-              isGuest: {
-                type: Boolean,
-                default: false,
-              },
-              stats: {
-                type: Map,
-                of: Number,
-                default: {},
-              },
-            },
-          ],
-        },
-      },
-    ],
     team1: {
-      type: {
-        type: String,
-        enum: ["player", "team"],
-        required: true,
-      },
-      id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      isGuest: {
-        type: Boolean,
-        default: false,
-      },
+      players: [
+        {
+          userId: String,
+          username: String,
+          isGuest: Boolean,
+          status: String,
+        },
+      ],
       score: {
         type: Number,
         default: 0,
       },
-      players: [
-        {
-          id: {
-            type: Schema.Types.ObjectId,
-            required: true,
-          },
-          isGuest: {
-            type: Boolean,
-            default: false,
-          },
-        },
-      ],
     },
     team2: {
-      type: {
-        type: String,
-        enum: ["player", "team"],
-        required: true,
-      },
-      id: {
-        type: Schema.Types.ObjectId,
-        required: true,
-      },
-      isGuest: {
-        type: Boolean,
-        default: false,
-      },
+      players: [
+        {
+          userId: String,
+          username: String,
+          isGuest: Boolean,
+          status: String,
+        },
+      ],
       score: {
         type: Number,
         default: 0,
       },
-      players: [
-        {
-          id: {
-            type: Schema.Types.ObjectId,
-            required: true,
-          },
-          isGuest: {
-            type: Boolean,
-            default: false,
-          },
-        },
-      ],
+    },
+    stats: {
+      type: Schema.Types.Mixed,
+      default: {},
     },
     nextMatch: {
       type: Schema.Types.ObjectId,
@@ -217,15 +110,9 @@ MatchSchema.index({ winner: 1 });
 
 // Add a pre-save hook to validate team matches
 MatchSchema.pre("save", function (next) {
-  if (this.teamType === "team") {
-    if (!this.team1.players || !this.team2.players) {
-      next(new Error("Team matches must have players arrays"));
-      return;
-    }
-    if (this.team1.players.length === 0 || this.team2.players.length === 0) {
-      next(new Error("Team matches must have at least one player per team"));
-      return;
-    }
+  if (this.team1.players.length === 0 || this.team2.players.length === 0) {
+    next(new Error("Both teams must have at least one player"));
+    return;
   }
   next();
 });

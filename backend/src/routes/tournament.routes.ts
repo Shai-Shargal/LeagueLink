@@ -1,7 +1,11 @@
 import express, { Request, Response } from "express";
 import { body } from "express-validator";
 import { protect } from "../middleware/auth.middleware.js";
-import { Tournament } from "../models/Tournament.model.js";
+import {
+  Tournament,
+  ITournament,
+  ITournamentParticipant,
+} from "../models/Tournament.model.js";
 import { Channel } from "../models/Channel.model.js";
 import { logger } from "../utils/logger.js";
 import mongoose from "mongoose";
@@ -13,33 +17,8 @@ const router = express.Router();
 // Create a new tournament
 router.post("/", protect, async (req: Request, res: Response) => {
   try {
-    const {
-      name,
-      description,
-      channelId,
-      format,
-      startDate,
-      location,
-      maxParticipants,
-      rules,
-      prizes,
-      participants,
-      matches,
-      status,
-      statsConfig,
-      matchConfig,
-    } = req.body;
-
-    console.log("Received tournament data:", {
-      name,
-      description,
-      channelId,
-      format,
-      startDate,
-      location,
-      matches: matches?.length,
-      matchConfig,
-    });
+    const { name, description, channelId, startDate, location, participants } =
+      req.body;
 
     // Check if user has permission to create tournament in channel
     const channel = await Channel.findById(channelId);
@@ -66,137 +45,32 @@ router.post("/", protect, async (req: Request, res: Response) => {
       });
     }
 
-    try {
-      const tournament = await Tournament.create({
-        name,
-        description,
-        channel: channelId,
-        organizer: req.user.id,
-        format: format || "single_elimination",
-        startDate: new Date(startDate),
-        location,
-        maxParticipants: maxParticipants || 32,
-        rules: rules || "Standard tournament rules apply",
-        prizes: prizes || "Trophies for winners",
-        participants: participants || [],
-        matches: matches || [],
-        status: status || "UPCOMING",
-        statsConfig: statsConfig || {
-          enabledStats: ["wins", "losses", "winRate"],
-          customStats: [],
-        },
-        matchConfig: matchConfig || {
-          teamType: "1v1",
-          bestOf: 3,
-          stats: {
-            enabled: ["score"],
-            custom: [],
-          },
-        },
-      });
+    // Create tournament
+    const tournament = await Tournament.create({
+      name,
+      description: description || "",
+      channel: channelId,
+      organizer: req.user.id,
+      startDate: new Date(startDate),
+      location,
+      participants: participants || [],
+      matches: [], // Initialize empty matches array
+    });
 
-      console.log("Created tournament:", tournament._id);
+    // Add tournament to channel
+    await Channel.findByIdAndUpdate(channelId, {
+      $push: { tournaments: tournament._id },
+    });
 
-      // Create matches for the tournament
-      if (matches && matches.length > 0) {
-        console.log("Creating matches for tournament:", matches.length);
-        const matchPromises = matches.map(async (matchData: any) => {
-          console.log("Processing match data:", matchData);
-          let team1User = null;
-          let team2User = null;
-          if (matchData.team1 && matchData.team1.id) {
-            team1User = await User.findById(matchData.team1.id);
-          }
-          if (matchData.team2 && matchData.team2.id) {
-            team2User = await User.findById(matchData.team2.id);
-          }
-          const match = await Match.create({
-            tournament: tournament._id,
-            round: matchData.round,
-            matchNumber: matchData.matchNumber,
-            teamType: matchData.teamType || matchConfig?.teamType || "1v1",
-            bestOf: matchData.rounds || matchConfig?.bestOf || 3,
-            team1: matchData.team1
-              ? {
-                  type: matchData.team1.type || "player",
-                  id: matchData.team1.id
-                    ? new mongoose.Types.ObjectId(matchData.team1.id)
-                    : undefined,
-                  isGuest: matchData.team1.isGuest || false,
-                  score: matchData.team1.score || 0,
-                  username: team1User ? team1User.username : "Unknown",
-                  profilePicture: team1User ? team1User.profilePicture : "",
-                  players:
-                    matchData.team1.players?.map((p: any) => ({
-                      id: new mongoose.Types.ObjectId(p.id),
-                      isGuest: p.isGuest || false,
-                    })) || [],
-                }
-              : null,
-            team2: matchData.team2
-              ? {
-                  type: matchData.team2.type || "player",
-                  id: matchData.team2.id
-                    ? new mongoose.Types.ObjectId(matchData.team2.id)
-                    : undefined,
-                  isGuest: matchData.team2.isGuest || false,
-                  score: matchData.team2.score || 0,
-                  username: team2User ? team2User.username : "Unknown",
-                  profilePicture: team2User ? team2User.profilePicture : "",
-                  players:
-                    matchData.team2.players?.map((p: any) => ({
-                      id: new mongoose.Types.ObjectId(p.id),
-                      isGuest: p.isGuest || false,
-                    })) || [],
-                }
-              : null,
-            nextMatch: matchData.nextMatchId,
-            status: "pending",
-            games: Array.from(
-              { length: matchData.rounds || matchConfig?.bestOf || 3 },
-              (_, i) => ({
-                gameNumber: i + 1,
-                status: "pending",
-                stats: {
-                  team1: [],
-                  team2: [],
-                },
-              })
-            ),
-          });
-          console.log("Created match:", match._id);
-          return match;
-        });
-
-        const createdMatches = await Promise.all(matchPromises);
-        console.log("All matches created:", createdMatches.length);
-      }
-
-      // Add tournament to channel
-      if (channel.tournaments) {
-        channel.tournaments.push(tournament._id);
-      } else {
-        channel.tournaments = [tournament._id];
-      }
-      await channel.save();
-
-      res.status(201).json({
-        success: true,
-        data: tournament,
-      });
-    } catch (err) {
-      console.error("Error creating tournament:", err);
-      if (err instanceof Error) {
-        throw new Error(`Failed to create tournament: ${err.message}`);
-      }
-      throw new Error("Failed to create tournament");
-    }
+    res.status(201).json({
+      success: true,
+      data: tournament,
+    });
   } catch (error) {
-    console.error("Create Tournament Error:", error);
+    logger.error("Create Tournament Error:", error);
     res.status(500).json({
       success: false,
-      message:
-        error instanceof Error ? error.message : "Error creating tournament",
+      message: "Error creating tournament",
     });
   }
 });
@@ -288,21 +162,29 @@ router.post("/:id/join", protect, async (req: Request, res: Response) => {
       });
     }
 
-    if (tournament.participants.includes(req.user.id)) {
+    if (tournament.participants.some((p) => p.userId === req.user.id)) {
       return res.status(400).json({
         success: false,
         message: "Already registered for this tournament",
       });
     }
 
-    if (tournament.participants.length >= tournament.maxParticipants) {
-      return res.status(400).json({
+    // Add user as participant
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({
         success: false,
-        message: "Tournament is full",
+        message: "User not found",
       });
     }
 
-    tournament.participants.push(req.user.id);
+    tournament.participants.push({
+      userId: req.user.id,
+      username: user.username,
+      isGuest: false,
+      status: "active",
+    });
+
     await tournament.save();
 
     res.json({
@@ -331,20 +213,26 @@ router.get(
       // Get all unique participants
       const participants = new Set<string>();
       tournaments.forEach((tournament) => {
-        tournament.participants.forEach((participant) => {
-          participants.add(participant._id.toString());
-        });
+        tournament.participants.forEach(
+          (participant: ITournamentParticipant) => {
+            participants.add(participant.userId);
+          }
+        );
       });
 
       // Calculate stats for each participant
       const userStats = await Promise.all(
         Array.from(participants).map(async (userId) => {
           const userTournaments = tournaments.filter((tournament) =>
-            tournament.participants.some((p) => p._id.toString() === userId)
+            tournament.participants.some(
+              (p: ITournamentParticipant) => p.userId === userId
+            )
           );
 
           const wins = userTournaments.filter(
-            (tournament) => tournament.winner?.toString() === userId
+            (tournament) =>
+              tournament.participants.find((p) => p.userId === userId)
+                ?.status === "winner"
           ).length;
 
           const losses = userTournaments.length - wins;
@@ -415,32 +303,13 @@ router.put("/:id", protect, async (req: Request, res: Response) => {
       });
     }
 
-    const {
-      name,
-      description,
-      format,
-      startDate,
-      location,
-      maxParticipants,
-      rules,
-      prizes,
-      status,
-      statsConfig,
-      matchConfig,
-    } = req.body;
+    const { name, description, startDate, location } = req.body;
 
     // Update tournament fields
     if (name) tournament.name = name;
     if (description) tournament.description = description;
-    if (format) tournament.format = format;
     if (startDate) tournament.startDate = new Date(startDate);
     if (location) tournament.location = location;
-    if (maxParticipants) tournament.maxParticipants = maxParticipants;
-    if (rules) tournament.rules = rules;
-    if (prizes) tournament.prizes = prizes;
-    if (status) tournament.status = status;
-    if (statsConfig) tournament.statsConfig = statsConfig;
-    if (matchConfig) tournament.matchConfig = matchConfig;
 
     await tournament.save();
 

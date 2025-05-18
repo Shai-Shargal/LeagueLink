@@ -9,14 +9,6 @@ export interface ITournamentParticipant {
   status: string;
 }
 
-export interface IMatch {
-  id: string;
-  round: number;
-  matchNumber: number;
-  team1: ITournamentParticipant | null;
-  team2: ITournamentParticipant | null;
-}
-
 export interface ITournament extends Document {
   name: string;
   description: string;
@@ -24,26 +16,8 @@ export interface ITournament extends Document {
   organizer: mongoose.Types.ObjectId | IUser;
   startDate: Date;
   location: string;
-  maxParticipants: number;
   participants: ITournamentParticipant[];
-  matches: IMatch[];
-  status: string;
-  statsConfig: {
-    enabledStats: string[];
-    customStats: any[];
-  };
-  matchConfig: {
-    teamType: "1v1" | "team";
-    bestOf: number;
-    stats: {
-      enabled: string[];
-      custom: Array<{
-        name: string;
-        type: "number" | "boolean" | "text";
-        required: boolean;
-      }>;
-    };
-  };
+  matches: mongoose.Types.ObjectId[];
 }
 
 const tournamentParticipantSchema = new Schema({
@@ -51,14 +25,6 @@ const tournamentParticipantSchema = new Schema({
   username: String,
   isGuest: Boolean,
   status: String,
-});
-
-const matchSchema = new Schema({
-  id: String,
-  round: Number,
-  matchNumber: Number,
-  team1: { type: tournamentParticipantSchema, default: null },
-  team2: { type: tournamentParticipantSchema, default: null },
 });
 
 const tournamentSchema = new Schema<ITournament>(
@@ -89,65 +55,16 @@ const tournamentSchema = new Schema<ITournament>(
       type: String,
       required: true,
     },
-    maxParticipants: {
-      type: Number,
-      default: 32,
-    },
     participants: {
       type: [tournamentParticipantSchema],
       default: [],
     },
-    matches: {
-      type: [matchSchema],
-      default: [],
-    },
-    status: {
-      type: String,
-      enum: ["UPCOMING", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
-      default: "UPCOMING",
-    },
-    statsConfig: {
-      enabledStats: {
-        type: [String],
-        default: ["wins", "losses", "winRate"],
+    matches: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Match",
       },
-      customStats: {
-        type: [Schema.Types.Mixed],
-        default: [],
-      },
-    },
-    matchConfig: {
-      teamType: {
-        type: String,
-        enum: ["1v1", "team"],
-        default: "1v1",
-      },
-      bestOf: {
-        type: Number,
-        default: 3,
-        min: 1,
-      },
-      stats: {
-        enabled: {
-          type: [String],
-          default: ["score"],
-        },
-        custom: [
-          {
-            name: String,
-            type: {
-              type: String,
-              enum: ["number", "boolean", "text"],
-              default: "number",
-            },
-            required: {
-              type: Boolean,
-              default: false,
-            },
-          },
-        ],
-      },
-    },
+    ],
   },
   {
     timestamps: true,
@@ -155,8 +72,7 @@ const tournamentSchema = new Schema<ITournament>(
 );
 
 // Indexes for better query performance
-tournamentSchema.index({ channel: 1, status: 1 });
-tournamentSchema.index({ startDate: 1 });
+tournamentSchema.index({ channel: 1 });
 tournamentSchema.index({ organizer: 1 });
 
 const Tournament = mongoose.model<ITournament>("Tournament", tournamentSchema);

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { protect } from "../middleware/auth.middleware.js";
-import { Match } from "../models/Match.model.js";
+import { Match, IMatch } from "../models/Match.model.js";
 import { Tournament } from "../models/Tournament.model.js";
 import { logger } from "../utils/logger.js";
 import mongoose from "mongoose";
@@ -90,25 +90,13 @@ router.patch(
         });
       }
 
-      const game = match.games.find(
-        (g) => g.gameNumber === parseInt(gameNumber)
-      );
-      if (!game) {
-        return res.status(404).json({
-          success: false,
-          message: "Game not found",
-        });
-      }
-
-      // Update game stats
-      game.stats.team1 = team1Stats;
-      game.stats.team2 = team2Stats;
-      game.winner = winner;
-      game.status = "completed";
+      // Update match stats
+      if (team1Stats) match.stats.team1 = team1Stats;
+      if (team2Stats) match.stats.team2 = team2Stats;
 
       // Update match scores
       if (winner) {
-        if (winner.toString() === match.team1.id.toString()) {
+        if (winner.toString() === match.team1.players[0].userId.toString()) {
           match.team1.score += 1;
         } else {
           match.team2.score += 1;
@@ -122,10 +110,11 @@ router.patch(
         match.team2.score >= gamesNeededToWin
       ) {
         match.status = "completed";
-        match.winner =
+        match.winner = new mongoose.Types.ObjectId(
           match.team1.score > match.team2.score
-            ? match.team1.id
-            : match.team2.id;
+            ? match.team1.players[0].userId
+            : match.team2.players[0].userId
+        );
       }
 
       await match.save();
@@ -289,21 +278,12 @@ router.put("/:matchId", protect, async (req: Request, res: Response) => {
       });
     }
 
-    const {
-      round,
-      matchNumber,
-      teamType,
-      bestOf,
-      team1,
-      team2,
-      nextMatch,
-      status,
-    } = req.body;
+    const { round, matchNumber, bestOf, team1, team2, nextMatch, status } =
+      req.body;
 
     // Update match fields
     if (round !== undefined) match.round = round;
     if (matchNumber !== undefined) match.matchNumber = matchNumber;
-    if (teamType) match.teamType = teamType;
     if (bestOf) match.bestOf = bestOf;
     if (team1) match.team1 = team1;
     if (team2) match.team2 = team2;
@@ -452,5 +432,210 @@ router.patch("/:id", protect, async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: "Error updating match" });
   }
 });
+
+// Bulk create matches for a tournament
+router.post(
+  "/tournament/:tournamentId/bulk",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const { tournamentId } = req.params;
+      const { matches } = req.body;
+
+      // Validate tournament exists and user has permission
+      const tournament = await Tournament.findById(tournamentId);
+      if (!tournament) {
+        return res.status(404).json({
+          success: false,
+          message: "Tournament not found",
+        });
+      }
+
+      const channel = await Channel.findById(tournament.channel);
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Associated channel not found",
+        });
+      }
+
+      const isAdmin = channel.admins.includes(req.user.id);
+      const isOrganizer = tournament.organizer.toString() === req.user.id;
+
+      if (!isAdmin && !isOrganizer) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to create matches for this tournament",
+        });
+      }
+
+      // Create all matches without nextMatchId first
+      const createdMatches = await Promise.all(
+        matches.map(
+          async (matchData: {
+            round: number;
+            matchNumber: number;
+            bestOf: number;
+            team1: { players: any[] };
+            team2: { players: any[] };
+            position: number;
+          }) => {
+            const match = await Match.create({
+              tournament: tournamentId,
+              round: matchData.round,
+              matchNumber: matchData.matchNumber,
+              bestOf: matchData.bestOf,
+              team1: {
+                players: matchData.team1.players || [],
+                score: 0,
+              },
+              team2: {
+                players: matchData.team2.players || [],
+                score: 0,
+              },
+              position: matchData.position,
+              stats: {},
+            });
+
+            // Add match to tournament
+            await Tournament.findByIdAndUpdate(tournamentId, {
+              $push: { matches: match._id },
+            });
+
+            return match;
+          }
+        )
+      );
+
+      // Create a map of frontend IDs to MongoDB IDs
+      const idMap = new Map(
+        matches.map((match: { id: string }, index: number) => [
+          match.id,
+          createdMatches[index]._id,
+        ])
+      );
+
+      // Update matches with nextMatchId relationships
+      await Promise.all(
+        createdMatches.map(async (match, index) => {
+          const originalMatch = matches[index];
+          if (originalMatch.nextMatchId) {
+            const nextMatchId = idMap.get(originalMatch.nextMatchId);
+            if (nextMatchId) {
+              match.nextMatch = nextMatchId;
+              await match.save();
+            }
+          }
+        })
+      );
+
+      res.status(201).json({
+        success: true,
+        data: createdMatches,
+      });
+    } catch (error) {
+      logger.error("Bulk Create Matches Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error creating matches",
+      });
+    }
+  }
+);
+
+// Update match stats and results
+router.patch(
+  "/:matchId/stats",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const { matchId } = req.params;
+      const { stats, team1Score, team2Score, winner } = req.body;
+
+      const match = await Match.findById(matchId);
+      if (!match) {
+        return res.status(404).json({
+          success: false,
+          message: "Match not found",
+        });
+      }
+
+      // Validate tournament exists and user has permission
+      const tournament = await Tournament.findById(match.tournament);
+      if (!tournament) {
+        return res.status(404).json({
+          success: false,
+          message: "Associated tournament not found",
+        });
+      }
+
+      const channel = await Channel.findById(tournament.channel);
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Associated channel not found",
+        });
+      }
+
+      const isAdmin = channel.admins.includes(req.user.id);
+      const isOrganizer = tournament.organizer.toString() === req.user.id;
+
+      if (!isAdmin && !isOrganizer) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to update match stats",
+        });
+      }
+
+      // Update match stats
+      if (stats) {
+        match.stats = stats;
+      }
+
+      // Update scores
+      if (team1Score !== undefined) {
+        match.team1.score = team1Score;
+      }
+      if (team2Score !== undefined) {
+        match.team2.score = team2Score;
+      }
+
+      // Update winner if provided
+      if (winner) {
+        match.winner = winner;
+      }
+
+      // Check if match is completed based on bestOf
+      const gamesNeededToWin = Math.ceil(match.bestOf / 2);
+      if (
+        match.team1.score >= gamesNeededToWin ||
+        match.team2.score >= gamesNeededToWin
+      ) {
+        match.status = "completed";
+        if (!match.winner) {
+          match.winner =
+            match.team1.score > match.team2.score
+              ? match.team1.players[0].userId
+              : match.team2.players[0].userId;
+        }
+      } else {
+        match.status = "in_progress";
+      }
+
+      await match.save();
+
+      res.json({
+        success: true,
+        data: match,
+      });
+    } catch (error) {
+      logger.error("Update Match Stats Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating match stats",
+      });
+    }
+  }
+);
 
 export default router;
