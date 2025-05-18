@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Match, BASE_BOX_WIDTH, BASE_BOX_HEIGHT } from "@/ll-tournament/types";
 import { Box } from "@mui/material";
+
+interface Match {
+  id: string;
+  nextMatchId?: string;
+  position: {
+    x: number;
+    y: number;
+  };
+}
+
+const BASE_BOX_WIDTH = 200;
+const BASE_BOX_HEIGHT = 100;
 
 interface MatchConnectionsProps {
   matches: Match[];

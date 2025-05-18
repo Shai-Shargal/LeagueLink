@@ -21,7 +21,7 @@ export interface Match {
   id: string;
   round: number;
   matchNumber: number;
-  teamType: "1v1" | "team";
+  teamType: "solo" | "team";
   team1: Team | null;
   team2: Team | null;
   position: { x: number; y: number };

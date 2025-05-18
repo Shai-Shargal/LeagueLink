@@ -1,26 +1,27 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose from "mongoose";
 import { IUser } from "./User.model.js";
 
-export interface IChannel extends Document {
+export interface IChannel {
   name: string;
   description: string;
   passcode: string;
   image?: string;
-  owner: IUser["_id"];
-  members: IUser["_id"][];
-  admins: IUser["_id"][];
-  tournaments: mongoose.Types.ObjectId[];
+  owner: mongoose.Types.ObjectId;
+  members: mongoose.Types.ObjectId[];
+  admins: mongoose.Types.ObjectId[];
+  isPrivate: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
 
-const channelSchema = new Schema<IChannel>(
+const channelSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: [true, "Channel name is required"],
       trim: true,
       minlength: [3, "Channel name must be at least 3 characters long"],
+      unique: true,
     },
     description: {
       type: String,
@@ -39,28 +40,26 @@ const channelSchema = new Schema<IChannel>(
       default: "",
     },
     owner: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
     members: [
       {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
     ],
     admins: [
       {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
       },
     ],
-    tournaments: [
-      {
-        type: Schema.Types.ObjectId,
-        ref: "Tournament",
-      },
-    ],
+    isPrivate: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,

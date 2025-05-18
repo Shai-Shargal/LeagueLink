@@ -212,8 +212,8 @@ export const EditTournament: React.FC<EditTournamentProps> = ({
         team2: match.team2,
         rounds: match.rounds,
         teamType: match.teamType,
-        round: match.round,
-        matchNumber: match.matchNumber,
+        round: match.round || 1,
+        matchNumber: match.matchNumber || matches.indexOf(match) + 1,
       })),
     };
     onSave(updatedTournament);

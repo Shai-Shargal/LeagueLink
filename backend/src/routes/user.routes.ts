@@ -6,8 +6,6 @@ import { User } from "../models/User.model.js";
 import { protect } from "../middleware/auth.middleware.js";
 import { logger } from "../utils/logger.js";
 import { Channel } from "../models/Channel.model.js";
-import { Tournament } from "../models/Tournament.model.js";
-import mongoose from "mongoose";
 
 const router = express.Router();
 
@@ -303,9 +301,6 @@ router.delete("/", protect, async (req: Request, res: Response) => {
       { members: user._id },
       { $pull: { members: user._id, admins: user._id } }
     );
-
-    // Delete user's tournaments
-    await Tournament.deleteMany({ organizer: user._id });
 
     // Delete user
     await user.deleteOne();
