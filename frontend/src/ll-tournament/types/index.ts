@@ -28,6 +28,7 @@ export interface Match {
   rounds: number;
   status?: string;
   winner?: string;
+  nextMatchId?: string;
   games?: Array<{
     gameNumber: number;
     status: string;

@@ -204,7 +204,17 @@ export const EditTournament: React.FC<EditTournamentProps> = ({
   const handleSave = () => {
     const updatedTournament: Tournament = {
       ...tournament,
-      matches: matches,
+      matches: matches.map((match) => ({
+        ...match,
+        position: match.position,
+        nextMatchId: match.nextMatchId,
+        team1: match.team1,
+        team2: match.team2,
+        rounds: match.rounds,
+        teamType: match.teamType,
+        round: match.round,
+        matchNumber: match.matchNumber,
+      })),
     };
     onSave(updatedTournament);
   };

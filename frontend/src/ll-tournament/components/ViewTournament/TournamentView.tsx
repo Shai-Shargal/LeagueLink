@@ -282,6 +282,33 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     }
   };
 
+  const handleSaveTournament = async (updatedTournament: Tournament) => {
+    try {
+      // Update tournament basic info
+      await tournamentService.updateTournament(updatedTournament.id, {
+        name: updatedTournament.name,
+        description: updatedTournament.description,
+        location: updatedTournament.location,
+        startDate: updatedTournament.startDate,
+        time: updatedTournament.time,
+      });
+
+      // Update matches using createMatches
+      if (updatedTournament.matches && updatedTournament.matches.length > 0) {
+        await tournamentService.createMatches(
+          updatedTournament.id,
+          updatedTournament.matches
+        );
+      }
+
+      // Refresh tournaments list
+      await fetchTournaments();
+      setEditTournamentOpen(false);
+    } catch (error) {
+      console.error("Error saving tournament:", error);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -309,38 +336,15 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         <EditTournament
           tournament={editingTournament}
           channelUsers={channelUsers.map((user) => ({
-            ...user,
             userId: user.id,
+            username: user.username,
+            isGuest: false,
+            type: "player",
+            id: user.id,
             status: ParticipantStatus.PENDING,
           }))}
-          onClose={() => {
-            setEditTournamentOpen(false);
-            setEditingTournament(null);
-          }}
-          onSave={async (updatedTournament) => {
-            try {
-              await tournamentService.updateTournament(editingTournament.id, {
-                ...updatedTournament,
-                name: updatedTournament.name || editingTournament.name,
-                description:
-                  updatedTournament.description ||
-                  editingTournament.description,
-                location:
-                  updatedTournament.location || editingTournament.location,
-                startDate:
-                  updatedTournament.startDate || editingTournament.startDate,
-              });
-              await loadData();
-              setEditTournamentOpen(false);
-              setEditingTournament(null);
-            } catch (error) {
-              setError(
-                error instanceof Error
-                  ? error.message
-                  : "Failed to update tournament"
-              );
-            }
-          }}
+          onClose={() => setEditTournamentOpen(false)}
+          onSave={handleSaveTournament}
         />
       )}
 

@@ -72,47 +72,74 @@ export const tournamentService = {
 
   // Match operations
   async createMatches(tournamentId: string, matches: any[]) {
-    const matchesPayload = matches.map((match) => ({
-      tournament: tournamentId,
-      round: match.round,
-      matchNumber: match.matchNumber,
-      bestOf: match.rounds,
-      team1: {
-        players:
-          match.team1?.players?.map((p) => ({
-            userId: p.id,
-            username: p.username || "",
-          })) || [],
-        isGuest: match.team1?.isGuest || false,
-      },
-      team2: {
-        players:
-          match.team2?.players?.map((p) => ({
-            userId: p.id,
-            username: p.username || "",
-          })) || [],
-        isGuest: match.team2?.isGuest || false,
-      },
-      position: match.position,
-      nextMatchId: match.nextMatchId,
-      stats: {},
-      status: "pending",
-    }));
+    try {
+      // Create new matches one by one
+      const createdMatches = await Promise.all(
+        matches.map(async (match) => {
+          const matchPayload = {
+            tournament: tournamentId,
+            round: match.round || 1,
+            matchNumber: match.matchNumber || 1,
+            bestOf: match.rounds || 3,
+            team1: {
+              players:
+                match.team1?.players?.map(
+                  (p: { id: string; username?: string }) => ({
+                    userId: p.id,
+                    username: p.username || "",
+                  })
+                ) || [],
+              isGuest: match.team1?.isGuest || false,
+            },
+            team2: {
+              players:
+                match.team2?.players?.map(
+                  (p: { id: string; username?: string }) => ({
+                    userId: p.id,
+                    username: p.username || "",
+                  })
+                ) || [],
+              isGuest: match.team2?.isGuest || false,
+            },
+            position: {
+              x: match.position?.x || 0,
+              y: match.position?.y || 0,
+            },
+            nextMatchId: match.nextMatchId || null,
+            teamType: match.teamType || "1v1",
+            stats: {},
+            status: "pending",
+            games: [],
+          };
 
-    console.log(
-      "Sending matches data to backend:",
-      JSON.stringify(matchesPayload, null, 2)
-    );
+          console.log("Creating match:", JSON.stringify(matchPayload, null, 2));
 
-    const response = await fetch(
-      `${MATCH_URL}/tournament/${tournamentId}/bulk`,
-      {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ matches: matchesPayload }),
-      }
-    );
-    return handleResponse(response);
+          const response = await fetch(`${MATCH_URL}`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(matchPayload),
+          });
+
+          if (!response.ok) {
+            let errorMessage = `HTTP error! status: ${response.status}`;
+            try {
+              const errorData = await response.json();
+              errorMessage = errorData.message || errorMessage;
+            } catch (e) {
+              console.error("Error parsing error response:", e);
+            }
+            throw new Error(errorMessage);
+          }
+
+          return handleResponse(response);
+        })
+      );
+
+      return createdMatches;
+    } catch (error) {
+      console.error("Error creating matches:", error);
+      throw error;
+    }
   },
 
   async getChannelTournaments(channelId: string) {

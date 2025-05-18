@@ -36,101 +36,6 @@ router.get("/:matchId", protect, async (req: Request, res: Response) => {
   }
 });
 
-// Update match status
-router.patch(
-  "/:matchId/status",
-  protect,
-  async (req: Request, res: Response) => {
-    try {
-      const { status } = req.body;
-      const match = await Match.findByIdAndUpdate(
-        req.params.matchId,
-        { status },
-        { new: true }
-      );
-
-      if (!match) {
-        return res.status(404).json({
-          success: false,
-          message: "Match not found",
-        });
-      }
-
-      res.json({
-        success: true,
-        data: match,
-      });
-    } catch (error) {
-      logger.error("Update Match Status Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error updating match status",
-      });
-    }
-  }
-);
-
-// Update game stats
-router.patch(
-  "/:matchId/games/:gameNumber/stats",
-  protect,
-  async (req: Request, res: Response) => {
-    try {
-      const { gameNumber } = req.params;
-      const { team1Stats, team2Stats, winner } = req.body;
-
-      const match = await Match.findById(req.params.matchId);
-      if (!match) {
-        return res.status(404).json({
-          success: false,
-          message: "Match not found",
-        });
-      }
-
-      // Update match stats
-      if (!match.stats.scores) {
-        match.stats.scores = [];
-      }
-
-      // Add or update game score
-      const gameIndex = parseInt(gameNumber) - 1;
-      if (winner) {
-        if (winner.toString() === match.team1.players[0].userId.toString()) {
-          match.team1.score += 1;
-          match.stats.scores[gameIndex] = { team1: 1, team2: 0 };
-        } else {
-          match.team2.score += 1;
-          match.stats.scores[gameIndex] = { team1: 0, team2: 1 };
-        }
-      }
-
-      // Check if match is completed
-      const gamesNeededToWin = Math.ceil(match.bestOf / 2);
-      if (
-        match.team1.score >= gamesNeededToWin ||
-        match.team2.score >= gamesNeededToWin
-      ) {
-        match.status = "completed";
-      } else {
-        match.status = "in_progress";
-      }
-
-      await match.save();
-
-      res.json({
-        success: true,
-        data: match,
-      });
-    } catch (error) {
-      logger.error("Update Game Stats Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error updating game stats",
-      });
-    }
-  }
-);
-
 // Get matches by tournament
 router.get(
   "/tournament/:tournamentId",
@@ -165,6 +70,7 @@ router.post("/", protect, async (req: Request, res: Response) => {
       matchNumber,
       position,
       bestOf,
+      teamType,
       team1,
       team2,
       nextMatchId,
@@ -189,6 +95,7 @@ router.post("/", protect, async (req: Request, res: Response) => {
         y: position.y,
       },
       bestOf,
+      teamType,
       team1: {
         players:
           team1.players?.map((p: any) => ({
@@ -210,30 +117,22 @@ router.post("/", protect, async (req: Request, res: Response) => {
       nextMatchId: nextMatchId
         ? new mongoose.Types.ObjectId(nextMatchId)
         : null,
+      stats: {
+        scores: [],
+      },
+      games: [],
       status: "pending",
     });
 
-    // Add match to tournament
-    await Tournament.findByIdAndUpdate(tournament, {
-      $push: { matches: match._id },
-    });
-
-    // Populate the created match with necessary data
-    const populatedMatch = await Match.findById(match._id)
-      .populate("tournament")
-      .populate("team1.players.userId")
-      .populate("team2.players.userId");
-
     res.status(201).json({
       success: true,
-      data: populatedMatch,
+      data: match,
     });
   } catch (error) {
     logger.error("Create Match Error:", error);
     res.status(500).json({
       success: false,
       message: "Error creating match",
-      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
@@ -342,11 +241,6 @@ router.delete("/:matchId", protect, async (req: Request, res: Response) => {
       });
     }
 
-    // Remove match from tournament
-    await Tournament.findByIdAndUpdate(match.tournament, {
-      $pull: { matches: match._id },
-    });
-
     // Delete match
     await match.deleteOne();
 
@@ -363,205 +257,16 @@ router.delete("/:matchId", protect, async (req: Request, res: Response) => {
   }
 });
 
-// Get all matches (optionally filter by status)
-router.get("/", protect, async (req: Request, res: Response) => {
-  try {
-    const filter: any = {};
-    if (req.query.status) {
-      filter.status = req.query.status;
-    }
-    const matches = await Match.find(filter)
-      .populate("team1.players.userId")
-      .populate("team2.players.userId")
-      .sort({ createdAt: -1 });
-    res.json({ success: true, data: matches });
-  } catch (error) {
-    logger.error("Get All Matches Error:", error);
-    res.status(500).json({ success: false, message: "Error fetching matches" });
-  }
-});
-
-// Get all matches for a player
-router.get(
-  "/player/:playerId",
-  protect,
-  async (req: Request, res: Response) => {
-    try {
-      const playerId = req.params.playerId;
-      const matches = await Match.find({
-        $or: [
-          { "team1.players.id": playerId },
-          { "team2.players.id": playerId },
-        ],
-      })
-        .populate("team1.players.userId")
-        .populate("team2.players.userId")
-        .sort({ createdAt: -1 });
-      res.json({ success: true, data: matches });
-    } catch (error) {
-      logger.error("Get Player Matches Error:", error);
-      res
-        .status(500)
-        .json({ success: false, message: "Error fetching player matches" });
-    }
-  }
-);
-
-// General update for a match
-router.patch("/:id", protect, async (req: Request, res: Response) => {
-  try {
-    const match = await Match.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    })
-      .populate("team1.players.userId")
-      .populate("team2.players.userId");
-    if (!match) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Match not found" });
-    }
-    res.json({ success: true, data: match });
-  } catch (error) {
-    logger.error("General Update Match Error:", error);
-    res.status(500).json({ success: false, message: "Error updating match" });
-  }
-});
-
-// Bulk create matches for a tournament
-router.post(
-  "/tournament/:tournamentId/bulk",
-  protect,
-  async (req: Request, res: Response) => {
-    try {
-      const { tournamentId } = req.params;
-      const { matches } = req.body;
-
-      // Validate tournament exists and user has permission
-      const tournament = await Tournament.findById(tournamentId);
-      if (!tournament) {
-        return res.status(404).json({
-          success: false,
-          message: "Tournament not found",
-        });
-      }
-
-      const channel = await Channel.findById(tournament.channel);
-      if (!channel) {
-        return res.status(404).json({
-          success: false,
-          message: "Associated channel not found",
-        });
-      }
-
-      const isAdmin = channel.admins.includes(req.user.id);
-      const isOrganizer = tournament.organizer.toString() === req.user.id;
-
-      if (!isAdmin && !isOrganizer) {
-        return res.status(403).json({
-          success: false,
-          message: "Not authorized to create matches for this tournament",
-        });
-      }
-
-      // Create a map to store frontend IDs to MongoDB IDs
-      const idMap = new Map();
-
-      // First pass: Create all matches without nextMatchId
-      const createdMatches = await Promise.all(
-        matches.map(async (matchData: any) => {
-          // Validate required fields
-          if (
-            !matchData.round ||
-            !matchData.matchNumber ||
-            !matchData.position ||
-            !matchData.bestOf
-          ) {
-            throw new Error(
-              "Missing required match fields: round, matchNumber, position, and bestOf are required"
-            );
-          }
-
-          // Validate bestOf is odd
-          if (matchData.bestOf % 2 === 0) {
-            throw new Error("bestOf must be an odd number");
-          }
-
-          const match = await Match.create({
-            tournament: tournamentId,
-            round: matchData.round,
-            matchNumber: matchData.matchNumber,
-            position: matchData.position,
-            bestOf: matchData.bestOf,
-            team1: {
-              players: matchData.team1.players.map((p: any) => ({
-                userId: p.userId,
-                username: p.username || "",
-              })),
-              isGuest: matchData.team1.isGuest || false,
-              score: 0,
-            },
-            team2: {
-              players: matchData.team2.players.map((p: any) => ({
-                userId: p.userId,
-                username: p.username || "",
-              })),
-              isGuest: matchData.team2.isGuest || false,
-              score: 0,
-            },
-            status: "pending",
-            stats: {
-              scores: [],
-            },
-          });
-
-          // Store the mapping between frontend ID and MongoDB ID
-          if (matchData.id) {
-            idMap.set(matchData.id, match._id);
-          }
-
-          return match;
-        })
-      );
-
-      // Second pass: Update nextMatchId relationships
-      await Promise.all(
-        createdMatches.map(async (match, index) => {
-          const originalMatch = matches[index];
-          if (originalMatch.nextMatchId) {
-            const nextMatchId = idMap.get(originalMatch.nextMatchId);
-            if (nextMatchId) {
-              match.nextMatchId = nextMatchId;
-              await match.save();
-            }
-          }
-        })
-      );
-
-      res.status(201).json({
-        success: true,
-        data: createdMatches,
-      });
-    } catch (error) {
-      logger.error("Bulk Create Matches Error:", error);
-      res.status(500).json({
-        success: false,
-        message:
-          error instanceof Error ? error.message : "Error creating matches",
-      });
-    }
-  }
-);
-
-// Update match stats and results
+// Update game stats
 router.patch(
-  "/:matchId/stats",
+  "/:matchId/games/:gameNumber/stats",
   protect,
   async (req: Request, res: Response) => {
     try {
-      const { matchId } = req.params;
-      const { stats, team1Score, team2Score } = req.body;
+      const { gameNumber } = req.params;
+      const { team1Stats, team2Stats, winner } = req.body;
 
-      const match = await Match.findById(matchId);
+      const match = await Match.findById(req.params.matchId);
       if (!match) {
         return res.status(404).json({
           success: false,
@@ -569,53 +274,42 @@ router.patch(
         });
       }
 
-      // Validate tournament exists and user has permission
-      const tournament = await Tournament.findById(match.tournament);
-      if (!tournament) {
-        return res.status(404).json({
-          success: false,
-          message: "Associated tournament not found",
-        });
+      // Find or create game
+      const gameIndex = parseInt(gameNumber) - 1;
+      if (!match.games[gameIndex]) {
+        match.games[gameIndex] = {
+          number: parseInt(gameNumber),
+          winner: null,
+          team1Stats: {},
+          team2Stats: {},
+        };
       }
 
-      const channel = await Channel.findById(tournament.channel);
-      if (!channel) {
-        return res.status(404).json({
-          success: false,
-          message: "Associated channel not found",
-        });
-      }
-
-      const isAdmin = channel.admins.includes(req.user.id);
-      const isOrganizer = tournament.organizer.toString() === req.user.id;
-
-      if (!isAdmin && !isOrganizer) {
-        return res.status(403).json({
-          success: false,
-          message: "Not authorized to update match stats",
-        });
-      }
+      // Update game stats
+      match.games[gameIndex].team1Stats = team1Stats || {};
+      match.games[gameIndex].team2Stats = team2Stats || {};
+      match.games[gameIndex].winner = winner || null;
 
       // Update match stats
-      if (stats) {
-        match.stats = stats;
+      if (winner) {
+        if (winner.toString() === match.team1.players[0].userId.toString()) {
+          match.team1.score += 1;
+          match.stats.scores[gameIndex] = { team1: 1, team2: 0 };
+        } else {
+          match.team2.score += 1;
+          match.stats.scores[gameIndex] = { team1: 0, team2: 1 };
+        }
       }
 
-      // Update scores
-      if (team1Score !== undefined) {
-        match.team1.score = team1Score;
-      }
-      if (team2Score !== undefined) {
-        match.team2.score = team2Score;
-      }
-
-      // Check if match is completed based on bestOf
+      // Check if match is completed
       const gamesNeededToWin = Math.ceil(match.bestOf / 2);
       if (
         match.team1.score >= gamesNeededToWin ||
         match.team2.score >= gamesNeededToWin
       ) {
         match.status = "completed";
+      } else {
+        match.status = "in_progress";
       }
 
       await match.save();
@@ -625,53 +319,10 @@ router.patch(
         data: match,
       });
     } catch (error) {
-      logger.error("Update Match Stats Error:", error);
+      logger.error("Update Game Stats Error:", error);
       res.status(500).json({
         success: false,
-        message: "Error updating match stats",
-      });
-    }
-  }
-);
-
-// Update match position
-router.patch(
-  "/:matchId/position",
-  protect,
-  async (req: Request, res: Response) => {
-    try {
-      const { position } = req.body;
-      const match = await Match.findByIdAndUpdate(
-        req.params.matchId,
-        {
-          position: {
-            x: position.x,
-            y: position.y,
-          },
-        },
-        { new: true }
-      )
-        .populate("tournament")
-        .populate("team1.players.userId")
-        .populate("team2.players.userId");
-
-      if (!match) {
-        return res.status(404).json({
-          success: false,
-          message: "Match not found",
-        });
-      }
-
-      res.json({
-        success: true,
-        data: match,
-      });
-    } catch (error) {
-      logger.error("Update Match Position Error:", error);
-      res.status(500).json({
-        success: false,
-        message: "Error updating match position",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Error updating game stats",
       });
     }
   }

@@ -54,6 +54,7 @@ router.post("/", protect, async (req: Request, res: Response) => {
       startDate: new Date(startDate),
       location,
       participants: [],
+      status: "pending",
     });
 
     res.status(201).json({
@@ -164,7 +165,7 @@ router.post("/:id/join", protect, async (req: Request, res: Response) => {
       userId: req.user.id,
       username: user.username,
       isGuest: false,
-      status: "active",
+      status: "pending",
     });
 
     await tournament.save();
@@ -258,7 +259,6 @@ router.get(
 router.put("/:id", protect, async (req: Request, res: Response) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
-
     if (!tournament) {
       return res.status(404).json({
         success: false,
@@ -285,13 +285,14 @@ router.put("/:id", protect, async (req: Request, res: Response) => {
       });
     }
 
-    const { name, description, startDate, location } = req.body;
+    const { name, description, startDate, location, status } = req.body;
 
     // Update tournament fields
     if (name) tournament.name = name;
-    if (description) tournament.description = description;
+    if (description !== undefined) tournament.description = description;
     if (startDate) tournament.startDate = new Date(startDate);
     if (location) tournament.location = location;
+    if (status) tournament.status = status;
 
     await tournament.save();
 
@@ -312,7 +313,6 @@ router.put("/:id", protect, async (req: Request, res: Response) => {
 router.delete("/:id", protect, async (req: Request, res: Response) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
-
     if (!tournament) {
       return res.status(404).json({
         success: false,
@@ -339,13 +339,8 @@ router.delete("/:id", protect, async (req: Request, res: Response) => {
       });
     }
 
-    // Delete all matches associated with the tournament
+    // Delete all matches associated with this tournament
     await Match.deleteMany({ tournament: tournament._id });
-
-    // Remove tournament from channel
-    await Channel.findByIdAndUpdate(tournament.channel, {
-      $pull: { tournaments: tournament._id },
-    });
 
     // Delete tournament
     await tournament.deleteOne();

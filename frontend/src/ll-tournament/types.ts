@@ -1,4 +1,4 @@
-import type { Team } from "./types/index";
+import type { Team, Match, DraggableParticipant } from "./types/index";
 
 export interface TournamentStructure {
   groups: number;
@@ -19,24 +19,6 @@ export interface TournamentMatch {
   winner?: TournamentParticipant;
 }
 
-export interface Match {
-  id: string;
-  round: number;
-  matchNumber: number;
-  position: {
-    x: number;
-    y: number;
-  };
-  teamType?: "solo" | "team";
-  team1: Team | null;
-  team2: Team | null;
-  score1?: number;
-  score2?: number;
-  winner?: DraggableParticipant | null;
-  nextMatchId?: string;
-  rounds?: number;
-}
-
 export interface MatchConfig {
   teamType: "1v1" | "team";
   bestOf: number;
@@ -53,14 +35,14 @@ export interface MatchConfig {
 export interface Tournament {
   id: string;
   name: string;
-  description?: string;
+  description: string;
   channelId: string;
   startDate: string;
   maxParticipants: number;
   participants: TournamentParticipant[];
   statsConfig: TournamentStatsConfig;
   structure?: TournamentStructure;
-  matches?: Match[];
+  matches: Match[];
   date: string;
   time: string;
   location: string;
@@ -69,6 +51,9 @@ export interface Tournament {
   status: TournamentStatus;
   sportType: string;
   matchConfig: MatchConfig;
+  format?: string;
+  participantsCount?: number;
+  completed?: boolean;
 }
 
 export interface TournamentParticipant {
@@ -203,17 +188,4 @@ export interface Match {
   nextMatchId?: string;
   round?: number;
   matchNumber?: number;
-}
-
-export interface Tournament {
-  id: string;
-  name: string;
-  description?: string;
-  format?: string;
-  date?: string;
-  startDate?: string;
-  location?: string;
-  participantsCount?: number;
-  completed?: boolean;
-  matches: Match[];
 }

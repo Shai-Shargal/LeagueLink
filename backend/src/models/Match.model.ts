@@ -9,6 +9,7 @@ export interface IMatch extends Document {
     y: number;
   };
   bestOf: number;
+  teamType: "1v1" | "2v2" | "3v3" | "4v4" | "5v5";
   team1: {
     players: Array<{
       userId: string;
@@ -27,12 +28,18 @@ export interface IMatch extends Document {
   };
   nextMatchId: mongoose.Types.ObjectId | null;
   stats: {
-    scores?: Array<{
+    scores: Array<{
       team1: number;
       team2: number;
     }>;
     [key: string]: any;
   };
+  games: Array<{
+    number: number;
+    winner: string | null;
+    team1Stats: Record<string, any>;
+    team2Stats: Record<string, any>;
+  }>;
   status: "pending" | "in_progress" | "completed";
   createdAt: Date;
   updatedAt: Date;
@@ -73,6 +80,12 @@ const MatchSchema = new Schema<IMatch>(
         message: (props) =>
           `${props.value} is not a valid bestOf value. Must be an odd number greater than or equal to 1.`,
       },
+    },
+    teamType: {
+      type: String,
+      enum: ["1v1", "2v2", "3v3", "4v4", "5v5"],
+      default: "1v1",
+      required: true,
     },
     team1: {
       players: [
@@ -124,9 +137,23 @@ const MatchSchema = new Schema<IMatch>(
       default: null,
     },
     stats: {
+      scores: [
+        {
+          team1: { type: Number, default: 0 },
+          team2: { type: Number, default: 0 },
+        },
+      ],
       type: Schema.Types.Mixed,
       default: {},
     },
+    games: [
+      {
+        number: { type: Number, required: true },
+        winner: { type: String, default: null },
+        team1Stats: { type: Schema.Types.Mixed, default: {} },
+        team2Stats: { type: Schema.Types.Mixed, default: {} },
+      },
+    ],
     status: {
       type: String,
       enum: ["pending", "in_progress", "completed"],
