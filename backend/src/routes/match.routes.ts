@@ -163,60 +163,54 @@ router.post("/", protect, async (req: Request, res: Response) => {
       tournament,
       round,
       matchNumber,
-      teamType,
+      position,
       bestOf,
       team1,
       team2,
-      nextMatch,
+      nextMatchId,
     } = req.body;
 
-    console.log("Creating match with data:", {
-      tournament,
-      round,
-      matchNumber,
-      teamType,
-      bestOf,
-      team1,
-      team2,
-    });
+    // Validate tournament exists
+    const tournamentExists = await Tournament.findById(tournament);
+    if (!tournamentExists) {
+      return res.status(404).json({
+        success: false,
+        message: "Tournament not found",
+      });
+    }
 
+    // Create the match
     const match = await Match.create({
       tournament: new mongoose.Types.ObjectId(tournament),
       round,
       matchNumber,
-      teamType,
+      position: {
+        x: position.x,
+        y: position.y,
+      },
       bestOf,
       team1: {
-        type: team1.type,
-        id: new mongoose.Types.ObjectId(team1.id),
-        isGuest: team1.isGuest || false,
-        score: team1.score || 0,
         players:
           team1.players?.map((p: any) => ({
-            id: new mongoose.Types.ObjectId(p.id),
-            isGuest: p.isGuest || false,
+            userId: new mongoose.Types.ObjectId(p.userId),
+            username: p.username,
           })) || [],
+        isGuest: team1.isGuest || false,
+        score: team1.score || 0,
       },
       team2: {
-        type: team2.type,
-        id: new mongoose.Types.ObjectId(team2.id),
-        isGuest: team2.isGuest || false,
-        score: team2.score || 0,
         players:
           team2.players?.map((p: any) => ({
-            id: new mongoose.Types.ObjectId(p.id),
-            isGuest: p.isGuest || false,
+            userId: new mongoose.Types.ObjectId(p.userId),
+            username: p.username,
           })) || [],
+        isGuest: team2.isGuest || false,
+        score: team2.score || 0,
       },
-      nextMatch: nextMatch ? new mongoose.Types.ObjectId(nextMatch) : null,
-      games: Array.from({ length: bestOf }, (_, i) => ({
-        gameNumber: i + 1,
-        status: "pending",
-        stats: {
-          team1: [],
-          team2: [],
-        },
-      })),
+      nextMatchId: nextMatchId
+        ? new mongoose.Types.ObjectId(nextMatchId)
+        : null,
+      status: "pending",
     });
 
     // Add match to tournament
@@ -224,15 +218,22 @@ router.post("/", protect, async (req: Request, res: Response) => {
       $push: { matches: match._id },
     });
 
+    // Populate the created match with necessary data
+    const populatedMatch = await Match.findById(match._id)
+      .populate("tournament")
+      .populate("team1.players.userId")
+      .populate("team2.players.userId");
+
     res.status(201).json({
       success: true,
-      data: match,
+      data: populatedMatch,
     });
   } catch (error) {
     logger.error("Create Match Error:", error);
     res.status(500).json({
       success: false,
       message: "Error creating match",
+      error: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
@@ -628,6 +629,49 @@ router.patch(
       res.status(500).json({
         success: false,
         message: "Error updating match stats",
+      });
+    }
+  }
+);
+
+// Update match position
+router.patch(
+  "/:matchId/position",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const { position } = req.body;
+      const match = await Match.findByIdAndUpdate(
+        req.params.matchId,
+        {
+          position: {
+            x: position.x,
+            y: position.y,
+          },
+        },
+        { new: true }
+      )
+        .populate("tournament")
+        .populate("team1.players.userId")
+        .populate("team2.players.userId");
+
+      if (!match) {
+        return res.status(404).json({
+          success: false,
+          message: "Match not found",
+        });
+      }
+
+      res.json({
+        success: true,
+        data: match,
+      });
+    } catch (error) {
+      logger.error("Update Match Position Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating match position",
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   }

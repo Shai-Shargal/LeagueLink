@@ -434,4 +434,104 @@ router.patch(
   }
 );
 
+// Update tournament matches structure
+router.put(
+  "/:tournamentId/matches",
+  protect,
+  async (req: Request, res: Response) => {
+    try {
+      const { matches } = req.body;
+      const tournament = await Tournament.findById(req.params.tournamentId);
+
+      if (!tournament) {
+        return res.status(404).json({
+          success: false,
+          message: "Tournament not found",
+        });
+      }
+
+      // Check if user is tournament organizer or channel admin
+      const channel = await Channel.findById(tournament.channel);
+      if (!channel) {
+        return res.status(404).json({
+          success: false,
+          message: "Associated channel not found",
+        });
+      }
+
+      const isAdmin = channel.admins.includes(req.user.id);
+      const isOrganizer = tournament.organizer.toString() === req.user.id;
+
+      if (!isAdmin && !isOrganizer) {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to update tournament matches",
+        });
+      }
+
+      // Delete existing matches
+      await Match.deleteMany({ tournament: tournament._id });
+
+      // Create new matches
+      const createdMatches = await Promise.all(
+        matches.map(async (matchData: any) => {
+          const match = await Match.create({
+            tournament: tournament._id,
+            round: matchData.round,
+            matchNumber: matchData.matchNumber,
+            position: matchData.position,
+            bestOf: matchData.bestOf,
+            team1: {
+              players: matchData.team1.players.map((p: any) => ({
+                userId: new mongoose.Types.ObjectId(p.userId),
+                username: p.username,
+              })),
+              isGuest: matchData.team1.isGuest || false,
+              score: matchData.team1.score || 0,
+            },
+            team2: {
+              players: matchData.team2.players.map((p: any) => ({
+                userId: new mongoose.Types.ObjectId(p.userId),
+                username: p.username,
+              })),
+              isGuest: matchData.team2.isGuest || false,
+              score: matchData.team2.score || 0,
+            },
+            nextMatchId: matchData.nextMatchId
+              ? new mongoose.Types.ObjectId(matchData.nextMatchId)
+              : null,
+            status: matchData.status || "pending",
+          });
+          return match;
+        })
+      );
+
+      // Update tournament with new match references
+      tournament.matches = createdMatches.map((match) => match._id);
+      await tournament.save();
+
+      // Populate the matches with necessary data
+      const populatedMatches = await Match.find({ tournament: tournament._id })
+        .populate("team1.players.userId")
+        .populate("team2.players.userId")
+        .sort({ round: 1, matchNumber: 1 });
+
+      res.json({
+        success: true,
+        data: {
+          tournament,
+          matches: populatedMatches,
+        },
+      });
+    } catch (error) {
+      logger.error("Update Tournament Matches Error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Error updating tournament matches",
+        error: error instanceof Error ? error.message : "Unknown error",
+      });
+    }
+  }
+);
+
 export default router;

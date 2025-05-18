@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -8,57 +8,14 @@ import {
   Stack,
   Box,
   CircularProgress,
-  Paper,
   Alert,
   Snackbar,
+  IconButton,
 } from "@mui/material";
-import { v4 as uuidv4 } from "uuid";
 import CloseIcon from "@mui/icons-material/Close";
-import IconButton from "@mui/material/IconButton";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
-import { Typography } from "@mui/material";
-
-import {
-  CreateTournamentDialogProps,
-  DraggableParticipant,
-  Match,
-  GAMES_AREA_HEIGHT,
-  BASE_BOX_WIDTH,
-  BASE_BOX_HEIGHT,
-  ROUND_HORIZONTAL_GAP,
-  INITIAL_TOP_MARGIN,
-  GuestUser,
-  Tournament,
-} from "../../types";
-import { useMatchHistory } from "../../hooks/useMatchHistory";
+import { CreateTournamentDialogProps } from "../../types";
 import { TournamentForm } from "./TournamentForm";
-import { GuestDialog } from "./GuestDialog";
-import { TournamentParticipants } from "./TournamentParticipants";
-import { MatchBox } from "./MatchBox";
-import { TournamentToolbar } from "./TournamentToolbar";
-import { MatchConnections } from "./MatchConnections";
-
-interface MatchUpdate {
-  id: string;
-  round?: number;
-  matchNumber?: number;
-  team1?: DraggableParticipant | null;
-  team2?: DraggableParticipant | null;
-  position?: { x: number; y: number };
-  score1?: number;
-  score2?: number;
-  winner?: DraggableParticipant | null;
-  nextMatchId?: string;
-}
-
-const API_BASE_URL = "http://localhost:5000/api";
-
-const getAuthHeaders = () => {
-  const token = localStorage.getItem("token");
-  return {
-    Authorization: `Bearer ${token}`,
-  };
-};
 
 const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   open,
@@ -66,25 +23,12 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   onSubmit,
   newTournament,
   onTournamentChange,
-  channelUsers,
   isCreating,
   isEditing = false,
   existingTournament,
+  channelId,
 }: CreateTournamentDialogProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [guestUsers, setGuestUsers] = useState<GuestUser[]>([]);
-  const [isGuestDialogOpen, setIsGuestDialogOpen] = useState(false);
-  const [draggedParticipant, setDraggedParticipant] =
-    useState<DraggableParticipant | null>(null);
-  const [draggedMatch, setDraggedMatch] = useState<Match | null>(null);
-  const [isCreatingMatch, setIsCreatingMatch] = useState(false);
-  const [newMatchPosition, setNewMatchPosition] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
-  const [paperSize, setPaperSize] = useState({ width: 1200, height: 700 });
-  const paperRef = useRef<HTMLDivElement>(null);
-  const [connectionSource, setConnectionSource] = useState<string | null>(null);
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -94,49 +38,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     message: "",
     severity: "success",
   });
-
-  const {
-    matches,
-    setMatches,
-    historyIndex,
-    handleUndo,
-    handleRedo,
-    clearAllMatches,
-    autoArrangeMatches,
-    addToHistory,
-    updateMatch,
-  } = useMatchHistory();
-
-  useEffect(() => {
-    if (paperRef.current) {
-      setPaperSize({
-        width: paperRef.current.offsetWidth,
-        height: paperRef.current.offsetHeight,
-      });
-    }
-  }, [open, matches.length]);
-
-  useEffect(() => {
-    if (isEditing && existingTournament) {
-      // Initialize form with existing tournament data
-      onTournamentChange("name", existingTournament.name);
-      onTournamentChange("description", existingTournament.description || "");
-      onTournamentChange("location", existingTournament.location);
-
-      // Format date and time from startDate
-      const startDate = new Date(existingTournament.startDate);
-      const formattedDate = startDate.toISOString().split("T")[0];
-      const formattedTime = startDate.toTimeString().slice(0, 5);
-
-      onTournamentChange("date", formattedDate);
-      onTournamentChange("time", formattedTime);
-
-      // Initialize matches if they exist
-      if (existingTournament.matches) {
-        setMatches(existingTournament.matches);
-      }
-    }
-  }, [isEditing, existingTournament]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -151,19 +52,19 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
       newErrors.location = "Location is required";
     }
 
-    if (!newTournament.date) {
-      newErrors.date = "Date is required";
+    if (!newTournament.startDate) {
+      newErrors.startDate = "Start date is required";
     } else {
-      const selectedDate = new Date(newTournament.date);
+      const selectedDate = new Date(newTournament.startDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate < today) {
-        newErrors.date = "Date cannot be in the past";
+        newErrors.startDate = "Start date cannot be in the past";
       }
     }
 
     if (!newTournament.time) {
-      newErrors.time = "Time is required";
+      newErrors.time = "Start time is required";
     }
 
     setErrors(newErrors);
@@ -175,32 +76,17 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     if (!validateForm()) return;
 
     try {
-      const [year, month, day] = newTournament.date?.split("-") || [];
-      const [hours, minutes] = newTournament.time?.split(":") || [];
-      const formattedDate = new Date(
-        parseInt(year),
-        parseInt(month) - 1,
-        parseInt(day),
-        parseInt(hours),
-        parseInt(minutes)
-      );
+      // Combine date and time into a single ISO string
+      const [hours, minutes] = newTournament.time.split(":");
+      const startDate = new Date(newTournament.startDate);
+      startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
       const tournamentData = {
-        ...newTournament,
-        startDate: formattedDate.toISOString(),
-        matches: matches.map((match: Match) => ({
-          id: match.id,
-          round: match.round,
-          matchNumber: match.matchNumber,
-          teamType: match.teamType,
-          team1: match.team1,
-          team2: match.team2,
-          score1: match.score1,
-          score2: match.score2,
-          winner: match.winner,
-          nextMatchId: match.nextMatchId,
-          position: match.position,
-        })),
+        name: newTournament.name,
+        description: newTournament.description,
+        location: newTournament.location,
+        startDate: startDate.toISOString(),
+        channelId: channelId,
       };
 
       if (isEditing && existingTournament) {
@@ -222,325 +108,12 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   const handleClose = () => {
     if (!isCreating) {
       setErrors({});
-      setGuestUsers([]);
       onClose();
     }
   };
 
-  const handleAddGuest = (guest: GuestUser) => {
-    setGuestUsers((prev) => [
-      ...prev,
-      {
-        id: `guest_${guest.username}`,
-        username: guest.username,
-      },
-    ]);
-    setIsGuestDialogOpen(false);
-  };
-
-  const handleRemoveGuest = (guestId: string) => {
-    setGuestUsers(
-      guestUsers.filter(
-        (guest: GuestUser) => `guest_${guest.username}` !== guestId
-      )
-    );
-  };
-
-  const handleDragStart = (participant: DraggableParticipant) => {
-    setDraggedParticipant(participant);
-  };
-
-  const handleDragEnd = () => {
-    setDraggedParticipant(null);
-  };
-
-  const handleMatchDragStart = (e: React.DragEvent) => {
-    const matchId = e.currentTarget.getAttribute("data-match-id");
-    if (matchId) {
-      const match = matches.find((m: Match) => m.id === matchId);
-      if (match) {
-        setDraggedMatch(match);
-      }
-    }
-  };
-
-  const handleMatchDragEnd = () => {
-    setDraggedMatch(null);
-  };
-
-  const handleMatchDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    // Check if this is a team match drop from toolbar
-    const type = e.dataTransfer.getData("type");
-    if (type === "team-match") {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const round = 1;
-      const newMatch: Match = {
-        id: uuidv4(),
-        round: round,
-        matchNumber: matches.filter((m: Match) => m.round === round).length + 1,
-        teamType: "team",
-        team1: {
-          type: "team",
-          id: uuidv4(),
-          isGuest: false,
-          score: 0,
-          players: [],
-        },
-        team2: {
-          type: "team",
-          id: uuidv4(),
-          isGuest: false,
-          score: 0,
-          players: [],
-        },
-        position: {
-          x,
-          y,
-        },
-        rounds: 3,
-      };
-      const updatedMatches = [...matches, newMatch];
-      addToHistory(updatedMatches);
-      setMatches(updatedMatches);
-      return;
-    }
-
-    if (!draggedParticipant) return;
-
-    // Check if player is already in another match
-    if (isPlayerInAnyMatch(draggedParticipant.userId)) {
-      setNotification({
-        open: true,
-        message: "Player is already in another match",
-        severity: "error",
-      });
-      return;
-    }
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const round = Math.floor(x / ROUND_HORIZONTAL_GAP) + 1;
-
-    const updatedMatch = {
-      ...draggedMatch,
-      round: round,
-      position: {
-        x: (round - 1) * ROUND_HORIZONTAL_GAP,
-        y: y - INITIAL_TOP_MARGIN,
-      },
-    };
-
-    const updatedMatches = matches.map((m: Match) =>
-      m.id === draggedMatch?.id ? updatedMatch : m
-    );
-
-    addToHistory(updatedMatches);
-    setMatches(updatedMatches);
-  };
-
-  const removeMatch = (matchId: string) => {
-    try {
-      const updatedMatches = matches.filter(
-        (match: Match) => match.id !== matchId
-      );
-      addToHistory(updatedMatches);
-      setMatches(updatedMatches);
-
-      setNotification({
-        open: true,
-        message: "Match deleted successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Failed to delete match:", error);
-      setNotification({
-        open: true,
-        message: "Failed to delete match",
-        severity: "error",
-      });
-    }
-  };
-
-  const handleMatchDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-  };
-
-  const handleAddMatchClick = () => {
-    setIsCreatingMatch(true);
-  };
-
-  const handleAddTeamMatch = () => {
-    try {
-      // Create a team match at a default position
-      const round = 1;
-      const newMatch: Match = {
-        id: uuidv4(),
-        round: round,
-        matchNumber: matches.filter((m: Match) => m.round === round).length + 1,
-        teamType: "team",
-        team1: {
-          type: "team",
-          id: uuidv4(),
-          isGuest: false,
-          score: 0,
-          players: [],
-        },
-        team2: {
-          type: "team",
-          id: uuidv4(),
-          isGuest: false,
-          score: 0,
-          players: [],
-        },
-        position: {
-          x: (round - 1) * ROUND_HORIZONTAL_GAP + 100,
-          y: matches.length * 120 + 100,
-        },
-        rounds: 3,
-      };
-
-      const updatedMatches = [...matches, newMatch];
-      addToHistory(updatedMatches);
-      setMatches(updatedMatches);
-
-      setNotification({
-        open: true,
-        message: "Team match created successfully",
-        severity: "success",
-      });
-    } catch (error) {
-      console.error("Failed to create match:", error);
-      setNotification({
-        open: true,
-        message: "Failed to create match",
-        severity: "error",
-      });
-    }
-  };
-
-  const handleMatchCreation = (e: React.MouseEvent) => {
-    if (!isCreatingMatch) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const round = Math.floor(x / ROUND_HORIZONTAL_GAP) + 1;
-
-    const newMatch: Match = {
-      id: uuidv4(),
-      round: round,
-      matchNumber: matches.filter((m: Match) => m.round === round).length + 1,
-      team1: null,
-      team2: null,
-      position: {
-        x: (round - 1) * ROUND_HORIZONTAL_GAP,
-        y: y - INITIAL_TOP_MARGIN,
-      },
-      rounds: 3, // Default best of 3
-    };
-
-    const updatedMatches = [...matches, newMatch];
-    addToHistory(updatedMatches);
-    setMatches(updatedMatches);
-    setIsCreatingMatch(false);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isCreatingMatch) return;
-
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    setNewMatchPosition({ x, y });
-  };
-
-  // Helper: Get all parent matches for a given match
-  const getParentMatches = (targetMatchId: string, matchesArr: Match[]) => {
-    return matchesArr.filter((m) => m.nextMatchId === targetMatchId);
-  };
-
-  // Helper: Recursively update rounds for a match and its downstream matches
-  const propagateRounds = (matchId: string, matchesArr: Match[]): Match[] => {
-    const parents = getParentMatches(matchId, matchesArr);
-    let newRound = 1;
-    if (parents.length > 0) {
-      newRound = Math.max(...parents.map((m) => m.round || 1)) + 1;
-    }
-    let updated = false;
-    const updatedMatches = matchesArr.map((m) => {
-      if (m.id === matchId && m.round !== newRound) {
-        updated = true;
-        return { ...m, round: newRound };
-      }
-      return m;
-    });
-    // If this match's round changed, propagate to its children
-    if (updated) {
-      const children = updatedMatches.filter((m) => m.nextMatchId === matchId);
-      let result = updatedMatches;
-      for (const child of children) {
-        result = propagateRounds(child.id, result);
-      }
-      return result;
-    }
-    return updatedMatches;
-  };
-
-  const handleSelectMatchAsSource = (matchId: string) => {
-    if (connectionSource === matchId) {
-      setConnectionSource(null);
-    } else if (connectionSource) {
-      const sourceMatch = matches.find((m) => m.id === connectionSource);
-      const targetMatch = matches.find((m) => m.id === matchId);
-
-      if (sourceMatch && targetMatch) {
-        // Allow connection regardless of round, but recalculate rounds
-        let updatedMatches = matches.map((match: Match) => {
-          if (match.id === connectionSource) {
-            return { ...match, nextMatchId: matchId };
-          }
-          return match;
-        });
-        // Propagate round calculation for the target match and downstream
-        updatedMatches = propagateRounds(matchId, updatedMatches);
-        addToHistory(updatedMatches);
-        setMatches(updatedMatches);
-      }
-
-      setConnectionSource(null);
-    } else {
-      setConnectionSource(matchId);
-    }
-  };
-
-  const clearConnectionMode = () => {
-    setConnectionSource(null);
-  };
-
   const handleCloseNotification = () => {
     setNotification({ ...notification, open: false });
-  };
-
-  // Helper function to check if a player is already in a match
-  const isPlayerInMatch = (playerId: string, match: Match): boolean => {
-    if (match.teamType === "team") {
-      const team1Players = match.team1?.players || [];
-      const team2Players = match.team2?.players || [];
-      return [...team1Players, ...team2Players].some((p) => p.id === playerId);
-    } else {
-      return match.team1?.id === playerId || match.team2?.id === playerId;
-    }
-  };
-
-  // Helper function to check if a player is in any match
-  const isPlayerInAnyMatch = (playerId: string): boolean => {
-    return matches.some((match) => isPlayerInMatch(playerId, match));
   };
 
   return (
@@ -548,12 +121,12 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
       <Dialog
         open={open}
         onClose={handleClose}
-        maxWidth="xl"
+        maxWidth="sm"
         fullWidth
         PaperProps={{
           sx: {
             bgcolor: "background.default",
-            minHeight: "80vh",
+            minHeight: "auto",
             maxHeight: "90vh",
           },
         }}
@@ -598,33 +171,22 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               {isEditing ? "Edit Tournament" : "Create New Tournament"}
             </Box>
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <TournamentToolbar
-              matchesCount={matches.length}
-              historyIndex={historyIndex}
-              onAddMatch={handleAddMatchClick}
-              onAddTeamMatch={handleAddTeamMatch}
-              onUndo={handleUndo}
-              onRedo={handleRedo}
-              onAutoArrange={autoArrangeMatches}
-              onClearAll={clearAllMatches}
-            />
-            <IconButton
-              edge="end"
-              color="inherit"
-              onClick={handleClose}
-              aria-label="close"
-              sx={{
-                color: "white",
-                "&:hover": {
-                  color: "primary.main",
-                },
-              }}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={handleClose}
+            aria-label="close"
+            sx={{
+              color: "white",
+              "&:hover": {
+                color: "primary.main",
+              },
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
         </DialogTitle>
+
         <DialogContent
           sx={{
             flex: 1,
@@ -641,7 +203,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         >
           {Object.keys(errors).length > 0 && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {errors.name}
+              {Object.values(errors)[0]}
             </Alert>
           )}
           <Stack spacing={3} sx={{ width: "100%" }}>
@@ -651,99 +213,9 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
               errors={errors}
               isCreating={isCreating}
             />
-            <Box
-              sx={{
-                display: "flex",
-                flex: 1,
-                gap: 3,
-                minHeight: GAMES_AREA_HEIGHT,
-              }}
-            >
-              <Paper
-                ref={paperRef}
-                sx={{
-                  flex: 10,
-                  minWidth: 0,
-                  height: 700,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  justifyContent: "flex-start",
-                  border: "2px dashed",
-                  borderColor: "divider",
-                  background: "transparent",
-                  color: "text.secondary",
-                  mr: 2,
-                  overflowY: "auto",
-                  position: "relative",
-                }}
-                elevation={0}
-                onDrop={handleMatchDrop}
-                onDragOver={handleMatchDragOver}
-                onClick={handleMatchCreation}
-                onMouseMove={handleMouseMove}
-              >
-                <MatchConnections matches={matches} />
-                {isCreatingMatch && newMatchPosition && (
-                  <Paper
-                    sx={{
-                      position: "absolute",
-                      left: newMatchPosition.x - BASE_BOX_WIDTH / 2,
-                      top: newMatchPosition.y - BASE_BOX_HEIGHT / 2,
-                      width: BASE_BOX_WIDTH,
-                      height: BASE_BOX_HEIGHT,
-                      p: 2,
-                      cursor: "crosshair",
-                      backgroundColor: "rgba(255, 255, 255, 0.1)",
-                      border: "2px dashed",
-                      borderColor: "primary.main",
-                      opacity: 0.7,
-                      pointerEvents: "none",
-                    }}
-                  >
-                    <Box sx={{ mt: 1 }}>TBD vs TBD</Box>
-                  </Paper>
-                )}
-
-                {matches.map((match: Match) => (
-                  <Box
-                    key={match.id}
-                    id={`match-${match.id}`}
-                    data-match-id={match.id}
-                  >
-                    <MatchBox
-                      match={match}
-                      channelUsers={channelUsers}
-                      draggedParticipant={draggedParticipant}
-                      onDragStart={handleDragStart}
-                      onDragEnd={handleDragEnd}
-                      onDelete={() => removeMatch(match.id)}
-                      onUpdate={(updates: MatchUpdate) =>
-                        updateMatch(match.id, updates)
-                      }
-                      parentWidth={paperSize.width}
-                      parentHeight={paperSize.height}
-                      isSourceMatch={connectionSource === match.id}
-                      onSelectAsSource={() =>
-                        handleSelectMatchAsSource(match.id)
-                      }
-                    />
-                  </Box>
-                ))}
-              </Paper>
-
-              <TournamentParticipants
-                channelUsers={channelUsers}
-                guestUsers={guestUsers}
-                draggedParticipant={draggedParticipant}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-                onAddGuest={() => setIsGuestDialogOpen(true)}
-                onRemoveGuest={handleRemoveGuest}
-              />
-            </Box>
           </Stack>
         </DialogContent>
+
         <DialogActions
           sx={{
             p: 3,
@@ -780,12 +252,6 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
-
-      <GuestDialog
-        open={isGuestDialogOpen}
-        onClose={() => setIsGuestDialogOpen(false)}
-        onAdd={handleAddGuest}
-      />
 
       <Snackbar
         open={notification.open}

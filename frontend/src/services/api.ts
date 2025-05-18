@@ -348,4 +348,109 @@ export const uploadService = {
   },
 };
 
+export const matchService = {
+  createMatch: async (data: {
+    tournament: string;
+    round: number;
+    matchNumber: number;
+    position: { x: number; y: number };
+    bestOf: number;
+    team1: {
+      players: Array<{ userId: string; username: string }>;
+      isGuest?: boolean;
+      score?: number;
+    };
+    team2: {
+      players: Array<{ userId: string; username: string }>;
+      isGuest?: boolean;
+      score?: number;
+    };
+    nextMatchId?: string;
+  }) => {
+    const response = await api.post("/matches", data, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    return response.data;
+  },
+
+  updateMatchPosition: async (
+    matchId: string,
+    position: { x: number; y: number }
+  ) => {
+    const response = await api.patch(
+      `/matches/${matchId}/position`,
+      { position },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    return response.data;
+  },
+
+  getTournamentMatches: async (tournamentId: string) => {
+    const response = await api.get(`/matches/tournament/${tournamentId}`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+    return response.data;
+  },
+
+  updateMatchStatus: async (
+    matchId: string,
+    status: "pending" | "in_progress" | "completed"
+  ) => {
+    const response = await api.patch(
+      `/matches/${matchId}/status`,
+      { status },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    return response.data;
+  },
+
+  updateMatchTeams: async (matchId: string, team1: any, team2: any) => {
+    const response = await api.put(
+      `/matches/${matchId}`,
+      { team1, team2 },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    return response.data;
+  },
+};
+
+export const tournamentService = {
+  updateTournamentMatches: async (
+    tournamentId: string,
+    matches: Array<{
+      round: number;
+      matchNumber: number;
+      position: { x: number; y: number };
+      bestOf: number;
+      team1: {
+        players: Array<{ userId: string; username: string }>;
+        isGuest?: boolean;
+        score?: number;
+      };
+      team2: {
+        players: Array<{ userId: string; username: string }>;
+        isGuest?: boolean;
+        score?: number;
+      };
+      nextMatchId?: string;
+      status?: "pending" | "in_progress" | "completed";
+    }>
+  ) => {
+    const response = await api.put(
+      `/tournaments/${tournamentId}/matches`,
+      { matches },
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      }
+    );
+    return response.data;
+  },
+};
+
 export default api;

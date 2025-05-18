@@ -137,12 +137,18 @@ export interface CreateTournamentDialogProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (tournament: any) => void;
-  newTournament: any;
+  newTournament: {
+    name: string;
+    description: string;
+    location: string;
+    startDate: string;
+    time: string;
+  };
   onTournamentChange: (field: string, value: string | number) => void;
-  channelUsers: DraggableParticipant[];
   isCreating: boolean;
   isEditing?: boolean;
   existingTournament?: Tournament;
+  channelId: string;
 }
 
 export const DIALOG_WIDTH = 1200;

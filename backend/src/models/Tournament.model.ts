@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document } from "mongoose";
 import { IUser } from "./User.model.js";
 import { IChannel } from "./Channel.model.js";
+import { IMatch } from "./Match.model.js";
 
 export interface ITournamentParticipant {
   userId: string;
@@ -17,6 +18,8 @@ export interface ITournament extends Document {
   startDate: Date;
   location: string;
   participants: ITournamentParticipant[];
+  matches: mongoose.Types.ObjectId[] | IMatch[];
+  status: "pending" | "active" | "completed";
 }
 
 const tournamentParticipantSchema = new Schema({
@@ -58,6 +61,17 @@ const tournamentSchema = new Schema<ITournament>(
       type: [tournamentParticipantSchema],
       default: [],
     },
+    matches: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Match",
+      },
+    ],
+    status: {
+      type: String,
+      enum: ["pending", "active", "completed"],
+      default: "pending",
+    },
   },
   {
     timestamps: true,
@@ -67,6 +81,7 @@ const tournamentSchema = new Schema<ITournament>(
 // Indexes for better query performance
 tournamentSchema.index({ channel: 1 });
 tournamentSchema.index({ organizer: 1 });
+tournamentSchema.index({ matches: 1 });
 
 const Tournament = mongoose.model<ITournament>("Tournament", tournamentSchema);
 

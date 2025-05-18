@@ -1,19 +1,17 @@
 import { Box, TextField } from "@mui/material";
-import {
-  DatePicker,
-  TimePicker,
-  LocalizationProvider,
-} from "@mui/x-date-pickers";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
+import { TimePicker } from "@mui/x-date-pickers/TimePicker";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 
 interface TournamentFormProps {
   newTournament: {
     name: string;
+    description: string;
     location: string;
-    date: string;
+    startDate: string;
     time: string;
-    rounds?: number;
   };
   onTournamentChange: (field: string, value: string | number) => void;
   errors: Record<string, string>;
@@ -63,7 +61,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ display: "flex", gap: 2 }}>
+      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
         <TextField
           label="Tournament Name"
           value={newTournament.name}
@@ -73,29 +71,44 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
           {...commonTextFieldProps}
         />
         <TextField
+          label="Description"
+          value={newTournament.description || ""}
+          onChange={handleChange("description")}
+          error={!!errors.description}
+          helperText={errors.description}
+          multiline
+          rows={3}
+          {...commonTextFieldProps}
+        />
+        <TextField
           label="Location"
           value={newTournament.location || ""}
-          onChange={(e) => onTournamentChange("location", e.target.value)}
+          onChange={handleChange("location")}
           error={!!errors.location}
           helperText={errors.location}
           {...commonTextFieldProps}
         />
         <DatePicker
-          label="Date"
-          value={newTournament.date ? dayjs(newTournament.date) : null}
+          label="Start Date"
+          value={
+            newTournament.startDate ? dayjs(newTournament.startDate) : null
+          }
           onChange={(value) =>
-            onTournamentChange("date", value ? value.format("YYYY-MM-DD") : "")
+            onTournamentChange(
+              "startDate",
+              value ? value.format("YYYY-MM-DD") : ""
+            )
           }
           slotProps={{
             textField: {
-              error: !!errors.date,
-              helperText: errors.date,
+              error: !!errors.startDate,
+              helperText: errors.startDate,
               ...commonTextFieldProps,
             },
           }}
         />
         <TimePicker
-          label="Time"
+          label="Start Time"
           value={newTournament.time ? dayjs(newTournament.time, "HH:mm") : null}
           onChange={(value) =>
             onTournamentChange("time", value ? value.format("HH:mm") : "")
