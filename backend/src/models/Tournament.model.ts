@@ -6,6 +6,7 @@ export interface ITournament extends Document {
   channelId: mongoose.Types.ObjectId;
   date: string;
   time: string;
+  matchIds: mongoose.Types.ObjectId[];
 }
 
 const tournamentSchema = new Schema<ITournament>(
@@ -33,6 +34,12 @@ const tournamentSchema = new Schema<ITournament>(
       type: String,
       required: [true, "Time is required"],
     },
+    matchIds: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "Match",
+      },
+    ],
   },
   {
     timestamps: true,
