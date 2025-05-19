@@ -1,11 +1,13 @@
 import express from "express";
 import { Tournament } from "../models/Tournament.model.js";
-import { auth } from "../middleware/auth.middleware.js";
+import { Match } from "../models/Match.model.js";
+import { protect } from "../middleware/auth.middleware.js";
+import mongoose from "mongoose";
 
 const router = express.Router();
 
 // Create a new tournament
-router.post("/", auth, async (req, res) => {
+router.post("/", protect, async (req, res) => {
   try {
     const tournament = new Tournament(req.body);
     await tournament.save();
@@ -23,11 +25,13 @@ router.post("/", auth, async (req, res) => {
 });
 
 // Get all tournaments for a channel
-router.get("/channel/:channelId", auth, async (req, res) => {
+router.get("/channel/:channelId", protect, async (req, res) => {
   try {
     const tournaments = await Tournament.find({
       channelId: req.params.channelId,
-    }).sort({ date: -1, time: -1 });
+    })
+      .populate("matchIds")
+      .sort({ date: -1, time: -1 });
 
     res.json({
       success: true,
@@ -42,9 +46,11 @@ router.get("/channel/:channelId", auth, async (req, res) => {
 });
 
 // Get a single tournament
-router.get("/:id", auth, async (req, res) => {
+router.get("/:id", protect, async (req, res) => {
   try {
-    const tournament = await Tournament.findById(req.params.id);
+    const tournament = await Tournament.findById(req.params.id).populate(
+      "matchIds"
+    );
 
     if (!tournament) {
       return res.status(404).json({
@@ -66,7 +72,7 @@ router.get("/:id", auth, async (req, res) => {
 });
 
 // Update a tournament
-router.put("/:id", auth, async (req, res) => {
+router.put("/:id", protect, async (req, res) => {
   try {
     const tournament = await Tournament.findByIdAndUpdate(
       req.params.id,
@@ -97,9 +103,9 @@ router.put("/:id", auth, async (req, res) => {
 });
 
 // Delete a tournament
-router.delete("/:id", auth, async (req, res) => {
+router.delete("/:id", protect, async (req, res) => {
   try {
-    const tournament = await Tournament.findByIdAndDelete(req.params.id);
+    const tournament = await Tournament.findById(req.params.id);
 
     if (!tournament) {
       return res.status(404).json({
@@ -107,6 +113,12 @@ router.delete("/:id", auth, async (req, res) => {
         error: "Tournament not found",
       });
     }
+
+    // Delete all matches associated with this tournament
+    await Match.deleteMany({ tournamentId: tournament._id });
+
+    // Delete the tournament
+    await tournament.deleteOne();
 
     res.json({
       success: true,
@@ -120,8 +132,8 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
-// Add a participant to a tournament
-router.post("/:id/participants", auth, async (req, res) => {
+// Add a match to a tournament
+router.post("/:id/matches", protect, async (req, res) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
 
@@ -132,42 +144,19 @@ router.post("/:id/participants", auth, async (req, res) => {
       });
     }
 
-    // Check if tournament is full
-    if (tournament.participantsCount >= tournament.maxParticipants) {
-      return res.status(400).json({
-        success: false,
-        error: "Tournament is full",
-      });
-    }
-
-    // Check if user is already a participant
-    const isParticipant = tournament.participants.some(
-      (p) => p.userId === req.user._id.toString()
-    );
-
-    if (isParticipant) {
-      return res.status(400).json({
-        success: false,
-        error: "Already a participant in this tournament",
-      });
-    }
-
-    // Add participant
-    tournament.participants.push({
-      id: req.user._id.toString(),
-      userId: req.user._id.toString(),
-      username: req.user.username,
-      profilePicture: req.user.profilePicture,
-      status: "member",
-      stats: {},
+    const match = new Match({
+      ...req.body,
+      tournamentId: tournament._id,
     });
 
-    tournament.participantsCount += 1;
+    await match.save();
+    // Add match ID to tournament
+    tournament.matchIds.push(match._id as mongoose.Types.ObjectId);
     await tournament.save();
 
-    res.json({
+    res.status(201).json({
       success: true,
-      data: tournament,
+      data: match,
     });
   } catch (error: any) {
     res.status(400).json({
@@ -177,8 +166,8 @@ router.post("/:id/participants", auth, async (req, res) => {
   }
 });
 
-// Remove a participant from a tournament
-router.delete("/:id/participants/:userId", auth, async (req, res) => {
+// Remove a match from a tournament
+router.delete("/:id/matches/:matchId", protect, async (req, res) => {
   try {
     const tournament = await Tournament.findById(req.params.id);
 
@@ -189,28 +178,18 @@ router.delete("/:id/participants/:userId", auth, async (req, res) => {
       });
     }
 
-    // Check if user is the creator or an admin
-    if (
-      tournament.createdBy.toString() !== req.user._id.toString() &&
-      !req.user.isAdmin
-    ) {
-      return res.status(403).json({
-        success: false,
-        error: "Not authorized to remove participants",
-      });
-    }
-
-    // Remove participant
-    tournament.participants = tournament.participants.filter(
-      (p) => p.userId !== req.params.userId
+    // Remove match ID from tournament
+    tournament.matchIds = tournament.matchIds.filter(
+      (id) => id.toString() !== req.params.matchId
     );
-
-    tournament.participantsCount -= 1;
     await tournament.save();
+
+    // Delete the match
+    await Match.findByIdAndDelete(req.params.matchId);
 
     res.json({
       success: true,
-      data: tournament,
+      data: {},
     });
   } catch (error: any) {
     res.status(400).json({

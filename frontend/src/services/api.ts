@@ -421,6 +421,80 @@ export const matchService = {
 };
 
 export const tournamentService = {
+  createTournament: async (data: {
+    name: string;
+    description: string;
+    channelId: string;
+    date: string;
+    time: string;
+  }) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await api.post("/tournaments", data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  getTournamentsByChannel: async (channelId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await api.get(`/tournaments/channel/${channelId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  getTournament: async (tournamentId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await api.get(`/tournaments/${tournamentId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  updateTournament: async (
+    tournamentId: string,
+    data: {
+      name?: string;
+      description?: string;
+      date?: string;
+      time?: string;
+    }
+  ) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await api.put(`/tournaments/${tournamentId}`, data, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
+  deleteTournament: async (tournamentId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    const response = await api.delete(`/tournaments/${tournamentId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  },
+
   updateTournamentMatches: async (
     tournamentId: string,
     matches: Array<{

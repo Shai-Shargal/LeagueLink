@@ -16,6 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import { CreateTournamentDialogProps } from "../../types";
 import { TournamentForm } from "./TournamentForm";
+import { tournamentService } from "../../../services/api";
 
 const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   open,
@@ -76,24 +77,39 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
     if (!validateForm()) return;
 
     try {
-      // Combine date and time into a single ISO string
-      const [hours, minutes] = newTournament.time.split(":");
-      const startDate = new Date(newTournament.startDate);
-      startDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
       const tournamentData = {
         name: newTournament.name,
-        description: newTournament.description,
-        location: newTournament.location,
-        startDate: startDate.toISOString(),
+        description: newTournament.description || "",
         channelId: channelId,
+        date: newTournament.startDate,
+        time: newTournament.time,
       };
 
       if (isEditing && existingTournament) {
-        tournamentData.id = existingTournament.id;
+        const response = await tournamentService.updateTournament(
+          existingTournament.id,
+          tournamentData
+        );
+        if (response.success) {
+          setNotification({
+            open: true,
+            message: "Tournament updated successfully!",
+            severity: "success",
+          });
+          onSubmit(response.data);
+        }
+      } else {
+        const response =
+          await tournamentService.createTournament(tournamentData);
+        if (response.success) {
+          setNotification({
+            open: true,
+            message: "Tournament created successfully!",
+            severity: "success",
+          });
+          onSubmit(response.data);
+        }
       }
-
-      onSubmit(tournamentData);
       handleClose();
     } catch (error) {
       console.error("Error submitting tournament:", error);
@@ -248,7 +264,11 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
             }}
             startIcon={isCreating ? <CircularProgress size={20} /> : null}
           >
-            {isEditing ? "Update Tournament" : "Create Tournament"}
+            {isCreating
+              ? "Creating..."
+              : isEditing
+                ? "Update Tournament"
+                : "Create Tournament"}
           </Button>
         </DialogActions>
       </Dialog>
