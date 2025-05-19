@@ -129,7 +129,7 @@ export const TournamentParticipants: React.FC<TournamentParticipantsProps> = ({
                   id: `guest_${guest.username}`,
                   userId: `guest_${guest.username}`,
                   username: guest.username,
-                  status: ParticipantStatus.PENDING,
+                  status: "guest" as ParticipantStatus,
                 })
               }
               onDragEnd={onDragEnd}

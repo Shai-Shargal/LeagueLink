@@ -158,7 +158,7 @@ export const tournamentService = {
       participants: tournament.participants.map((p: any) => ({
         userId: p.userId || p._id || p,
         username: p.username || "Unknown",
-        status: ParticipantStatus.PENDING,
+        status: "member" as ParticipantStatus,
         stats: {},
       })),
     }));

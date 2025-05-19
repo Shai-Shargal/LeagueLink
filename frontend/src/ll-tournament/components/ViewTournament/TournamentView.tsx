@@ -15,7 +15,7 @@ import {
   TournamentStatsConfig,
   ParticipantStatus,
   Match,
-} from "../../types";
+} from "../../types/index";
 import { tournamentService } from "../../services/tournamentService";
 import { authService } from "../../../services/api";
 import TournamentTabs from "../ViewStats/TournamentTabs";
@@ -58,11 +58,19 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const [userStats, setUserStats] = useState<ChannelUserStats[]>([]);
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [newTournament, setNewTournament] = useState<Partial<Tournament>>({
+  const [newTournament, setNewTournament] = useState<{
+    name: string;
+    description: string;
+    location: string;
+    startDate: string;
+    time: string;
+    statsConfig: TournamentStatsConfig;
+  }>({
     name: "",
-    date: "",
-    time: "",
+    description: "",
     location: "",
+    startDate: "",
+    time: "",
     statsConfig: defaultStatsConfig,
   });
   const [selectedUser, setSelectedUser] = useState<UserProfileData | null>(
@@ -164,7 +172,14 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       await fetchTournaments();
       setCreateDialogOpen(false);
       setEditingTournament(null);
-      setNewTournament({});
+      setNewTournament({
+        name: "",
+        description: "",
+        location: "",
+        startDate: "",
+        time: "",
+        statsConfig: defaultStatsConfig,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
@@ -175,7 +190,14 @@ const TournamentView: React.FC<TournamentViewProps> = ({
   const handleCloseCreateDialog = () => {
     setCreateDialogOpen(false);
     setEditingTournament(null);
-    setNewTournament({});
+    setNewTournament({
+      name: "",
+      description: "",
+      location: "",
+      startDate: "",
+      time: "",
+      statsConfig: defaultStatsConfig,
+    });
   };
 
   const handleUpdateStatsConfig = async (
@@ -251,12 +273,8 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     }
   };
 
-  const handleTournamentChange = async (
-    field: string,
-    value: string | number
-  ) => {
-    console.log("Tournament change:", field, value); // Debug log
-    setNewTournament((prev: Partial<Tournament>) => ({
+  const handleTournamentChange = (field: string, value: string | number) => {
+    setNewTournament((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -266,16 +284,31 @@ const TournamentView: React.FC<TournamentViewProps> = ({
     if (!selectedTournament) return;
     try {
       // Update the match in the tournament
-      const updatedTournament = {
+      const updatedTournament: Tournament = {
         ...selectedTournament,
         matches: selectedTournament.matches?.map((m: Match) =>
-          m.id === match.id ? match : m
-        ) || [match],
+          m.id === match.id
+            ? {
+                ...match,
+                round: match.round || 1,
+                matchNumber: match.matchNumber || 1,
+              }
+            : m
+        ) || [
+          {
+            ...match,
+            round: match.round || 1,
+            matchNumber: match.matchNumber || 1,
+          },
+        ],
       };
-      await tournamentService.updateTournament(
-        selectedTournament.id,
-        updatedTournament
-      );
+      await tournamentService.updateTournament(selectedTournament.id, {
+        name: updatedTournament.name,
+        description: updatedTournament.description,
+        location: updatedTournament.location,
+        startDate: updatedTournament.startDate,
+        time: updatedTournament.time,
+      });
       setSelectedTournament(updatedTournament);
     } catch (error) {
       console.error("Failed to update match:", error);
@@ -295,9 +328,14 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
       // Update matches using createMatches
       if (updatedTournament.matches && updatedTournament.matches.length > 0) {
+        const matchesWithDefaults = updatedTournament.matches.map((match) => ({
+          ...match,
+          round: match.round || 1,
+          matchNumber: match.matchNumber || 1,
+        }));
         await tournamentService.createMatches(
           updatedTournament.id,
-          updatedTournament.matches
+          matchesWithDefaults
         );
       }
 
@@ -341,7 +379,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
             isGuest: false,
             type: "player",
             id: user.id,
-            status: ParticipantStatus.PENDING,
+            status: "guest",
           }))}
           onClose={() => setEditTournamentOpen(false)}
           onSave={handleSaveTournament}
@@ -359,7 +397,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
           userId: user.id,
           username: user.username,
           profilePicture: user.profilePicture,
-          status: ParticipantStatus.PENDING,
+          status: "guest",
         }))}
         isCreating={isCreating}
         isEditing={!!editingTournament}

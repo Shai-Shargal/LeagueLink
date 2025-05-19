@@ -45,7 +45,6 @@ function App() {
               </ProtectedRoute>
             }
           />
-          {/* Add additional routes here */}
         </Routes>
       </MainLayout>
     </Router>
