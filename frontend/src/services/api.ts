@@ -427,6 +427,7 @@ export const tournamentService = {
     channelId: string;
     date: string;
     time: string;
+    location: string;
   }) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -470,6 +471,7 @@ export const tournamentService = {
       description?: string;
       date?: string;
       time?: string;
+      location?: string;
     }
   ) => {
     const token = localStorage.getItem("token");

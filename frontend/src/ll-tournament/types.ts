@@ -7,6 +7,7 @@ export interface CreateTournamentDialogProps {
     description: string;
     startDate: string;
     time: string;
+    location: string;
   };
   onTournamentChange: (field: string, value: string) => void;
   isCreating: boolean;
@@ -17,6 +18,7 @@ export interface CreateTournamentDialogProps {
     description: string;
     startDate: string;
     time: string;
+    location: string;
   };
   channelId: string;
 }
