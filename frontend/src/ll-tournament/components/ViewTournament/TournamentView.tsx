@@ -108,34 +108,11 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
   const loadData = async () => {
     try {
-      const [stats, tournaments] = await Promise.all([
-        tournamentService.getChannelUserStats(channelId),
-        tournamentService.getChannelTournaments(channelId),
-      ]);
-
-      const initializedStats = channelUsers.map((user) => {
-        const existingStats = stats.find(
-          (stat: ChannelUserStats) => stat.userId === user.id
-        );
-        return (
-          existingStats || {
-            userId: user.id,
-            username: user.username,
-            profilePicture: user.profilePicture,
-            totalTournaments: 0,
-            wins: 0,
-            losses: 0,
-            winRate: 0,
-            customStats: {},
-          }
-        );
-      });
-
-      setUserStats(initializedStats);
+      const tournaments =
+        await tournamentService.getChannelTournaments(channelId);
       setTournaments(tournaments);
-    } catch (error) {
-      console.error("Failed to load data:", error);
-      // Initialize stats for all users even if the API call fails
+
+      // Initialize default stats for all users
       const defaultStats = channelUsers.map((user) => ({
         userId: user.id,
         username: user.username,
@@ -147,7 +124,12 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         customStats: {},
       }));
       setUserStats(defaultStats);
+    } catch (error) {
+      console.error("Failed to load data:", error);
+      setError(error instanceof Error ? error.message : "Failed to load data");
+      // Initialize empty state
       setTournaments([]);
+      setUserStats([]);
     }
   };
 
@@ -161,26 +143,45 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       setIsCreating(true);
       if (editingTournament) {
         // Update existing tournament
-        await tournamentService.updateTournament(
+        const response = await tournamentService.updateTournament(
           editingTournament.id,
           tournamentData
         );
+        if (response.success) {
+          await fetchTournaments();
+          setCreateDialogOpen(false);
+          setEditingTournament(null);
+          setNewTournament({
+            name: "",
+            description: "",
+            location: "",
+            startDate: "",
+            time: "",
+            statsConfig: defaultStatsConfig,
+          });
+        }
       } else {
         // Create new tournament
-        await tournamentService.createTournament(channelId, tournamentData);
+        const response = await tournamentService.createTournament(
+          channelId,
+          tournamentData
+        );
+        if (response.success) {
+          await fetchTournaments();
+          setCreateDialogOpen(false);
+          setEditingTournament(null);
+          setNewTournament({
+            name: "",
+            description: "",
+            location: "",
+            startDate: "",
+            time: "",
+            statsConfig: defaultStatsConfig,
+          });
+        }
       }
-      await fetchTournaments();
-      setCreateDialogOpen(false);
-      setEditingTournament(null);
-      setNewTournament({
-        name: "",
-        description: "",
-        location: "",
-        startDate: "",
-        time: "",
-        statsConfig: defaultStatsConfig,
-      });
     } catch (err) {
+      console.error("Error creating/updating tournament:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setIsCreating(false);
@@ -402,6 +403,7 @@ const TournamentView: React.FC<TournamentViewProps> = ({
         isCreating={isCreating}
         isEditing={!!editingTournament}
         existingTournament={editingTournament || undefined}
+        channelId={channelId}
       />
 
       <StatsConfigDialog

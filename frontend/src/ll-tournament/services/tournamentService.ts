@@ -45,15 +45,17 @@ export const tournamentService = {
       name: string;
       description?: string;
       startDate: string;
+      time: string;
       location: string;
     }
   ) {
-    // Only send basic tournament fields
+    // Send all required fields
     const backendData = {
       name: tournamentData.name,
       description: tournamentData.description || "",
       channelId: channelId,
-      startDate: tournamentData.startDate,
+      date: tournamentData.startDate,
+      time: tournamentData.time,
       location: tournamentData.location,
     };
 
@@ -151,16 +153,12 @@ export const tournamentService = {
       id: tournament._id || tournament.id,
       name: tournament.name,
       description: tournament.description,
-      channelId: tournament.channel,
-      startDate: tournament.startDate,
+      channelId: tournament.channelId,
+      date: tournament.date,
+      time: tournament.time,
       location: tournament.location,
-      status: tournament.status,
-      participants: tournament.participants.map((p: any) => ({
-        userId: p.userId || p._id || p,
-        username: p.username || "Unknown",
-        status: "member" as ParticipantStatus,
-        stats: {},
-      })),
+      matchIds: tournament.matchIds || [],
+      status: tournament.status || "pending",
     }));
   },
 
@@ -197,17 +195,6 @@ export const tournamentService = {
   },
 
   // Statistics operations
-  async getChannelUserStats(channelId: string) {
-    const response = await fetch(
-      `${TOURNAMENT_URL}/stats/channel/${channelId}`,
-      {
-        headers: getAuthHeaders(),
-      }
-    );
-    const data = await handleResponse(response);
-    return data.data || [];
-  },
-
   async getTournamentStats(tournamentId: string) {
     const response = await fetch(`${TOURNAMENT_URL}/${tournamentId}/stats`, {
       headers: getAuthHeaders(),

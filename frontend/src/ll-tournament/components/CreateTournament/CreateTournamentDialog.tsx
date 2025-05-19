@@ -78,12 +78,15 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
 
     try {
       const tournamentData = {
-        name: newTournament.name,
-        description: newTournament.description || "",
+        name: newTournament.name.trim(),
+        description: newTournament.description?.trim() || "",
         channelId: channelId,
         date: newTournament.startDate,
         time: newTournament.time,
+        location: newTournament.location.trim(),
       };
+
+      console.log("Sending tournament data:", tournamentData);
 
       if (isEditing && existingTournament) {
         const response = await tournamentService.updateTournament(
@@ -111,11 +114,13 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
         }
       }
       handleClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error submitting tournament:", error);
       setNotification({
         open: true,
-        message: "Error submitting tournament. Please try again.",
+        message:
+          error.response?.data?.error ||
+          "Error submitting tournament. Please try again.",
         severity: "error",
       });
     }

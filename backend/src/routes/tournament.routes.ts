@@ -9,7 +9,24 @@ const router = express.Router();
 // Create a new tournament
 router.post("/", protect, async (req, res) => {
   try {
-    const tournament = new Tournament(req.body);
+    // Validate channelId
+    if (!mongoose.Types.ObjectId.isValid(req.body.channelId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid channel ID format",
+      });
+    }
+
+    // Create tournament with validated data
+    const tournament = new Tournament({
+      name: req.body.name,
+      description: req.body.description,
+      channelId: new mongoose.Types.ObjectId(req.body.channelId),
+      date: req.body.date,
+      time: req.body.time,
+      location: req.body.location,
+    });
+
     await tournament.save();
 
     res.status(201).json({
@@ -17,9 +34,10 @@ router.post("/", protect, async (req, res) => {
       data: tournament,
     });
   } catch (error: any) {
+    console.error("Error creating tournament:", error);
     res.status(400).json({
       success: false,
-      error: error.message,
+      error: error.message || "Error creating tournament",
     });
   }
 });

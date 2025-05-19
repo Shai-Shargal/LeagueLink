@@ -21,4 +21,11 @@ export interface CreateTournamentDialogProps {
     location: string;
   };
   channelId: string;
+  channelUsers?: Array<{
+    id: string;
+    userId: string;
+    username: string;
+    profilePicture?: string;
+    status: string;
+  }>;
 }
