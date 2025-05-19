@@ -3,6 +3,7 @@ import { Tournament } from "../models/Tournament.model.js";
 import { Match } from "../models/Match.model.js";
 import { protect } from "../middleware/auth.middleware.js";
 import mongoose from "mongoose";
+import { Channel } from "../models/Channel.model.js";
 
 const router = express.Router();
 
@@ -28,6 +29,23 @@ router.post("/", protect, async (req, res) => {
     });
 
     await tournament.save();
+
+    // Add the tournament ID to the channel's tournaments array
+    const updatedChannel = await Channel.findByIdAndUpdate(
+      tournament.channelId,
+      { $push: { tournaments: tournament._id } },
+      { new: true }
+    );
+
+    if (!updatedChannel) {
+      // Clean up: delete the tournament if the channel was not found
+      await Tournament.findByIdAndDelete(tournament._id);
+      console.error("Channel not found for channelId:", tournament.channelId);
+      return res.status(404).json({
+        success: false,
+        error: "Channel not found",
+      });
+    }
 
     res.status(201).json({
       success: true,

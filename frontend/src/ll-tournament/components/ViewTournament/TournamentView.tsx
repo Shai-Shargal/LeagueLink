@@ -23,6 +23,7 @@ import CreateTournamentDialog from "../CreateTournament/CreateTournamentDialog";
 import StatsConfigDialog from "../ViewStats/StatsConfigDialog";
 import UserProfileDialog from "../UserProfileDialog";
 import EditTournament from "../EditTournament/EditTournament";
+import TimeIcon from "@mui/icons-material/AccessTime";
 
 interface TournamentViewProps {
   onBack: () => void;
@@ -108,9 +109,16 @@ const TournamentView: React.FC<TournamentViewProps> = ({
 
   const loadData = async () => {
     try {
-      const tournaments =
+      // Fetch tournaments for the current channel only
+      const fetchedTournaments =
         await tournamentService.getChannelTournaments(channelId);
-      setTournaments(tournaments);
+
+      // Filter tournaments to ensure they belong to the current channel
+      const channelTournaments = fetchedTournaments.filter(
+        (tournament) => tournament.channelId === channelId
+      );
+
+      setTournaments(channelTournaments);
 
       // Initialize default stats for all users
       const defaultStats = channelUsers.map((user) => ({
@@ -343,6 +351,23 @@ const TournamentView: React.FC<TournamentViewProps> = ({
       // Refresh tournaments list
       await fetchTournaments();
       setEditTournamentOpen(false);
+
+      console.log("Saving tournament...");
+      await tournamentService.saveTournament(updatedTournament);
+      console.log("Tournament saved, updating channel...");
+      const updatedChannel = await tournamentService.updateChannel(
+        updatedTournament.channelId,
+        { $push: { tournaments: updatedTournament._id } },
+        { new: true }
+      );
+      console.log("Channel update result:", updatedChannel);
+
+      if (!updatedChannel) {
+        return res.status(404).json({
+          success: false,
+          error: "Channel not found",
+        });
+      }
     } catch (error) {
       console.error("Error saving tournament:", error);
     }

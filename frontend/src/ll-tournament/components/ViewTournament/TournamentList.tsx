@@ -298,9 +298,7 @@ export const TournamentList: React.FC<TournamentListProps> = ({
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                   <TimeIcon sx={{ opacity: 0.7, fontSize: 20 }} />
                   <Typography variant="body2">
-                    {tournament.startDate
-                      ? formatTime(tournament.startDate)
-                      : "TBD"}
+                    {tournament.time || "TBD"}
                   </Typography>
                 </Box>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

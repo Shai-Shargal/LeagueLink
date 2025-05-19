@@ -145,21 +145,32 @@ export const tournamentService = {
   },
 
   async getChannelTournaments(channelId: string) {
-    const response = await fetch(`${TOURNAMENT_URL}/channel/${channelId}`, {
-      headers: getAuthHeaders(),
-    });
-    const data = await handleResponse(response);
-    return data.data.map((tournament: any) => ({
-      id: tournament._id || tournament.id,
-      name: tournament.name,
-      description: tournament.description,
-      channelId: tournament.channelId,
-      date: tournament.date,
-      time: tournament.time,
-      location: tournament.location,
-      matchIds: tournament.matchIds || [],
-      status: tournament.status || "pending",
-    }));
+    try {
+      const response = await fetch(`${TOURNAMENT_URL}/channel/${channelId}`, {
+        headers: getAuthHeaders(),
+      });
+      const data = await handleResponse(response);
+
+      if (!data.success || !data.data) {
+        console.error("Failed to get tournaments:", data);
+        return [];
+      }
+
+      return data.data.map((tournament: any) => ({
+        id: tournament._id || tournament.id,
+        name: tournament.name,
+        description: tournament.description,
+        channelId: tournament.channelId,
+        date: tournament.date,
+        time: tournament.time,
+        location: tournament.location,
+        matchIds: tournament.matchIds || [],
+        status: tournament.status || "pending",
+      }));
+    } catch (error) {
+      console.error("Error fetching tournaments:", error);
+      return [];
+    }
   },
 
   async getTournament(tournamentId: string) {
