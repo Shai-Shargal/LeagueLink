@@ -153,6 +153,11 @@ router.delete("/:id", protect, async (req, res) => {
     // Delete all matches associated with this tournament
     await Match.deleteMany({ tournamentId: tournament._id });
 
+    // Remove tournament ID from channel's tournaments array
+    await Channel.findByIdAndUpdate(tournament.channelId, {
+      $pull: { tournaments: tournament._id },
+    });
+
     // Delete the tournament
     await tournament.deleteOne();
 
