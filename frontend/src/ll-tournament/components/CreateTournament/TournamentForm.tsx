@@ -4,18 +4,14 @@ import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+import { tournamentService } from "../../../services/api";
+import { CreateTournamentDialogProps } from "../../types";
 
-interface TournamentFormProps {
-  newTournament: {
-    name: string;
-    description: string;
-    location: string;
-    startDate: string;
-    time: string;
-  };
-  onTournamentChange: (field: string, value: string | number) => void;
+interface TournamentFormProps
+  extends Omit<CreateTournamentDialogProps, "open" | "onClose" | "onSubmit"> {
   errors: Record<string, string>;
-  isCreating: boolean;
+  onSubmit?: (data: any) => void;
+  onClose?: () => void;
 }
 
 export const TournamentForm: React.FC<TournamentFormProps> = ({
@@ -23,6 +19,11 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
   onTournamentChange,
   errors,
   isCreating,
+  isEditing,
+  existingTournament,
+  channelId,
+  onSubmit,
+  onClose,
 }) => {
   const handleChange =
     (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,9 +60,105 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
     },
   };
 
+  const validateTime = (time: string) => {
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    return timeRegex.test(time);
+  };
+
+  const validateDate = (date: string) => {
+    if (!date) return false;
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(date)) return false;
+    const selectedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return selectedDate >= today;
+  };
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!newTournament.name?.trim()) {
+      newErrors.name = "Tournament name is required";
+    } else if (newTournament.name.trim().length < 3) {
+      newErrors.name = "Tournament name must be at least 3 characters";
+    }
+
+    if (!newTournament.location?.trim()) {
+      newErrors.location = "Location is required";
+    }
+
+    if (!newTournament.startDate) {
+      newErrors.startDate = "Start date is required";
+    } else if (!validateDate(newTournament.startDate)) {
+      newErrors.startDate = "Invalid date. Please select a valid future date.";
+    }
+
+    if (!newTournament.time) {
+      newErrors.time = "Start time is required";
+    } else if (!validateTime(newTournament.time)) {
+      newErrors.time = "Invalid time format. Please use 24-hour format (HH:mm)";
+    }
+
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    try {
+      const tournamentData = {
+        name: newTournament.name.trim(),
+        description: newTournament.description?.trim() || "",
+        startDate: newTournament.startDate,
+        time: newTournament.time,
+        location: newTournament.location.trim(),
+      };
+
+      console.log("Sending tournament data:", tournamentData);
+
+      if (isEditing && existingTournament) {
+        const response = await tournamentService.updateTournament(
+          existingTournament.id,
+          {
+            name: tournamentData.name,
+            description: tournamentData.description,
+            startDate: tournamentData.startDate,
+            location: tournamentData.location,
+          }
+        );
+        if (response.success && onSubmit) {
+          onSubmit(response.data);
+        }
+      } else if (channelId) {
+        const response = await tournamentService.createTournament(
+          channelId,
+          tournamentData
+        );
+        if (response.success && onSubmit) {
+          onSubmit(response.data);
+        }
+      }
+
+      if (onClose) {
+        onClose();
+      }
+    } catch (error: any) {
+      console.error("Error submitting tournament:", error);
+      if (onSubmit) {
+        onSubmit({ error: error.message || "Error submitting tournament" });
+      }
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+      <Box
+        component="form"
+        onSubmit={handleSubmit}
+        sx={{ display: "flex", flexDirection: "column", gap: 2 }}
+      >
         <TextField
           label="Tournament Name"
           value={newTournament.name}
@@ -113,6 +210,7 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
           onChange={(value) =>
             onTournamentChange("time", value ? value.format("HH:mm") : "")
           }
+          ampm={false}
           slotProps={{
             textField: {
               error: !!errors.time,

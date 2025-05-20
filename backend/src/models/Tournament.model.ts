@@ -34,6 +34,14 @@ const tournamentSchema = new Schema<ITournament>(
     time: {
       type: String,
       required: [true, "Time is required"],
+      validate: {
+        validator: function (v: string) {
+          // Validate time format (HH:mm)
+          return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
+        },
+        message: (props) =>
+          `${props.value} is not a valid time format. Please use HH:mm format (e.g., 14:30)`,
+      },
     },
     location: {
       type: String,
