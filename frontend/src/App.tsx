@@ -10,6 +10,7 @@ import SignIn from "./ll-dashboard/SignIn";
 import Register from "./ll-dashboard/Register";
 import Dashboard from "./ll-dashboard/Dashboard";
 import ProfileEditor from "./ll-dashboard/ProfileEditor";
+import TournamentStats from "./ll-tournament/components/TournamentStats";
 import "./App.css";
 
 // Protected Route component
@@ -42,6 +43,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <ProfileEditor />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tournament/:channelId"
+            element={
+              <ProtectedRoute>
+                <TournamentStats />
               </ProtectedRoute>
             }
           />

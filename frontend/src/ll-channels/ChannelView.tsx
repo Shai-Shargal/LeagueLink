@@ -30,6 +30,7 @@ import type {
   ApiResponse,
   ChannelViewProps,
 } from "./types/ChannelView";
+import { useNavigate } from "react-router-dom";
 
 const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [channel, setChannel] = useState<Channel | null>(null);
@@ -41,6 +42,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -556,7 +558,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             variant="contained"
             startIcon={<TournamentIcon />}
             endIcon={<StatsIcon />}
-            onClick={() => setShowTournament(true)}
+            onClick={() => navigate(`/tournament/${channelId}`)}
             sx={{
               width: "100%",
               backgroundColor: "rgba(198, 128, 227, 0.2)",
