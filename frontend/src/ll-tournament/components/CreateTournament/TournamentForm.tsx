@@ -6,18 +6,21 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 import { tournamentService } from "../../../services/api";
 import { CreateTournamentDialogProps } from "../../types";
+import { useState } from "react";
 
 interface TournamentFormProps
   extends Omit<CreateTournamentDialogProps, "open" | "onClose" | "onSubmit"> {
   errors: Record<string, string>;
-  onSubmit?: (data: any) => void;
-  onClose?: () => void;
+  setErrors?: (errors: Record<string, string>) => void;
+  onSubmit: (data: any) => void;
+  onClose: () => void;
 }
 
 export const TournamentForm: React.FC<TournamentFormProps> = ({
   newTournament,
   onTournamentChange,
   errors,
+  setErrors,
   isCreating,
   isEditing,
   existingTournament,
@@ -25,6 +28,21 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
   onSubmit,
   onClose,
 }) => {
+  // ערכי ברירת מחדל למקרה שלא הועבר setErrors
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+
+  // שימוש בפונקציית setErrors שהועברה או בפונקציה המקומית
+  const updateErrors = (newErrors: Record<string, string>) => {
+    if (setErrors) {
+      setErrors(newErrors);
+    } else {
+      setLocalErrors(newErrors);
+    }
+  };
+
+  // מיזוג שגיאות מקומיות ושגיאות שהועברו
+  const currentErrors = { ...localErrors, ...errors };
+
   const handleChange =
     (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
       onTournamentChange(field, event.target.value);
@@ -100,6 +118,9 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
       newErrors.time = "Invalid time format. Please use 24-hour format (HH:mm)";
     }
 
+    // עדכון מצב השגיאות
+    updateErrors(newErrors);
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -111,12 +132,10 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
       const tournamentData = {
         name: newTournament.name.trim(),
         description: newTournament.description?.trim() || "",
-        startDate: newTournament.startDate,
+        date: newTournament.startDate,
         time: newTournament.time,
         location: newTournament.location.trim(),
       };
-
-      console.log("Sending tournament data:", tournamentData);
 
       if (isEditing && existingTournament) {
         const response = await tournamentService.updateTournament(
@@ -124,31 +143,37 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
           {
             name: tournamentData.name,
             description: tournamentData.description,
-            startDate: tournamentData.startDate,
+            date: tournamentData.date,
+            time: tournamentData.time,
             location: tournamentData.location,
           }
         );
-        if (response.success && onSubmit) {
+        if (response.success) {
           onSubmit(response.data);
+          onClose();
         }
       } else if (channelId) {
         const response = await tournamentService.createTournament(
           channelId,
           tournamentData
         );
-        if (response.success && onSubmit) {
+        if (response.success) {
           onSubmit(response.data);
+          onClose();
         }
-      }
-
-      if (onClose) {
-        onClose();
+      } else {
+        // טיפול במקרה שלא הועבר channelId
+        throw new Error("Channel ID is required for creating a tournament");
       }
     } catch (error: any) {
       console.error("Error submitting tournament:", error);
-      if (onSubmit) {
-        onSubmit({ error: error.message || "Error submitting tournament" });
-      }
+      onSubmit({ error: error.message || "Error submitting tournament" });
+
+      // עדכון שגיאה כללית
+      updateErrors({
+        ...currentErrors,
+        general: error.message || "Error submitting tournament",
+      });
     }
   };
 
@@ -159,20 +184,24 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
         onSubmit={handleSubmit}
         sx={{ display: "flex", flexDirection: "column", gap: 2 }}
       >
+        {currentErrors.general && (
+          <Box sx={{ color: "error.main", mb: 2 }}>{currentErrors.general}</Box>
+        )}
+
         <TextField
           label="Tournament Name"
-          value={newTournament.name}
+          value={newTournament.name || ""}
           onChange={handleChange("name")}
-          error={!!errors.name}
-          helperText={errors.name}
+          error={!!currentErrors.name}
+          helperText={currentErrors.name}
           {...commonTextFieldProps}
         />
         <TextField
           label="Description"
           value={newTournament.description || ""}
           onChange={handleChange("description")}
-          error={!!errors.description}
-          helperText={errors.description}
+          error={!!currentErrors.description}
+          helperText={currentErrors.description}
           multiline
           rows={3}
           {...commonTextFieldProps}
@@ -181,8 +210,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
           label="Location"
           value={newTournament.location || ""}
           onChange={handleChange("location")}
-          error={!!errors.location}
-          helperText={errors.location}
+          error={!!currentErrors.location}
+          helperText={currentErrors.location}
           {...commonTextFieldProps}
         />
         <DatePicker
@@ -198,8 +227,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
           }
           slotProps={{
             textField: {
-              error: !!errors.startDate,
-              helperText: errors.startDate,
+              error: !!currentErrors.startDate,
+              helperText: currentErrors.startDate,
               ...commonTextFieldProps,
             },
           }}
@@ -213,8 +242,8 @@ export const TournamentForm: React.FC<TournamentFormProps> = ({
           ampm={false}
           slotProps={{
             textField: {
-              error: !!errors.time,
-              helperText: errors.time,
+              error: !!currentErrors.time,
+              helperText: currentErrors.time,
               ...commonTextFieldProps,
             },
           }}
