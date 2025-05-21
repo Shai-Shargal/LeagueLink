@@ -285,7 +285,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n    \"name\": \"Test Tournament\",\n    \"description\": \"This is a test tournament\",\n    \"channelId\": \"{{channel_id}}\",\n    \"format\": \"single-elimination\",\n    \"startDate\": \"2024-03-20T00:00:00.000Z\",\n    \"location\": \"Online\",\n    \"maxParticipants\": 16,\n    \"rules\": \"Standard tournament rules\",\n    \"prizes\": \"First place: $100\",\n    \"status\": \"upcoming\"\n}"
+              "raw": "{\n    \"name\": \"Summer Tennis Tournament\",\n    \"description\": \"Annual summer tennis tournament for all levels\",\n    \"channelId\": \"65f1a2b3c4d5e6f7g8h9i0j1\",\n    \"date\": \"2024-07-15\",\n    \"time\": \"14:30\",\n    \"location\": \"Central Tennis Club\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/tournaments",
