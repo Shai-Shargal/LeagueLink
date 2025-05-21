@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import { Box, Button } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import AddIcon from "@mui/icons-material/Add";
 import type { Channel } from "../../ll-channels/types/ChannelView";
 
 const TournamentStatsContainer = styled.div`
@@ -47,9 +48,41 @@ const TournamentStats: React.FC<TournamentStatsProps> = ({
 }) => {
   return (
     <TournamentStatsContainer>
-      <Title>Tournament Stats for Channel: {channelName}</Title>
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 3,
+        }}
+      >
+        <Title>Tournament List for Channel: {channelName}</Title>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          sx={{
+            background:
+              "linear-gradient(90deg, rgba(198,128,227,0.18) 0%, rgba(198,128,227,0.28) 100%)",
+            color: "#f3eaff",
+            borderRadius: "8px",
+            fontWeight: 600,
+            fontSize: "1rem",
+            boxShadow: "0 2px 8px 0 rgba(198,128,227,0.10)",
+            textTransform: "none",
+            ml: 2,
+            "&:hover": {
+              background:
+                "linear-gradient(90deg, rgba(198,128,227,0.32) 0%, rgba(198,128,227,0.45) 100%)",
+            },
+          }}
+          onClick={() => {
+            /* Placeholder for create tournament */
+          }}
+        >
+          Create Tournament
+        </Button>
+      </Box>
       {/* Add your tournament stats content here */}
-
       <BackButtonContainer>
         <Button
           variant="contained"
