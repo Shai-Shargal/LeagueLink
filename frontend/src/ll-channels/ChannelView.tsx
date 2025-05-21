@@ -610,6 +610,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
         >
           <TournamentStats
             channelId={channelId}
+            channelName={channel?.name || "Unnamed Channel"}
             onBackClick={() => setShowTournament(false)}
           />
         </Box>

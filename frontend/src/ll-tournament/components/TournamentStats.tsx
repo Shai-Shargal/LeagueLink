@@ -36,16 +36,18 @@ const BackButtonContainer = styled(Box)`
 
 interface TournamentStatsProps {
   channelId: string;
+  channelName: string;
   onBackClick: () => void;
 }
 
 const TournamentStats: React.FC<TournamentStatsProps> = ({
   channelId,
+  channelName,
   onBackClick,
 }) => {
   return (
     <TournamentStatsContainer>
-      <Title>Tournament Stats for Channel: {channelId}</Title>
+      <Title>Tournament Stats for Channel: {channelName}</Title>
       {/* Add your tournament stats content here */}
 
       <BackButtonContainer>
