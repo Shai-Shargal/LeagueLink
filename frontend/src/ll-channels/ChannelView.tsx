@@ -20,7 +20,6 @@ import {
   StatsIcon,
   AddIcon,
   authService,
-  TournamentView,
   sendMessage,
   subscribeToChannelMessages,
   uploadChannelImage,
@@ -135,26 +134,6 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
       >
         <Typography sx={{ color: "#fff" }}>Loading channel...</Typography>
       </Box>
-    );
-  }
-
-  if (showTournament) {
-    return (
-      <TournamentView
-        onBack={() => setShowTournament(false)}
-        channelId={channelId}
-        isAdmin={
-          channel?.admins.some((admin) => admin._id === currentUser?._id) ||
-          false
-        }
-        channelUsers={
-          channel?.members.map((member) => ({
-            id: member._id,
-            username: member.username,
-            profilePicture: member.profilePicture,
-          })) || []
-        }
-      />
     );
   }
 

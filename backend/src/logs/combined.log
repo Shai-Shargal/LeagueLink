@@ -651,3 +651,7 @@
 {"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-05-20T18:45:09.467Z"}
 {"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-05-20T18:53:03.021Z"}
 {"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-05-20T18:53:03.026Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-05-21T11:31:51.890Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-05-21T11:31:51.895Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-05-21T11:32:01.709Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-05-21T11:32:01.804Z"}

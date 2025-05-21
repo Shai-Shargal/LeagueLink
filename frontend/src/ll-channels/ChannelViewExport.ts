@@ -20,7 +20,6 @@ import {
   Add as AddIcon,
 } from "@mui/icons-material";
 import { authService } from "../services/api";
-import TournamentView from "../ll-tournament/components/ViewTournament/TournamentView";
 import {
   sendMessage,
   subscribeToChannelMessages,
@@ -50,7 +49,6 @@ export {
   StatsIcon,
   AddIcon,
   authService,
-  TournamentView,
   sendMessage,
   subscribeToChannelMessages,
   uploadChannelImage,
