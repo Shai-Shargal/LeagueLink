@@ -1,12 +1,12 @@
 import React from "react";
 import styled from "styled-components";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button, Box } from "@mui/material";
+import { Box, Button } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import type { Channel } from "../../ll-channels/types/ChannelView";
 
 const TournamentStatsContainer = styled.div`
   flex: 1;
-  height: calc(100vh - 60px);
+  height: 100%;
   background: linear-gradient(135deg, #23243a 0%, #2f184b 100%);
   color: #f3eaff;
   padding: 32px 32px 0 32px;
@@ -34,18 +34,25 @@ const BackButtonContainer = styled(Box)`
   right: 13px;
 `;
 
-const TournamentStats: React.FC = () => {
-  const { channelId } = useParams<{ channelId: string }>();
-  const navigate = useNavigate();
+interface TournamentStatsProps {
+  channelId: string;
+  onBackClick: () => void;
+}
 
+const TournamentStats: React.FC<TournamentStatsProps> = ({
+  channelId,
+  onBackClick,
+}) => {
   return (
     <TournamentStatsContainer>
       <Title>Tournament Stats for Channel: {channelId}</Title>
+      {/* Add your tournament stats content here */}
+
       <BackButtonContainer>
         <Button
           variant="contained"
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate(`/dashboard?channel=${channelId}`)}
+          onClick={onBackClick}
           sx={{
             width: "240px",
             color: "#f3eaff",
@@ -63,7 +70,7 @@ const TournamentStats: React.FC = () => {
             letterSpacing: "0.5px",
           }}
         >
-          Back to Channel
+          Back to Chat
         </Button>
       </BackButtonContainer>
     </TournamentStatsContainer>

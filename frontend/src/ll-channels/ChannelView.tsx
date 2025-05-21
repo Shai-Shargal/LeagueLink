@@ -31,9 +31,11 @@ import type {
   ChannelViewProps,
 } from "./types/ChannelView";
 import { useNavigate } from "react-router-dom";
+import TournamentStats from "../ll-tournament/components/TournamentStats";
 
 const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [channel, setChannel] = useState<Channel | null>(null);
+  const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [showTournament, setShowTournament] = useState(false);
@@ -89,6 +91,21 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
 
     return () => unsubscribe();
   }, [channelId, currentUser]);
+
+  useEffect(() => {
+    const fetchChannels = async () => {
+      try {
+        const response = await authService.getChannels();
+        if (response.data) {
+          setChannels(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching channels:", error);
+      }
+    };
+
+    fetchChannels();
+  }, []);
 
   // Filter out admins from the members list to avoid duplicates
   const regularMembers = useMemo(() => {
@@ -558,7 +575,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             variant="contained"
             startIcon={<TournamentIcon />}
             endIcon={<StatsIcon />}
-            onClick={() => navigate(`/tournament/${channelId}`)}
+            onClick={() => setShowTournament(!showTournament)}
             sx={{
               width: "100%",
               backgroundColor: "rgba(198, 128, 227, 0.2)",
@@ -571,10 +588,32 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
               fontWeight: 500,
             }}
           >
-            Tournament Stats
+            {showTournament ? "Hide Tournament Stats" : "Tournament Stats"}
           </Button>
         </Box>
       </Box>
+
+      {/* Tournament Stats View */}
+      {showTournament && (
+        <Box
+          sx={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(15, 23, 42, 0.98)",
+            zIndex: 1000,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          <TournamentStats
+            channelId={channelId}
+            onBackClick={() => setShowTournament(false)}
+          />
+        </Box>
+      )}
     </Box>
   );
 };
