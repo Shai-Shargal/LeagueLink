@@ -575,7 +575,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             startIcon={<TournamentIcon />}
             endIcon={<StatsIcon />}
             onClick={() =>
-              navigate(`/dashboard/tournaments?channel=${channelId}`)
+              navigate(`/dashboard?channel=${channelId}&view=tournaments`)
             }
             sx={{
               width: "100%",

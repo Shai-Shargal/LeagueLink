@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { authService } from "../services/api";
 import Channels from "../ll-channels/Channels";
 import ChannelView from "../ll-channels/ChannelView";
+import ViewTournamentInChannel from "../ll-tournament/components/ViewTournamentInChannel";
 
 const DRAWER_WIDTH = 242;
 
@@ -14,7 +15,10 @@ const Dashboard: React.FC = () => {
   } | null>(null);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const channelId = searchParams.get("channel");
+  const location = useLocation();
+  const channelId =
+    searchParams.get("channel") || location.pathname.split("/").pop();
+  const view = searchParams.get("view");
 
   useEffect(() => {
     fetchUser();
@@ -51,6 +55,57 @@ const Dashboard: React.FC = () => {
       </Box>
     );
   }
+
+  const renderContent = () => {
+    if (view === "tournaments" && channelId) {
+      return <ViewTournamentInChannel />;
+    }
+    if (channelId) {
+      return <ChannelView channelId={channelId} />;
+    }
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "100%",
+          padding: "24px",
+          textAlign: "center",
+        }}
+      >
+        <Typography
+          variant="h3"
+          sx={{
+            fontWeight: 700,
+            background: "linear-gradient(45deg, #C680E3, #9333EA)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            marginBottom: "16px",
+            fontSize: { xs: "2rem", md: "3rem" },
+            textShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          }}
+        >
+          Welcome {user.username}!
+        </Typography>
+        <Typography
+          variant="h6"
+          sx={{
+            color: "#dcddde",
+            maxWidth: "600px",
+            opacity: 0.9,
+            fontSize: { xs: "1rem", md: "1.25rem" },
+            textShadow: "0 1px 2px rgba(0,0,0,0.1)",
+          }}
+        >
+          Select a channel from the sidebar or create a new one to start
+          connecting with your community.
+        </Typography>
+      </Box>
+    );
+  };
 
   return (
     <Box
@@ -95,50 +150,7 @@ const Dashboard: React.FC = () => {
           background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
         }}
       >
-        {channelId ? (
-          <ChannelView channelId={channelId} />
-        ) : (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              height: "100%",
-              padding: "24px",
-              textAlign: "center",
-            }}
-          >
-            <Typography
-              variant="h3"
-              sx={{
-                fontWeight: 700,
-                background: "linear-gradient(45deg, #C680E3, #9333EA)",
-                backgroundClip: "text",
-                WebkitBackgroundClip: "text",
-                color: "transparent",
-                marginBottom: "16px",
-                fontSize: { xs: "2rem", md: "3rem" },
-                textShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              }}
-            >
-              Welcome {user.username}!
-            </Typography>
-            <Typography
-              variant="h6"
-              sx={{
-                color: "#dcddde",
-                maxWidth: "600px",
-                opacity: 0.9,
-                fontSize: { xs: "1rem", md: "1.25rem" },
-                textShadow: "0 1px 2px rgba(0,0,0,0.1)",
-              }}
-            >
-              Select a channel from the sidebar or create a new one to start
-              connecting with your community.
-            </Typography>
-          </Box>
-        )}
+        {renderContent()}
       </Box>
     </Box>
   );
