@@ -31,7 +31,6 @@ import type {
   ChannelViewProps,
 } from "./types/ChannelView";
 import { useNavigate } from "react-router-dom";
-import TournamentStats from "../ll-tournament/components/TournamentStats";
 
 const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   const [channel, setChannel] = useState<Channel | null>(null);
@@ -95,7 +94,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
   useEffect(() => {
     const fetchChannels = async () => {
       try {
-        const response = await authService.getChannels();
+        const response = await authService.getMyChannels();
         if (response.data) {
           setChannels(response.data);
         }
@@ -607,13 +606,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             display: "flex",
             flexDirection: "column",
           }}
-        >
-          <TournamentStats
-            channelId={channelId}
-            channelName={channel?.name || "Unnamed Channel"}
-            onBackClick={() => setShowTournament(false)}
-          />
-        </Box>
+        ></Box>
       )}
     </Box>
   );
