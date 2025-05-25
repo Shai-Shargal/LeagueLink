@@ -574,7 +574,9 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
             variant="contained"
             startIcon={<TournamentIcon />}
             endIcon={<StatsIcon />}
-            onClick={() => setShowTournament(!showTournament)}
+            onClick={() =>
+              navigate(`/dashboard/tournaments?channel=${channelId}`)
+            }
             sx={{
               width: "100%",
               backgroundColor: "rgba(198, 128, 227, 0.2)",
@@ -587,7 +589,7 @@ const ChannelView: React.FC<ChannelViewProps> = ({ channelId }) => {
               fontWeight: 500,
             }}
           >
-            {showTournament ? "Hide Tournament Stats" : "Tournament Stats"}
+            Tournament Stats
           </Button>
         </Box>
       </Box>

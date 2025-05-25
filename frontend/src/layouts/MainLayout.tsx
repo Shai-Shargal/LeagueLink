@@ -1,9 +1,16 @@
 import React from "react";
-import { Box, Container, CssBaseline, ThemeProvider } from "@mui/material";
+import {
+  Box,
+  Container,
+  CssBaseline,
+  ThemeProvider,
+  IconButton,
+} from "@mui/material";
 import { motion } from "framer-motion";
 import { theme } from "../themes/theme";
 import Navbar from "../ll-dashboard/Navbar";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -11,7 +18,17 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isEditProfile = location.pathname.includes("/editprofile");
+  const isTournaments = location.pathname.includes("/tournaments");
+  const channelId = searchParams.get("channel");
+
+  const handleBackToChannel = () => {
+    if (channelId) {
+      navigate(`/channel/${channelId}`);
+    }
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -49,6 +66,29 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           style={{ flex: 1, position: "relative" }}
         >
           <Navbar />
+          {isTournaments && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: "80px",
+                left: "16px",
+                zIndex: 2,
+              }}
+            >
+              <IconButton
+                onClick={handleBackToChannel}
+                sx={{
+                  color: "#fff",
+                  backgroundColor: "rgba(198, 128, 227, 0.2)",
+                  "&:hover": {
+                    backgroundColor: "rgba(198, 128, 227, 0.3)",
+                  },
+                }}
+              >
+                <ArrowBackIcon />
+              </IconButton>
+            </Box>
+          )}
           <Container
             maxWidth={false}
             sx={{
