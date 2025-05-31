@@ -92,10 +92,43 @@ router.get("/:id", protect, async (req, res) => {
 // Update a match
 router.put("/:id", protect, async (req, res) => {
   try {
-    const match = await Match.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-      runValidators: true,
+    const match = await Match.findById(req.params.id);
+
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        error: "Match not found",
+      });
+    }
+
+    // Update match fields
+    const allowedUpdates = ["status", "winner", "team1", "team2", "bestOf"];
+    const updates = Object.keys(req.body)
+      .filter((key) => allowedUpdates.includes(key))
+      .reduce((obj, key) => {
+        obj[key] = req.body[key];
+        return obj;
+      }, {});
+
+    Object.assign(match, updates);
+    await match.save();
+
+    res.json({
+      success: true,
+      data: match,
     });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Get match statistics
+router.get("/:id/stats", protect, async (req, res) => {
+  try {
+    const match = await Match.findById(req.params.id);
 
     if (!match) {
       return res.status(404).json({
@@ -106,7 +139,39 @@ router.put("/:id", protect, async (req, res) => {
 
     res.json({
       success: true,
-      data: match,
+      data: match.stats,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// Update match statistics
+router.put("/:id/stats", protect, async (req, res) => {
+  try {
+    const match = await Match.findById(req.params.id);
+
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        error: "Match not found",
+      });
+    }
+
+    // Update stats
+    match.stats = {
+      ...match.stats,
+      ...req.body,
+    };
+
+    await match.save();
+
+    res.json({
+      success: true,
+      data: match.stats,
     });
   } catch (error: any) {
     res.status(400).json({

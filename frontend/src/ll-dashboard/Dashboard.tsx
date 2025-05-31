@@ -16,8 +16,7 @@ const Dashboard: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const channelId =
-    searchParams.get("channel") || location.pathname.split("/").pop();
+  const channelId = searchParams.get("channel");
   const view = searchParams.get("view");
 
   useEffect(() => {

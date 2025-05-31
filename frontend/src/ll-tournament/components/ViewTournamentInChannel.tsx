@@ -5,7 +5,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 const ViewTournamentInChannel: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const channelId = searchParams.get("channel");
+  const channelId =
+    searchParams.get("channel") || location.pathname.split("/").pop();
 
   const handleBackToChannel = () => {
     navigate(`/channel/${channelId}`);

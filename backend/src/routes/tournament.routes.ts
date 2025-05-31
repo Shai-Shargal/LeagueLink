@@ -240,4 +240,53 @@ router.delete("/:id/matches/:matchId", protect, async (req, res) => {
   }
 });
 
+// Get tournament statistics
+router.get("/:id/stats", protect, async (req, res) => {
+  try {
+    const tournament = await Tournament.findById(req.params.id).populate({
+      path: "matchIds",
+      select: "stats team1 team2 winner status",
+    });
+
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        error: "Tournament not found",
+      });
+    }
+
+    // Calculate tournament statistics
+    const stats = {
+      totalMatches: tournament.matchIds.length,
+      completedMatches: tournament.matchIds.filter(
+        (match: any) => match.status === "COMPLETED"
+      ).length,
+      inProgressMatches: tournament.matchIds.filter(
+        (match: any) => match.status === "IN_PROGRESS"
+      ).length,
+      pendingMatches: tournament.matchIds.filter(
+        (match: any) => match.status === "PENDING"
+      ).length,
+      matches: tournament.matchIds.map((match: any) => ({
+        id: match._id,
+        stats: match.stats,
+        team1: match.team1,
+        team2: match.team2,
+        winner: match.winner,
+        status: match.status,
+      })),
+    };
+
+    res.json({
+      success: true,
+      data: stats,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 export default router;
