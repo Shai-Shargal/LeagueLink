@@ -1,6 +1,8 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import TournamentList from "./TournamentList";
+import CreateTournamentBox from "./CreateTournamentBox";
 
 const ViewTournamentInChannel: React.FC = () => {
   const navigate = useNavigate();
@@ -20,11 +22,15 @@ const ViewTournamentInChannel: React.FC = () => {
         height: "100%",
         width: "100%",
         backgroundColor: "rgba(15, 23, 42, 0.95)",
+        position: "relative",
       }}
     >
-      <Typography variant="h6" sx={{ color: "#fff", p: 2 }}>
-        Tournament Stats for Channel
-      </Typography>
+      <CreateTournamentBox
+        onCreate={() => {
+          /* TODO: open create tournament dialog */
+        }}
+      />
+      {channelId && <TournamentList channelId={channelId} />}
     </Box>
   );
 };
