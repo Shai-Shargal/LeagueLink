@@ -38,10 +38,10 @@ const TournamentList: React.FC<TournamentListProps> = ({ channelId }) => {
         if (data.success) {
           setTournaments(data.data);
         } else {
-          setError("Failed to fetch tournaments");
+          setError("");
         }
       } catch (err) {
-        setError("Error fetching tournaments");
+        setError("");
       } finally {
         setLoading(false);
       }

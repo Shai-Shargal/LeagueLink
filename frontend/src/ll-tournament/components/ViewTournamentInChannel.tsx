@@ -52,20 +52,27 @@ const ViewTournamentInChannel: React.FC = () => {
     <Box
       sx={{
         display: "flex",
-        flexDirection: "column",
+        flexDirection: "row",
         height: "100%",
         width: "100%",
         backgroundColor: "rgba(15, 23, 42, 0.95)",
         position: "relative",
+        alignItems: "flex-start",
+        gap: 3,
+        p: 3,
       }}
     >
-      <CreateTournamentBox onCreate={handleOpenDialog} />
-      <CreateTournamentDialog
-        open={openDialog}
-        onClose={handleCloseDialog}
-        onCreate={handleCreateTournament}
-      />
-      {channelId && <TournamentList key={refreshKey} channelId={channelId} />}
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <CreateTournamentDialog
+          open={openDialog}
+          onClose={handleCloseDialog}
+          onCreate={handleCreateTournament}
+        />
+        {channelId && <TournamentList key={refreshKey} channelId={channelId} />}
+      </Box>
+      <Box sx={{ minWidth: 220, maxWidth: 300, flexShrink: 0 }}>
+        <CreateTournamentBox onCreate={handleOpenDialog} />
+      </Box>
     </Box>
   );
 };
