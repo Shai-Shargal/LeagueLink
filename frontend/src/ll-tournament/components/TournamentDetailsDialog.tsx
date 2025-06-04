@@ -76,13 +76,55 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
       </DialogTitle>
       <DialogContent>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-          <TournamentToolbar
-            onCreateMatch={handleCreateMatch}
-            onUndo={handleUndo}
-            onRedo={handleRedo}
-            canUndo={canUndo}
-            canRedo={canRedo}
-          />
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              minWidth: 0,
+            }}
+          >
+            <Box
+              sx={{
+                mb: 1,
+                background: "rgba(255,255,255,0.03)",
+                borderRadius: 2,
+                boxShadow: "0 1px 4px 0 rgba(0,0,0,0.10)",
+                border: "1px solid rgba(255,255,255,0.05)",
+                p: 0.5,
+                width: "100%",
+                maxWidth: 280,
+                flex: 0,
+              }}
+            >
+              <TournamentToolbar
+                onCreateMatch={handleCreateMatch}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                canUndo={canUndo}
+                canRedo={canRedo}
+              />
+            </Box>
+            <Box
+              sx={{
+                flex: 2,
+                minHeight: "44vh",
+                background: "rgba(255,255,255,0.02)",
+                border: "1.5px dashed #444",
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#888",
+                fontSize: 22,
+                fontWeight: 500,
+                letterSpacing: 1,
+              }}
+            >
+              Matches will be displayed here soon
+            </Box>
+          </Box>
           <TournamentUsers
             channelId={tournament.channelId}
             onUserSelect={handleUserSelect}
