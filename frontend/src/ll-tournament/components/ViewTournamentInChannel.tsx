@@ -22,7 +22,7 @@ const ViewTournamentInChannel: React.FC = () => {
   const handleCreateTournament = async (data: TournamentFormData) => {
     if (!channelId) return;
     try {
-      const res = await fetch("/api/tournaments", {
+      const res = await fetch("http://localhost:5000/api/tournaments", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
