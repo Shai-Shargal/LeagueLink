@@ -9,7 +9,6 @@ const router = express.Router();
 
 // Create a new tournament
 router.post("/", async (req, res) => {
-  console.log("i reach this point");
   try {
     // Validate channelId
     if (!mongoose.Types.ObjectId.isValid(req.body.channelId)) {
