@@ -8,16 +8,10 @@ import {
 } from "@mui/material";
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import TournamentCard from "./TournamentCard";
-
-// Dummy type for now, can be replaced with real type from types/
-interface Tournament {
-  _id: string;
-  name: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-}
+import {
+  tournamentService,
+  Tournament,
+} from "../../services/tournamentService";
 
 interface TournamentListProps {
   channelId: string;
@@ -33,22 +27,10 @@ const TournamentList: React.FC<TournamentListProps> = ({ channelId }) => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(
-          `http://localhost:5000/api/tournaments/channel/${channelId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
-        const data = await res.json();
-        if (data.success) {
-          setTournaments(data.data);
-        } else {
-          setError("");
-        }
+        const data = await tournamentService.getTournamentsByChannel(channelId);
+        setTournaments(data);
       } catch (err) {
-        setError("");
+        setError("Failed to fetch tournaments");
       } finally {
         setLoading(false);
       }
@@ -58,22 +40,8 @@ const TournamentList: React.FC<TournamentListProps> = ({ channelId }) => {
 
   const handleDeleteTournament = async (tournamentId: string) => {
     try {
-      const res = await fetch(
-        `http://localhost:5000/api/tournaments/${tournamentId}`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-
-      if (res.ok) {
-        // Remove the deleted tournament from the state
-        setTournaments(tournaments.filter((t) => t._id !== tournamentId));
-      } else {
-        setError("Failed to delete tournament");
-      }
+      await tournamentService.deleteTournament(tournamentId);
+      setTournaments(tournaments.filter((t) => t._id !== tournamentId));
     } catch (err) {
       setError("Failed to delete tournament");
     }
@@ -139,6 +107,10 @@ const TournamentList: React.FC<TournamentListProps> = ({ channelId }) => {
                 date={tournament.date}
                 time={tournament.time}
                 location={tournament.location}
+                channelId={tournament.channelId}
+                createdBy={tournament.createdBy}
+                participantsCount={tournament.participantsCount}
+                status={tournament.status}
                 onDelete={handleDeleteTournament}
               />
             ))

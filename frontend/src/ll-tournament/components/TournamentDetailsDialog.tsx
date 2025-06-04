@@ -1,38 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
-  Button,
-  Typography,
+  IconButton,
   Box,
-  Chip,
-  Paper,
+  Typography,
 } from "@mui/material";
-import {
-  EmojiEvents as TrophyIcon,
-  People as PeopleIcon,
-  SportsTennis as SportsIcon,
-} from "@mui/icons-material";
+import { Close as CloseIcon } from "@mui/icons-material";
+import TournamentToolbar from "./TournamentToolbar";
+import TournamentUsers from "./TournamentUsers";
+import { Tournament } from "../../services/tournamentService";
 
 interface TournamentDetailsDialogProps {
   open: boolean;
   onClose: () => void;
-  tournament: {
-    id: string;
-    name: string;
-    description: string;
-    date: string;
-    time: string;
-    location: string;
-    createdBy?: {
-      username: string;
-      profilePicture?: string;
-    };
-    participantsCount?: number;
-    status?: "upcoming" | "in_progress" | "completed";
-  };
+  tournament: Omit<Tournament, "_id"> & { id: string };
 }
 
 const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
@@ -40,37 +23,28 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   onClose,
   tournament,
 }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "upcoming":
-        return {
-          bg: "rgba(76, 175, 80, 0.1)",
-          color: "#4CAF50",
-          border: "rgba(76, 175, 80, 0.3)",
-        };
-      case "in_progress":
-        return {
-          bg: "rgba(255, 152, 0, 0.1)",
-          color: "#FF9800",
-          border: "rgba(255, 152, 0, 0.3)",
-        };
-      case "completed":
-        return {
-          bg: "rgba(33, 150, 243, 0.1)",
-          color: "#2196F3",
-          border: "rgba(33, 150, 243, 0.3)",
-        };
-      default:
-        return {
-          bg: "rgba(76, 175, 80, 0.1)",
-          color: "#4CAF50",
-          border: "rgba(76, 175, 80, 0.3)",
-        };
-    }
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  const handleCreateMatch = () => {
+    // TODO: Implement match creation logic
+    console.log("Create match clicked");
   };
 
-  const statusStyle = getStatusColor(tournament.status || "upcoming");
-  const status = tournament.status || "upcoming";
+  const handleUndo = () => {
+    // TODO: Implement undo logic
+    console.log("Undo clicked");
+  };
+
+  const handleRedo = () => {
+    // TODO: Implement redo logic
+    console.log("Redo clicked");
+  };
+
+  const handleUserSelect = (user: any) => {
+    // TODO: Implement user selection logic
+    console.log("User selected:", user);
+  };
 
   return (
     <Dialog
@@ -82,93 +56,39 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
         sx: {
           backgroundColor: "#1a1a1a",
           color: "#fff",
-          borderRadius: 2,
           minHeight: "80vh",
         },
       }}
     >
       <DialogTitle
-        sx={{ borderBottom: "1px solid rgba(255,255,255,0.1)", p: 3 }}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <TrophyIcon sx={{ color: "#FFD700", fontSize: 32 }} />
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h4" sx={{ fontWeight: 600, mb: 1 }}>
-              {tournament.name}
-            </Typography>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-              <Chip
-                label={status.charAt(0).toUpperCase() + status.slice(1)}
-                size="small"
-                sx={{
-                  backgroundColor: statusStyle.bg,
-                  color: statusStyle.color,
-                  border: `1px solid ${statusStyle.border}`,
-                }}
-              />
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                <PeopleIcon sx={{ color: "#9C27B0", fontSize: 20 }} />
-                <Typography
-                  variant="body2"
-                  sx={{ color: "rgba(255,255,255,0.7)" }}
-                >
-                  {tournament.participantsCount || 0} Participants
-                </Typography>
-              </Box>
-            </Box>
-          </Box>
-        </Box>
+        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+          {tournament.name}
+        </Typography>
+        <IconButton onClick={onClose} sx={{ color: "rgba(255,255,255,0.7)" }}>
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
-
-      <DialogContent sx={{ p: 3 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            backgroundColor: "rgba(255,255,255,0.05)",
-            p: 3,
-            borderRadius: 2,
-            height: "100%",
-            minHeight: "600px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Typography variant="h6" sx={{ color: "rgba(255,255,255,0.3)" }}>
-            Future Component Space
-          </Typography>
-        </Paper>
+      <DialogContent>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          <TournamentToolbar
+            onCreateMatch={handleCreateMatch}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+          />
+          <TournamentUsers
+            channelId={tournament.channelId}
+            onUserSelect={handleUserSelect}
+          />
+        </Box>
       </DialogContent>
-
-      <DialogActions
-        sx={{ borderTop: "1px solid rgba(255,255,255,0.1)", p: 2 }}
-      >
-        <Button
-          onClick={onClose}
-          variant="outlined"
-          sx={{
-            color: "#fff",
-            borderColor: "rgba(255,255,255,0.3)",
-            "&:hover": {
-              borderColor: "rgba(255,255,255,0.5)",
-            },
-          }}
-        >
-          Close
-        </Button>
-        <Button
-          variant="contained"
-          startIcon={<SportsIcon />}
-          sx={{
-            backgroundColor: "#2196F3",
-            "&:hover": {
-              backgroundColor: "#1976D2",
-            },
-          }}
-        >
-          View Matches
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 };

@@ -27,20 +27,10 @@ import {
   Delete as DeleteIcon,
 } from "@mui/icons-material";
 import TournamentDetailsDialog from "./TournamentDetailsDialog";
+import { Tournament } from "../../services/tournamentService";
 
-interface TournamentCardProps {
+interface TournamentCardProps extends Omit<Tournament, "_id"> {
   id: string;
-  name: string;
-  description: string;
-  date: string;
-  time: string;
-  location: string;
-  createdBy?: {
-    username: string;
-    profilePicture?: string;
-  };
-  participantsCount?: number;
-  status?: "upcoming" | "in_progress" | "completed";
   onDelete?: (id: string) => void;
 }
 
@@ -51,6 +41,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   date,
   time,
   location,
+  channelId,
   createdBy,
   participantsCount = 0,
   status = "upcoming",
@@ -359,6 +350,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
           date,
           time,
           location,
+          channelId,
           createdBy,
           participantsCount,
           status,

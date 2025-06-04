@@ -131,6 +131,23 @@ const channelService = {
     );
     return response.data;
   },
+
+  // Get channel members
+  getChannelMembers: async (channelId: string) => {
+    const response = await axios.get(`${API_URL}/channels/${channelId}`);
+    return response.data.data.members;
+  },
+
+  // Get all users in a channel
+  getChannelUsers: async (channelId: string): Promise<ChannelUser[]> => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(`${API_URL}/${channelId}/users`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data.data;
+  },
 };
 
 export default channelService;
