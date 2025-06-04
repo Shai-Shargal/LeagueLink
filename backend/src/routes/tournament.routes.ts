@@ -8,7 +8,7 @@ import { Channel } from "../models/Channel.model.js";
 const router = express.Router();
 
 // Create a new tournament
-router.post("/", protect, async (req, res) => {
+router.post("/", async (req, res) => {
   console.log("i reach this point");
   try {
     // Validate channelId
