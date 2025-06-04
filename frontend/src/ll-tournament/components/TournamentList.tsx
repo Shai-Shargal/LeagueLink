@@ -56,6 +56,29 @@ const TournamentList: React.FC<TournamentListProps> = ({ channelId }) => {
     if (channelId) fetchTournaments();
   }, [channelId]);
 
+  const handleDeleteTournament = async (tournamentId: string) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/tournaments/${tournamentId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (res.ok) {
+        // Remove the deleted tournament from the state
+        setTournaments(tournaments.filter((t) => t._id !== tournamentId));
+      } else {
+        setError("Failed to delete tournament");
+      }
+    } catch (err) {
+      setError("Failed to delete tournament");
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -110,11 +133,13 @@ const TournamentList: React.FC<TournamentListProps> = ({ channelId }) => {
             tournaments.map((tournament) => (
               <TournamentCard
                 key={tournament._id}
+                id={tournament._id}
                 name={tournament.name}
                 description={tournament.description}
                 date={tournament.date}
                 time={tournament.time}
                 location={tournament.location}
+                onDelete={handleDeleteTournament}
               />
             ))
           )}
