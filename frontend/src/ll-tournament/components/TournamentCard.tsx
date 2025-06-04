@@ -26,6 +26,7 @@ import {
   SportsTennis as SportsIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import TournamentDetailsDialog from "./TournamentDetailsDialog";
 
 interface TournamentCardProps {
   id: string;
@@ -57,8 +58,10 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
+    event.stopPropagation(); // Prevent card click when clicking menu
     setAnchorEl(event.currentTarget);
   };
 
@@ -80,6 +83,14 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
+  };
+
+  const handleCardClick = () => {
+    setDetailsDialogOpen(true);
+  };
+
+  const handleDetailsClose = () => {
+    setDetailsDialogOpen(false);
   };
 
   // פונקציה לקבלת צבע סטטוס
@@ -117,6 +128,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   return (
     <>
       <Card
+        onClick={handleCardClick}
         sx={{
           backgroundColor: "#1a1a1a",
           color: "#fff",
@@ -126,6 +138,7 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
             transform: "translateY(-4px)",
             boxShadow: "0 8px 16px rgba(0,0,0,0.2)",
             backgroundColor: "#1f1f1f",
+            cursor: "pointer",
           },
           border: "1px solid rgba(255,255,255,0.1)",
           position: "relative",
@@ -283,63 +296,74 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
             />
           </Box>
         </CardContent>
+      </Card>
 
-        {/* Add the Menu component */}
-        <Menu
-          anchorEl={anchorEl}
-          open={Boolean(anchorEl)}
-          onClose={handleMenuClose}
-          PaperProps={{
-            sx: {
-              backgroundColor: "#1a1a1a",
+      {/* Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            backgroundColor: "#1a1a1a",
+            color: "#fff",
+            "& .MuiMenuItem-root": {
               color: "#fff",
-              "& .MuiMenuItem-root": {
-                color: "#fff",
-                "&:hover": {
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                },
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.1)",
               },
             },
-          }}
-        >
-          <MenuItem onClick={handleDeleteClick}>
-            <DeleteIcon sx={{ mr: 1, color: "#ff4444" }} />
-            Delete Tournament
-          </MenuItem>
-        </Menu>
+          },
+        }}
+      >
+        <MenuItem onClick={handleDeleteClick}>
+          <DeleteIcon sx={{ mr: 1 }} />
+          Delete
+        </MenuItem>
+      </Menu>
 
-        {/* Add the Delete Confirmation Dialog */}
-        <Dialog
-          open={deleteDialogOpen}
-          onClose={handleDeleteCancel}
-          PaperProps={{
-            sx: {
-              backgroundColor: "#1a1a1a",
-              color: "#fff",
-            },
-          }}
-        >
-          <DialogTitle>Delete Tournament</DialogTitle>
-          <DialogContent>
-            <Typography>
-              Are you sure you want to delete "{name}"? This action cannot be
-              undone.
-            </Typography>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleDeleteCancel} sx={{ color: "#fff" }}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDeleteConfirm}
-              color="error"
-              variant="contained"
-            >
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Card>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={handleDeleteCancel}
+        PaperProps={{
+          sx: {
+            backgroundColor: "#1a1a1a",
+            color: "#fff",
+          },
+        }}
+      >
+        <DialogTitle>Delete Tournament</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this tournament? This action cannot
+            be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Tournament Details Dialog */}
+      <TournamentDetailsDialog
+        open={detailsDialogOpen}
+        onClose={handleDetailsClose}
+        tournament={{
+          id,
+          name,
+          description,
+          date,
+          time,
+          location,
+          createdBy,
+          participantsCount,
+          status,
+        }}
+      />
     </>
   );
 };
