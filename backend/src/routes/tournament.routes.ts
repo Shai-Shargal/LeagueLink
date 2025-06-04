@@ -290,4 +290,24 @@ router.get("/:id/stats", protect, async (req, res) => {
   }
 });
 
+// Get all tournaments
+router.get("/", async (req, res) => {
+  try {
+    const tournaments = await Tournament.find()
+      .populate("matchIds")
+      .populate("channelId", "name description")
+      .sort({ date: -1, time: -1 });
+
+    res.json({
+      success: true,
+      data: tournaments,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
 export default router;

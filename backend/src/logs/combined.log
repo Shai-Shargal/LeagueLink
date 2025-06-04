@@ -750,3 +750,13 @@
 {"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-04T15:54:56.026Z"}
 {"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-04T15:58:50.240Z"}
 {"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-04T15:58:50.245Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-04T16:05:38.977Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-04T16:05:38.985Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-04T16:06:57.631Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-04T16:06:57.638Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-04T16:07:32.248Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-04T16:07:32.254Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-04T16:11:20.034Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-04T16:11:20.042Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-04T16:12:49.258Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-04T16:12:49.263Z"}

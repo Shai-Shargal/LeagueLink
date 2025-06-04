@@ -33,7 +33,14 @@ const TournamentList: React.FC<TournamentListProps> = ({ channelId }) => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/tournaments/channel/${channelId}`);
+        const res = await fetch(
+          `http://localhost:5000/api/tournaments/channel/${channelId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
         const data = await res.json();
         if (data.success) {
           setTournaments(data.data);
