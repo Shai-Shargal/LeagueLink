@@ -26,25 +26,27 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
       sx={{
         display: "flex",
         alignItems: "center",
-        gap: 2,
-        p: 2,
-        backgroundColor: "rgba(255,255,255,0.05)",
+        gap: 1.5,
+        p: 1,
+        backgroundColor: "rgba(255,255,255,0.04)",
         borderRadius: 1,
-        mb: 2,
       }}
     >
       <Button
+        size="small"
         variant="contained"
-        startIcon={<AddIcon />}
+        startIcon={<AddIcon fontSize="small" />}
         onClick={onCreateMatch}
         sx={{
           backgroundColor: "#2196F3",
+          minWidth: "unset",
+          px: 2,
           "&:hover": {
             backgroundColor: "#1976D2",
           },
         }}
       >
-        Create Match
+        Create
       </Button>
 
       <Divider
@@ -59,6 +61,7 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
             <IconButton
               onClick={onUndo}
               disabled={!canUndo}
+              size="small"
               sx={{
                 color: canUndo
                   ? "rgba(255,255,255,0.7)"
@@ -68,7 +71,7 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
                 },
               }}
             >
-              <UndoIcon />
+              <UndoIcon fontSize="small" />
             </IconButton>
           </span>
         </Tooltip>
@@ -78,6 +81,7 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
             <IconButton
               onClick={onRedo}
               disabled={!canRedo}
+              size="small"
               sx={{
                 color: canRedo
                   ? "rgba(255,255,255,0.7)"
@@ -87,7 +91,7 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
                 },
               }}
             >
-              <RedoIcon />
+              <RedoIcon fontSize="small" />
             </IconButton>
           </span>
         </Tooltip>
