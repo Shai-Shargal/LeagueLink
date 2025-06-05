@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDroppable, useDraggable } from "@dnd-kit/core";
+import { useDroppable } from "@dnd-kit/core";
 import {
   Box,
   Typography,
@@ -17,6 +17,7 @@ import {
   Grid,
   Autocomplete,
   Chip,
+  Avatar,
 } from "@mui/material";
 import { Delete, Close, Settings } from "@mui/icons-material";
 
@@ -126,36 +127,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
   ]);
   const [winner, setWinner] = useState<string>("");
 
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id,
-  });
-
-  const style = transform
-    ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
-    : undefined;
-
   const isInAnyTeam = (id: string) =>
     team1.some((u) => u.id === id) || team2.some((u) => u.id === id);
-
-  const handleDragEnd = (event: any) => {
-    const draggedId = String(event.active.id);
-    const target = event.over?.id;
-    const draggedName = event.active?.data?.current?.name || "Unknown";
-
-    if (!draggedId || !target || isInAnyTeam(draggedId)) return;
-
-    const user: User = { id: draggedId, name: draggedName };
-
-    if (target === "team1") setTeam1((prev) => [...prev, user]);
-    else if (target === "team2") setTeam2((prev) => [...prev, user]);
-  };
-
-  const removeFromTeam1 = (id: string) =>
-    setTeam1((prev) => prev.filter((u) => u.id !== id));
-  const removeFromTeam2 = (id: string) =>
-    setTeam2((prev) => prev.filter((u) => u.id !== id));
 
   const handleSettingsClose = () => {
     setIsSettingsOpen(false);
@@ -232,20 +205,12 @@ const MatchBox: React.FC<MatchBoxProps> = ({
 
   return (
     <Box
-      ref={setNodeRef}
-      style={style}
-      {...listeners}
-      {...attributes}
       sx={{
         backgroundColor: "#1a1a2e",
         p: 0.75,
         borderRadius: 1,
         width: 140,
-        cursor: "grab",
         position: "relative",
-        "&:active": {
-          cursor: "grabbing",
-        },
       }}
     >
       <Box
@@ -302,7 +267,9 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         teamColor={winner === "team1" ? "#4caf50" : "#3f51b5"}
         title="Team 1"
         players={team1}
-        onRemovePlayer={removeFromTeam1}
+        onRemovePlayer={(id) =>
+          setTeam1((prev) => prev.filter((u) => u.id !== id))
+        }
       />
 
       <Typography
@@ -322,7 +289,9 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         teamColor={winner === "team2" ? "#4caf50" : "#d81b60"}
         title="Team 2"
         players={team2}
-        onRemovePlayer={removeFromTeam2}
+        onRemovePlayer={(id) =>
+          setTeam2((prev) => prev.filter((u) => u.id !== id))
+        }
       />
 
       <Dialog

@@ -8,14 +8,6 @@ import {
   Typography,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
-import {
-  DndContext,
-  useSensor,
-  useSensors,
-  PointerSensor,
-  DragEndEvent,
-  useDroppable,
-} from "@dnd-kit/core";
 import TournamentToolbar from "./TournamentToolbar";
 import TournamentUsers from "./TournamentUsers";
 import MatchBox from "./matchbox";
@@ -45,18 +37,11 @@ const DroppableBox: React.FC<{
   onRemoveMatch: (id: string) => void;
   tournamentUsers: User[];
 }> = ({ matches, onRemoveMatch, tournamentUsers }) => {
-  const { setNodeRef, isOver } = useDroppable({
-    id: "matches-container",
-  });
-
   return (
     <Box
-      ref={setNodeRef}
       sx={{
         flex: 1.5,
-        background: isOver
-          ? "rgba(255,255,255,0.05)"
-          : "rgba(255,255,255,0.03)",
+        background: "rgba(255,255,255,0.03)",
         borderRadius: 2,
         border: "1.5px dashed #444",
         display: "flex",
@@ -83,10 +68,8 @@ const DroppableBox: React.FC<{
           <Box
             key={match.id}
             sx={{
-              position: "absolute",
-              left: `${match.position.x}%`,
-              top: `${match.position.y}%`,
-              transform: "translate(-50%, -50%)",
+              position: "relative",
+              m: 1,
             }}
           >
             <MatchBox
@@ -111,14 +94,6 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [tournamentUsers, setTournamentUsers] = useState<User[]>([]);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  );
 
   const calculateNewMatchPosition = (): { x: number; y: number } => {
     if (matches.length === 0) {
@@ -175,46 +150,6 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
     });
   };
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-
-    if (over && active.id !== over.id) {
-      if (over.id === "matches-container") {
-        const containerRect = over.rect;
-        const activeRect = active.rect;
-
-        if (
-          containerRect &&
-          activeRect &&
-          "left" in containerRect &&
-          "left" in activeRect
-        ) {
-          // Calculate position as percentage of container
-          const x =
-            ((activeRect.left - containerRect.left + activeRect.width / 2) /
-              containerRect.width) *
-            100;
-          const y =
-            ((activeRect.top - containerRect.top + activeRect.height / 2) /
-              containerRect.height) *
-            100;
-
-          // Update match position
-          setMatches((prev) =>
-            prev.map((match) =>
-              match.id === active.id
-                ? {
-                    ...match,
-                    position: { x, y },
-                  }
-                : match
-            )
-          );
-        }
-      }
-    }
-  };
-
   return (
     <Dialog
       open={open}
@@ -244,63 +179,61 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            gap: 3,
+            height: "100%",
+          }}
+        >
+          {/* Left side: Toolbar + Drop area */}
           <Box
             sx={{
+              flex: 2,
               display: "flex",
-              flexDirection: "row",
-              gap: 3,
-              height: "100%",
+              flexDirection: "column",
+              gap: 2,
             }}
           >
-            {/* Left side: Toolbar + Drop area */}
             <Box
               sx={{
-                flex: 2,
-                display: "flex",
-                flexDirection: "column",
-                gap: 2,
+                backgroundColor: "rgba(255,255,255,0.05)",
+                borderRadius: 2,
+                p: 1,
               }}
             >
-              <Box
-                sx={{
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  borderRadius: 2,
-                  p: 1,
-                }}
-              >
-                <TournamentToolbar
-                  onCreateMatch={handleCreateMatch}
-                  onUndo={handleUndo}
-                  onRedo={handleRedo}
-                  canUndo={canUndo}
-                  canRedo={canRedo}
-                />
-              </Box>
-
-              <DroppableBox
-                matches={matches}
-                onRemoveMatch={handleRemoveMatch}
-                tournamentUsers={tournamentUsers}
+              <TournamentToolbar
+                onCreateMatch={handleCreateMatch}
+                onUndo={handleUndo}
+                onRedo={handleRedo}
+                canUndo={canUndo}
+                canRedo={canRedo}
               />
             </Box>
 
-            {/* Right side: Users list */}
-            <Box
-              sx={{
-                flex: 1,
-                alignSelf: "flex-start",
-                maxHeight: "60vh",
-                overflowY: "auto",
-              }}
-            >
-              <TournamentUsers
-                channelId={tournament.channelId}
-                onUserSelect={handleUserSelect}
-              />
-            </Box>
+            <DroppableBox
+              matches={matches}
+              onRemoveMatch={handleRemoveMatch}
+              tournamentUsers={tournamentUsers}
+            />
           </Box>
-        </DndContext>
+
+          {/* Right side: Users list */}
+          <Box
+            sx={{
+              flex: 1,
+              alignSelf: "flex-start",
+              maxHeight: "60vh",
+              overflowY: "auto",
+            }}
+          >
+            <TournamentUsers
+              channelId={tournament.channelId}
+              onUserSelect={handleUserSelect}
+            />
+          </Box>
+        </Box>
       </DialogContent>
     </Dialog>
   );
