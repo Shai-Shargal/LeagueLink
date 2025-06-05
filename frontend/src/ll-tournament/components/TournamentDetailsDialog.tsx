@@ -18,6 +18,7 @@ import {
 } from "@dnd-kit/core";
 import TournamentToolbar from "./TournamentToolbar";
 import TournamentUsers from "./TournamentUsers";
+import MatchBox from "./matchbox";
 import { Tournament } from "../../services/tournamentService";
 
 interface TournamentDetailsDialogProps {
@@ -26,7 +27,15 @@ interface TournamentDetailsDialogProps {
   tournament: Omit<Tournament, "_id"> & { id: string };
 }
 
-const DroppableBox: React.FC = () => {
+interface Match {
+  id: string;
+  position: { x: number; y: number };
+}
+
+const DroppableBox: React.FC<{
+  matches: Match[];
+  onRemoveMatch: (id: string) => void;
+}> = ({ matches, onRemoveMatch }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: "matches-container",
   });
@@ -51,13 +60,30 @@ const DroppableBox: React.FC = () => {
         minHeight: "60vh",
         p: 3,
         transition: "all 0.2s ease",
+        position: "relative",
         "&:hover": {
           borderColor: "#666",
           background: "rgba(255,255,255,0.05)",
         },
       }}
     >
-      <Typography>Drop matches here</Typography>
+      {matches.length === 0 ? (
+        <Typography>Drop matches here</Typography>
+      ) : (
+        matches.map((match) => (
+          <Box
+            key={match.id}
+            sx={{
+              position: "absolute",
+              left: match.position.x,
+              top: match.position.y,
+              transform: "translate(-50%, -50%)",
+            }}
+          >
+            <MatchBox id={match.id} onRemove={() => onRemoveMatch(match.id)} />
+          </Box>
+        ))
+      )}
     </Box>
   );
 };
@@ -67,6 +93,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   onClose,
   tournament,
 }) => {
+  const [matches, setMatches] = useState<Match[]>([]);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -79,15 +106,29 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   );
 
   const handleCreateMatch = () => {
-    console.log("Create match clicked");
+    const newMatch: Match = {
+      id: `match-${Date.now()}`,
+      position: { x: 50, y: 50 }, // Default position in the center
+    };
+    setMatches((prev) => [...prev, newMatch]);
+    setCanUndo(true);
+  };
+
+  const handleRemoveMatch = (matchId: string) => {
+    setMatches((prev) => prev.filter((match) => match.id !== matchId));
+    setCanUndo(matches.length > 1);
   };
 
   const handleUndo = () => {
-    console.log("Undo clicked");
+    if (matches.length > 0) {
+      setMatches((prev) => prev.slice(0, -1));
+      setCanUndo(matches.length > 1);
+    }
   };
 
   const handleRedo = () => {
-    console.log("Redo clicked");
+    // TODO: Implement redo functionality
+    setCanRedo(false);
   };
 
   const handleUserSelect = (user: any) => {
@@ -96,8 +137,24 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+
     if (over && active.id !== over.id) {
-      console.log("Dropped item:", active.id, "into:", over.id);
+      if (over.id === "matches-container") {
+        // Update match position
+        setMatches((prev) =>
+          prev.map((match) =>
+            match.id === active.id
+              ? {
+                  ...match,
+                  position: {
+                    x: event.delta.x + match.position.x,
+                    y: event.delta.y + match.position.y,
+                  },
+                }
+              : match
+          )
+        );
+      }
     }
   };
 
@@ -129,7 +186,6 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-
       <DialogContent>
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <Box
@@ -165,7 +221,10 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
                 />
               </Box>
 
-              <DroppableBox />
+              <DroppableBox
+                matches={matches}
+                onRemoveMatch={handleRemoveMatch}
+              />
             </Box>
 
             {/* Right side: Users list */}

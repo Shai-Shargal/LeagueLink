@@ -778,3 +778,5 @@
 {"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-05T16:00:31.251Z"}
 {"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-05T16:01:11.789Z"}
 {"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-05T16:01:11.795Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-05T16:48:23.406Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-05T16:48:23.415Z"}
