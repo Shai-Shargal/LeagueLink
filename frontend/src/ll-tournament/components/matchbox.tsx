@@ -287,42 +287,6 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         onRemovePlayer={removeFromTeam2}
       />
 
-      <Box sx={{ mt: 0.5, display: "flex", alignItems: "center", gap: 0.25 }}>
-        <Typography sx={{ color: "#fff", fontSize: 10 }}>BO</Typography>
-        <TextField
-          type="number"
-          value={bestOf}
-          onChange={(e) => handleBestOfChange(Number(e.target.value))}
-          inputProps={{ min: 1, max: 9 }}
-          sx={{
-            input: {
-              backgroundColor: "transparent",
-              width: 24,
-              p: 0.25,
-              fontSize: 10,
-              textAlign: "center",
-              color: "#fff",
-              border: "1px solid rgba(255,255,255,0.2)",
-              borderRadius: 0.5,
-              "&:focus": {
-                borderColor: "rgba(255,255,255,0.4)",
-              },
-            },
-            "& .MuiOutlinedInput-root": {
-              "& fieldset": {
-                border: "none",
-              },
-              "&:hover fieldset": {
-                border: "none",
-              },
-              "&.Mui-focused fieldset": {
-                border: "none",
-              },
-            },
-          }}
-        />
-      </Box>
-
       <Dialog
         open={isSettingsOpen}
         onClose={handleSettingsClose}
@@ -352,37 +316,76 @@ const MatchBox: React.FC<MatchBoxProps> = ({
             <Grid container spacing={1}>
               {gameScores.map((game, index) => (
                 <Grid item xs={12} key={index}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Typography sx={{ minWidth: 60 }}>
-                      Game {index + 1}:
+                  <Box
+                    sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{ color: "text.secondary" }}
+                    >
+                      Game {index + 1}
                     </Typography>
-                    <TextField
-                      type="number"
-                      value={game.team1Score}
-                      onChange={(e) =>
-                        handleGameScoreChange(
-                          index,
-                          "team1",
-                          Number(e.target.value)
-                        )
-                      }
-                      size="small"
-                      sx={{ width: 60 }}
-                    />
-                    <Typography>-</Typography>
-                    <TextField
-                      type="number"
-                      value={game.team2Score}
-                      onChange={(e) =>
-                        handleGameScoreChange(
-                          index,
-                          "team2",
-                          Number(e.target.value)
-                        )
-                      }
-                      size="small"
-                      sx={{ width: 60 }}
-                    />
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "#3f51b5", fontWeight: 500 }}
+                        >
+                          {team1.length > 0
+                            ? team1.map((p) => p.name).join(", ")
+                            : "Team 1"}
+                        </Typography>
+                        <TextField
+                          type="number"
+                          value={game.team1Score}
+                          onChange={(e) =>
+                            handleGameScoreChange(
+                              index,
+                              "team1",
+                              Number(e.target.value)
+                            )
+                          }
+                          size="small"
+                          fullWidth
+                          sx={{
+                            mt: 0.5,
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "rgba(63, 81, 181, 0.1)",
+                            },
+                          }}
+                        />
+                      </Box>
+                      <Typography sx={{ px: 1 }}>vs</Typography>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography
+                          variant="caption"
+                          sx={{ color: "#d81b60", fontWeight: 500 }}
+                        >
+                          {team2.length > 0
+                            ? team2.map((p) => p.name).join(", ")
+                            : "Team 2"}
+                        </Typography>
+                        <TextField
+                          type="number"
+                          value={game.team2Score}
+                          onChange={(e) =>
+                            handleGameScoreChange(
+                              index,
+                              "team2",
+                              Number(e.target.value)
+                            )
+                          }
+                          size="small"
+                          fullWidth
+                          sx={{
+                            mt: 0.5,
+                            "& .MuiOutlinedInput-root": {
+                              backgroundColor: "rgba(216, 27, 96, 0.1)",
+                            },
+                          }}
+                        />
+                      </Box>
+                    </Box>
                   </Box>
                 </Grid>
               ))}
