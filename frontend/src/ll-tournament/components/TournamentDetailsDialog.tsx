@@ -97,7 +97,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
 
   const calculateNewMatchPosition = (): { x: number; y: number } => {
     if (matches.length === 0) {
-      return { x: 50, y: 50 }; // Center position for first match
+      return { x: 0, y: 0 }; // Center position for first match
     }
 
     // Calculate grid-like positions
