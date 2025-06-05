@@ -1,37 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
   List,
   ListItem,
+  ListItemText,
   ListItemAvatar,
   Avatar,
-  ListItemText,
-  Paper,
-  CircularProgress,
-  Alert,
+  Button,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
-import { Person as PersonIcon } from "@mui/icons-material";
+import {
+  Person as PersonIcon,
+  Add as AddIcon,
+  Close as CloseIcon,
+} from "@mui/icons-material";
 import { authService } from "../../services/api";
 
-interface TournamentUser {
-  _id: string;
-  username: string;
-  profilePicture?: string;
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  isGuest?: boolean;
 }
 
 interface TournamentUsersProps {
   channelId: string;
-  onUserSelect?: (user: TournamentUser) => void;
+  onUserSelect: (user: User) => void;
 }
 
 const TournamentUsers: React.FC<TournamentUsersProps> = ({
   channelId,
   onUserSelect,
 }) => {
-  const [users, setUsers] = useState<TournamentUser[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [guestUsers, setGuestUsers] = useState<User[]>([]);
+  const [guestCounter, setGuestCounter] = useState(1);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -39,7 +47,15 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
         setLoading(true);
         setError(null);
         const response = await authService.getChannel(channelId);
-        setUsers(response.data.members);
+        setUsers(
+          response.data.members.map((member: any) => ({
+            id: member._id,
+            name: member.username,
+            email: member.email || "",
+            avatar: member.profilePicture || null,
+            isGuest: false,
+          }))
+        );
       } catch (err) {
         setError("Failed to fetch channel members");
         console.error(err);
@@ -53,93 +69,122 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
     }
   }, [channelId]);
 
+  const handleAddGuest = () => {
+    const newGuest: User = {
+      id: `guest-${guestCounter}`,
+      name: `Guest User ${guestCounter}`,
+      email: `guest${guestCounter}@example.com`,
+      avatar: null,
+      isGuest: true,
+    };
+    setGuestUsers([...guestUsers, newGuest]);
+    setGuestCounter(guestCounter + 1);
+  };
+
+  const handleRemoveGuest = (guestId: string) => {
+    setGuestUsers(guestUsers.filter((guest) => guest.id !== guestId));
+  };
+
+  const allUsers = [...users, ...guestUsers];
+
   if (loading) {
-    return (
-      <Paper
-        elevation={0}
-        sx={{
-          backgroundColor: "rgba(255,255,255,0.05)",
-          p: 2,
-          borderRadius: 2,
-          height: "100%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress sx={{ color: "rgba(255,255,255,0.7)" }} />
-      </Paper>
-    );
+    return <Typography>Loading users...</Typography>;
   }
 
   if (error) {
-    return (
-      <Paper
-        elevation={0}
-        sx={{
-          backgroundColor: "rgba(255,255,255,0.05)",
-          p: 2,
-          borderRadius: 2,
-          height: "100%",
-        }}
-      >
-        <Alert
-          severity="error"
-          sx={{ backgroundColor: "transparent", color: "#f44336" }}
-        >
-          {error}
-        </Alert>
-      </Paper>
-    );
+    return <Typography color="error">Error loading users: {error}</Typography>;
   }
 
   return (
-    <Paper
-      elevation={0}
+    <Box
       sx={{
-        backgroundColor: "rgba(255,255,255,0.05)",
-        p: 2,
+        background: "rgba(255,255,255,0.03)",
         borderRadius: 2,
+        p: 2,
         height: "100%",
       }}
     >
-      <Typography variant="h6" sx={{ mb: 2, color: "rgba(255,255,255,0.9)" }}>
-        Tournament Participants
-      </Typography>
-
-      <List sx={{ width: "100%" }}>
-        {users.map((user) => (
-          <ListItem
-            key={user._id}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          Tournament Users
+        </Typography>
+        <Tooltip title="Add Guest User">
+          <IconButton
+            onClick={handleAddGuest}
             sx={{
-              cursor: onUserSelect ? "pointer" : "default",
-              "&:hover": onUserSelect
-                ? {
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    borderRadius: 1,
-                  }
-                : {},
+              color: "rgba(255,255,255,0.7)",
+              "&:hover": {
+                color: "rgba(255,255,255,0.9)",
+                background: "rgba(255,255,255,0.05)",
+              },
             }}
-            onClick={() => onUserSelect?.(user)}
+          >
+            <AddIcon />
+          </IconButton>
+        </Tooltip>
+      </Box>
+      <List sx={{ p: 0 }}>
+        {allUsers.map((user) => (
+          <ListItem
+            key={user.id}
+            button
+            onClick={() => onUserSelect(user)}
+            sx={{
+              borderRadius: 1,
+              mb: 0.5,
+              "&:hover": {
+                background: "rgba(255,255,255,0.05)",
+              },
+            }}
           >
             <ListItemAvatar>
               <Avatar
-                src={user.profilePicture}
-                sx={{ bgcolor: "rgba(255,255,255,0.1)" }}
+                src={user.avatar || undefined}
+                sx={{
+                  bgcolor: user.isGuest ? "primary.main" : "secondary.main",
+                }}
               >
-                {user.profilePicture ? null : <PersonIcon />}
+                {user.avatar ? null : <PersonIcon />}
               </Avatar>
             </ListItemAvatar>
             <ListItemText
-              primary={user.username}
+              primary={user.name}
+              secondary={user.isGuest ? "Guest User" : user.email}
               primaryTypographyProps={{
-                sx: { color: "rgba(255,255,255,0.9)" },
+                sx: { fontWeight: 500 },
+              }}
+              secondaryTypographyProps={{
+                sx: { color: "rgba(255,255,255,0.5)" },
               }}
             />
+            {user.isGuest && (
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveGuest(user.id);
+                }}
+                sx={{
+                  color: "rgba(255,255,255,0.5)",
+                  "&:hover": {
+                    color: "error.main",
+                  },
+                }}
+              >
+                <CloseIcon fontSize="small" />
+              </IconButton>
+            )}
           </ListItem>
         ))}
       </List>
-    </Paper>
+    </Box>
   );
 };
 
