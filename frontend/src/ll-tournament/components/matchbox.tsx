@@ -1,7 +1,22 @@
 import React, { useState } from "react";
 import { useDroppable, useDraggable } from "@dnd-kit/core";
-import { Box, Typography, IconButton, TextField } from "@mui/material";
-import { Delete, Close } from "@mui/icons-material";
+import {
+  Box,
+  Typography,
+  IconButton,
+  TextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid,
+} from "@mui/material";
+import { Delete, Close, Settings } from "@mui/icons-material";
 
 interface User {
   id: string;
@@ -78,15 +93,31 @@ const TeamSlot: React.FC<TeamSlotProps> = ({
   );
 };
 
+interface GameScore {
+  team1Score: number;
+  team2Score: number;
+}
+
 interface MatchBoxProps {
   id?: string;
   onRemove?: () => void;
+  position?: { x: number; y: number };
 }
 
-const MatchBox: React.FC<MatchBoxProps> = ({ id = "matchbox", onRemove }) => {
+const MatchBox: React.FC<MatchBoxProps> = ({
+  id = "matchbox",
+  onRemove,
+  position,
+}) => {
   const [team1, setTeam1] = useState<User[]>([]);
   const [team2, setTeam2] = useState<User[]>([]);
   const [bestOf, setBestOf] = useState<number>(3);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [matchStatus, setMatchStatus] = useState<string>("pending");
+  const [gameScores, setGameScores] = useState<GameScore[]>([
+    { team1Score: 0, team2Score: 0 },
+  ]);
+  const [winner, setWinner] = useState<string>("");
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
@@ -119,6 +150,48 @@ const MatchBox: React.FC<MatchBoxProps> = ({ id = "matchbox", onRemove }) => {
   const removeFromTeam2 = (id: string) =>
     setTeam2((prev) => prev.filter((u) => u.id !== id));
 
+  const handleSettingsClose = () => {
+    setIsSettingsOpen(false);
+  };
+
+  const handleBestOfChange = (newBestOf: number) => {
+    setBestOf(newBestOf);
+    // Adjust game scores array length
+    const newGameScores = Array(newBestOf)
+      .fill(null)
+      .map((_, index) => gameScores[index] || { team1Score: 0, team2Score: 0 });
+    setGameScores(newGameScores);
+  };
+
+  const handleGameScoreChange = (
+    gameIndex: number,
+    team: "team1" | "team2",
+    value: number
+  ) => {
+    const newGameScores = [...gameScores];
+    newGameScores[gameIndex] = {
+      ...newGameScores[gameIndex],
+      [`${team}Score`]: value,
+    };
+    setGameScores(newGameScores);
+
+    // Calculate winner based on game scores
+    const team1Wins = newGameScores.filter(
+      (game) => game.team1Score > game.team2Score
+    ).length;
+    const team2Wins = newGameScores.filter(
+      (game) => game.team2Score > game.team1Score
+    ).length;
+
+    if (team1Wins > bestOf / 2) {
+      setWinner("team1");
+    } else if (team2Wins > bestOf / 2) {
+      setWinner("team2");
+    } else {
+      setWinner("");
+    }
+  };
+
   return (
     <Box
       ref={setNodeRef}
@@ -137,32 +210,58 @@ const MatchBox: React.FC<MatchBoxProps> = ({ id = "matchbox", onRemove }) => {
         },
       }}
     >
-      <IconButton
-        size="small"
-        onClick={onRemove}
+      <Box
         sx={{
           position: "absolute",
           top: -6,
           right: -6,
-          backgroundColor: "#ff4444",
-          color: "#fff",
-          width: 16,
-          height: 16,
-          minWidth: 16,
-          "&:hover": {
-            backgroundColor: "#cc0000",
-          },
-          "& .MuiSvgIcon-root": {
-            fontSize: 12,
-          },
+          display: "flex",
+          gap: 0.5,
         }}
       >
-        <Close />
-      </IconButton>
+        <IconButton
+          size="small"
+          onClick={() => setIsSettingsOpen(true)}
+          sx={{
+            backgroundColor: "#2196f3",
+            color: "#fff",
+            width: 16,
+            height: 16,
+            minWidth: 16,
+            "&:hover": {
+              backgroundColor: "#1976d2",
+            },
+            "& .MuiSvgIcon-root": {
+              fontSize: 12,
+            },
+          }}
+        >
+          <Settings />
+        </IconButton>
+        <IconButton
+          size="small"
+          onClick={onRemove}
+          sx={{
+            backgroundColor: "#ff4444",
+            color: "#fff",
+            width: 16,
+            height: 16,
+            minWidth: 16,
+            "&:hover": {
+              backgroundColor: "#cc0000",
+            },
+            "& .MuiSvgIcon-root": {
+              fontSize: 12,
+            },
+          }}
+        >
+          <Close />
+        </IconButton>
+      </Box>
 
       <TeamSlot
         id="team1"
-        teamColor="#3f51b5"
+        teamColor={winner === "team1" ? "#4caf50" : "#3f51b5"}
         title="Team 1"
         players={team1}
         onRemovePlayer={removeFromTeam1}
@@ -182,7 +281,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({ id = "matchbox", onRemove }) => {
 
       <TeamSlot
         id="team2"
-        teamColor="#d81b60"
+        teamColor={winner === "team2" ? "#4caf50" : "#d81b60"}
         title="Team 2"
         players={team2}
         onRemovePlayer={removeFromTeam2}
@@ -193,19 +292,117 @@ const MatchBox: React.FC<MatchBoxProps> = ({ id = "matchbox", onRemove }) => {
         <TextField
           type="number"
           value={bestOf}
-          onChange={(e) => setBestOf(Number(e.target.value))}
+          onChange={(e) => handleBestOfChange(Number(e.target.value))}
           inputProps={{ min: 1, max: 9 }}
           sx={{
             input: {
-              backgroundColor: "#fff",
+              backgroundColor: "transparent",
               width: 24,
               p: 0.25,
               fontSize: 10,
               textAlign: "center",
+              color: "#fff",
+              border: "1px solid rgba(255,255,255,0.2)",
+              borderRadius: 0.5,
+              "&:focus": {
+                borderColor: "rgba(255,255,255,0.4)",
+              },
+            },
+            "& .MuiOutlinedInput-root": {
+              "& fieldset": {
+                border: "none",
+              },
+              "&:hover fieldset": {
+                border: "none",
+              },
+              "&.Mui-focused fieldset": {
+                border: "none",
+              },
             },
           }}
         />
       </Box>
+
+      <Dialog
+        open={isSettingsOpen}
+        onClose={handleSettingsClose}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Match Settings</DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Match Status</InputLabel>
+              <Select
+                value={matchStatus}
+                onChange={(e) => setMatchStatus(e.target.value)}
+                label="Match Status"
+              >
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="in_progress">In Progress</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+                <MenuItem value="cancelled">Cancelled</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Typography variant="subtitle2" sx={{ mt: 1 }}>
+              Game Scores
+            </Typography>
+            <Grid container spacing={1}>
+              {gameScores.map((game, index) => (
+                <Grid item xs={12} key={index}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography sx={{ minWidth: 60 }}>
+                      Game {index + 1}:
+                    </Typography>
+                    <TextField
+                      type="number"
+                      value={game.team1Score}
+                      onChange={(e) =>
+                        handleGameScoreChange(
+                          index,
+                          "team1",
+                          Number(e.target.value)
+                        )
+                      }
+                      size="small"
+                      sx={{ width: 60 }}
+                    />
+                    <Typography>-</Typography>
+                    <TextField
+                      type="number"
+                      value={game.team2Score}
+                      onChange={(e) =>
+                        handleGameScoreChange(
+                          index,
+                          "team2",
+                          Number(e.target.value)
+                        )
+                      }
+                      size="small"
+                      sx={{ width: 60 }}
+                    />
+                  </Box>
+                </Grid>
+              ))}
+            </Grid>
+
+            <TextField
+              label="Best of"
+              type="number"
+              value={bestOf}
+              onChange={(e) => handleBestOfChange(Number(e.target.value))}
+              inputProps={{ min: 1, max: 9 }}
+              size="small"
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleSettingsClose}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

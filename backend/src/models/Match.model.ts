@@ -21,7 +21,7 @@ export interface IMatch extends Document {
     y: number;
   };
   nextMatchId?: mongoose.Types.ObjectId;
-  status: "PENDING" | "IN_PROGRESS" | "COMPLETED";
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   winner?: mongoose.Types.ObjectId;
   stats: Record<string, any>;
 }

@@ -75,12 +75,16 @@ const DroppableBox: React.FC<{
             key={match.id}
             sx={{
               position: "absolute",
-              left: match.position.x,
-              top: match.position.y,
+              left: `${match.position.x}%`,
+              top: `${match.position.y}%`,
               transform: "translate(-50%, -50%)",
             }}
           >
-            <MatchBox id={match.id} onRemove={() => onRemoveMatch(match.id)} />
+            <MatchBox
+              id={match.id}
+              onRemove={() => onRemoveMatch(match.id)}
+              position={match.position}
+            />
           </Box>
         ))
       )}
@@ -105,10 +109,28 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
     })
   );
 
+  const calculateNewMatchPosition = (): { x: number; y: number } => {
+    if (matches.length === 0) {
+      return { x: 50, y: 50 }; // Center position for first match
+    }
+
+    // Calculate grid-like positions
+    const gridSize = Math.ceil(Math.sqrt(matches.length + 1));
+    const newIndex = matches.length;
+    const row = Math.floor(newIndex / gridSize);
+    const col = newIndex % gridSize;
+
+    // Calculate percentage positions (20% padding from edges)
+    const x = 20 + (col * 60) / (gridSize - 1);
+    const y = 20 + (row * 60) / (gridSize - 1);
+
+    return { x, y };
+  };
+
   const handleCreateMatch = () => {
     const newMatch: Match = {
       id: `match-${Date.now()}`,
-      position: { x: 50, y: 50 }, // Default position in the center
+      position: calculateNewMatchPosition(),
     };
     setMatches((prev) => [...prev, newMatch]);
     setCanUndo(true);
@@ -140,20 +162,32 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
 
     if (over && active.id !== over.id) {
       if (over.id === "matches-container") {
-        // Update match position
-        setMatches((prev) =>
-          prev.map((match) =>
-            match.id === active.id
-              ? {
-                  ...match,
-                  position: {
-                    x: event.delta.x + match.position.x,
-                    y: event.delta.y + match.position.y,
-                  },
-                }
-              : match
-          )
-        );
+        const containerRect = over.rect;
+        const activeRect = active.rect;
+
+        if (containerRect && activeRect) {
+          // Calculate position as percentage of container
+          const x =
+            ((activeRect.left - containerRect.left + activeRect.width / 2) /
+              containerRect.width) *
+            100;
+          const y =
+            ((activeRect.top - containerRect.top + activeRect.height / 2) /
+              containerRect.height) *
+            100;
+
+          // Update match position
+          setMatches((prev) =>
+            prev.map((match) =>
+              match.id === active.id
+                ? {
+                    ...match,
+                    position: { x, y },
+                  }
+                : match
+            )
+          );
+        }
       }
     }
   };
