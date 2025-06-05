@@ -29,61 +29,7 @@ interface TournamentDetailsDialogProps {
 
 interface Match {
   id: string;
-  position: { x: number; y: number };
 }
-
-const DroppableBox: React.FC<{
-  matches: Match[];
-  onRemoveMatch: (id: string) => void;
-  tournamentUsers: User[];
-}> = ({ matches, onRemoveMatch, tournamentUsers }) => {
-  return (
-    <Box
-      sx={{
-        flex: 1.5,
-        background: "rgba(255,255,255,0.03)",
-        borderRadius: 2,
-        border: "1.5px dashed #444",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "#aaa",
-        fontSize: 26,
-        fontWeight: 600,
-        letterSpacing: 1,
-        minHeight: "60vh",
-        p: 3,
-        transition: "all 0.2s ease",
-        position: "relative",
-        "&:hover": {
-          borderColor: "#666",
-          background: "rgba(255,255,255,0.05)",
-        },
-      }}
-    >
-      {matches.length === 0 ? (
-        <Typography>Drop matches here</Typography>
-      ) : (
-        matches.map((match) => (
-          <Box
-            key={match.id}
-            sx={{
-              position: "relative",
-              m: 1,
-            }}
-          >
-            <MatchBox
-              id={match.id}
-              onRemove={() => onRemoveMatch(match.id)}
-              position={match.position}
-              tournamentUsers={tournamentUsers}
-            />
-          </Box>
-        ))
-      )}
-    </Box>
-  );
-};
 
 const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   open,
@@ -95,28 +41,9 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const [canRedo, setCanRedo] = useState(false);
   const [tournamentUsers, setTournamentUsers] = useState<User[]>([]);
 
-  const calculateNewMatchPosition = (): { x: number; y: number } => {
-    if (matches.length === 0) {
-      return { x: 0, y: 0 }; // Center position for first match
-    }
-
-    // Calculate grid-like positions
-    const gridSize = Math.ceil(Math.sqrt(matches.length + 1));
-    const newIndex = matches.length;
-    const row = Math.floor(newIndex / gridSize);
-    const col = newIndex % gridSize;
-
-    // Calculate percentage positions (20% padding from edges)
-    const x = 20 + (col * 60) / (gridSize - 1);
-    const y = 20 + (row * 60) / (gridSize - 1);
-
-    return { x, y };
-  };
-
   const handleCreateMatch = () => {
     const newMatch: Match = {
       id: `match-${Date.now()}`,
-      position: calculateNewMatchPosition(),
     };
     setMatches((prev) => [...prev, newMatch]);
     setCanUndo(true);
@@ -211,12 +138,6 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
                 canRedo={canRedo}
               />
             </Box>
-
-            <DroppableBox
-              matches={matches}
-              onRemoveMatch={handleRemoveMatch}
-              tournamentUsers={tournamentUsers}
-            />
           </Box>
 
           {/* Right side: Users list */}
