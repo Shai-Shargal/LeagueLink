@@ -35,7 +35,7 @@ const DroppableBox: React.FC = () => {
     <Box
       ref={setNodeRef}
       sx={{
-        flex: 1,
+        flex: 1.5,
         background: isOver
           ? "rgba(255,255,255,0.05)"
           : "rgba(255,255,255,0.03)",
@@ -78,29 +78,24 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   );
 
   const handleCreateMatch = () => {
-    // TODO: Implement match creation logic
     console.log("Create match clicked");
   };
 
   const handleUndo = () => {
-    // TODO: Implement undo logic
     console.log("Undo clicked");
   };
 
   const handleRedo = () => {
-    // TODO: Implement redo logic
     console.log("Redo clicked");
   };
 
   const handleUserSelect = (user: any) => {
-    // TODO: Implement user selection logic
     console.log("User selected:", user);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      // TODO: Handle the drop logic here
       console.log("Dropped item:", active.id, "into:", over.id);
     }
   };
@@ -133,6 +128,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
           <CloseIcon />
         </IconButton>
       </DialogTitle>
+
       <DialogContent>
         <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <Box
@@ -143,16 +139,20 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
               height: "100%",
             }}
           >
-            {/* שמאל: Toolbar + Matches (Drop Area) */}
+            {/* Left side: Toolbar + Drop area */}
             <Box
-              sx={{ flex: 2, display: "flex", flexDirection: "column", gap: 2 }}
+              sx={{
+                flex: 2,
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}
             >
-              {/* Toolbar */}
               <Box
                 sx={{
                   backgroundColor: "rgba(255,255,255,0.05)",
                   borderRadius: 2,
-                  p: 2,
+                  p: 1,
                 }}
               >
                 <TournamentToolbar
@@ -164,12 +164,18 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
                 />
               </Box>
 
-              {/* Drop area */}
               <DroppableBox />
             </Box>
 
-            {/* ימין: משתמשים */}
-            <Box sx={{ flex: 1 }}>
+            {/* Right side: Users list */}
+            <Box
+              sx={{
+                flex: 1,
+                alignSelf: "flex-start",
+                maxHeight: "60vh",
+                overflowY: "auto",
+              }}
+            >
               <TournamentUsers
                 channelId={tournament.channelId}
                 onUserSelect={handleUserSelect}
