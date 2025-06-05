@@ -8,6 +8,14 @@ import {
   Typography,
 } from "@mui/material";
 import { Close as CloseIcon } from "@mui/icons-material";
+import {
+  DndContext,
+  useSensor,
+  useSensors,
+  PointerSensor,
+  DragEndEvent,
+  useDroppable,
+} from "@dnd-kit/core";
 import TournamentToolbar from "./TournamentToolbar";
 import TournamentUsers from "./TournamentUsers";
 import { Tournament } from "../../services/tournamentService";
@@ -18,6 +26,41 @@ interface TournamentDetailsDialogProps {
   tournament: Omit<Tournament, "_id"> & { id: string };
 }
 
+const DroppableBox: React.FC = () => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: "matches-container",
+  });
+
+  return (
+    <Box
+      ref={setNodeRef}
+      sx={{
+        flex: 1,
+        background: isOver
+          ? "rgba(255,255,255,0.05)"
+          : "rgba(255,255,255,0.03)",
+        borderRadius: 2,
+        border: "1.5px dashed #444",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "#888",
+        fontSize: 22,
+        fontWeight: 500,
+        letterSpacing: 1,
+        minHeight: "40vh",
+        transition: "all 0.2s ease",
+        "&:hover": {
+          borderColor: "#666",
+          background: "rgba(255,255,255,0.05)",
+        },
+      }}
+    >
+      <Typography>Drop matches here</Typography>
+    </Box>
+  );
+};
+
 const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   open,
   onClose,
@@ -25,6 +68,14 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
 }) => {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    })
+  );
 
   const handleCreateMatch = () => {
     // TODO: Implement match creation logic
@@ -44,6 +95,14 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const handleUserSelect = (user: any) => {
     // TODO: Implement user selection logic
     console.log("User selected:", user);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      // TODO: Handle the drop logic here
+      console.log("Dropped item:", active.id, "into:", over.id);
+    }
   };
 
   return (
@@ -75,61 +134,49 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
         </IconButton>
       </DialogTitle>
       <DialogContent>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+        <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
           <Box
             sx={{
-              flex: 1,
               display: "flex",
-              flexDirection: "column",
-              gap: 2,
-              minWidth: 0,
+              flexDirection: "row",
+              gap: 3,
+              height: "100%",
             }}
           >
+            {/* שמאל: Toolbar + Matches (Drop Area) */}
             <Box
-              sx={{
-                mb: 1,
-                background: "rgba(255,255,255,0.03)",
-                borderRadius: 2,
-                boxShadow: "0 1px 4px 0 rgba(0,0,0,0.10)",
-                border: "1px solid rgba(255,255,255,0.05)",
-                p: 0.5,
-                width: "100%",
-                maxWidth: 280,
-                flex: 0,
-              }}
+              sx={{ flex: 2, display: "flex", flexDirection: "column", gap: 2 }}
             >
-              <TournamentToolbar
-                onCreateMatch={handleCreateMatch}
-                onUndo={handleUndo}
-                onRedo={handleRedo}
-                canUndo={canUndo}
-                canRedo={canRedo}
+              {/* Toolbar */}
+              <Box
+                sx={{
+                  backgroundColor: "rgba(255,255,255,0.05)",
+                  borderRadius: 2,
+                  p: 2,
+                }}
+              >
+                <TournamentToolbar
+                  onCreateMatch={handleCreateMatch}
+                  onUndo={handleUndo}
+                  onRedo={handleRedo}
+                  canUndo={canUndo}
+                  canRedo={canRedo}
+                />
+              </Box>
+
+              {/* Drop area */}
+              <DroppableBox />
+            </Box>
+
+            {/* ימין: משתמשים */}
+            <Box sx={{ flex: 1 }}>
+              <TournamentUsers
+                channelId={tournament.channelId}
+                onUserSelect={handleUserSelect}
               />
             </Box>
-            <Box
-              sx={{
-                flex: 2,
-                minHeight: "44vh",
-                background: "rgba(255,255,255,0.02)",
-                border: "1.5px dashed #444",
-                borderRadius: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#888",
-                fontSize: 22,
-                fontWeight: 500,
-                letterSpacing: 1,
-              }}
-            >
-              Matches will be displayed here soon
-            </Box>
           </Box>
-          <TournamentUsers
-            channelId={tournament.channelId}
-            onUserSelect={handleUserSelect}
-          />
-        </Box>
+        </DndContext>
       </DialogContent>
     </Dialog>
   );
