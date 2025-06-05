@@ -15,12 +15,17 @@ import {
   FormControl,
   InputLabel,
   Grid,
+  Autocomplete,
+  Chip,
 } from "@mui/material";
 import { Delete, Close, Settings } from "@mui/icons-material";
 
 interface User {
   id: string;
   name: string;
+  email: string;
+  avatar: string | null;
+  isGuest?: boolean;
 }
 
 interface TeamSlotProps {
@@ -102,12 +107,14 @@ interface MatchBoxProps {
   id?: string;
   onRemove?: () => void;
   position?: { x: number; y: number };
+  tournamentUsers?: User[];
 }
 
 const MatchBox: React.FC<MatchBoxProps> = ({
   id = "matchbox",
   onRemove,
   position,
+  tournamentUsers = [],
 }) => {
   const [team1, setTeam1] = useState<User[]>([]);
   const [team2, setTeam2] = useState<User[]>([]);
@@ -190,6 +197,37 @@ const MatchBox: React.FC<MatchBoxProps> = ({
     } else {
       setWinner("");
     }
+  };
+
+  const handleTeamMemberChange = (
+    team: "team1" | "team2",
+    newMembers: User[]
+  ) => {
+    if (team === "team1") {
+      setTeam1(newMembers);
+    } else {
+      setTeam2(newMembers);
+    }
+  };
+
+  const isUserInAnyTeam = (userId: string) => {
+    return (
+      team1.some((p) => p.id === userId) || team2.some((p) => p.id === userId)
+    );
+  };
+
+  const getAvailableUsers = (currentTeam: "team1" | "team2") => {
+    return tournamentUsers.filter((user) => {
+      const isInCurrentTeam =
+        currentTeam === "team1"
+          ? team1.some((p) => p.id === user.id)
+          : team2.some((p) => p.id === user.id);
+      const isInOtherTeam =
+        currentTeam === "team1"
+          ? team2.some((p) => p.id === user.id)
+          : team1.some((p) => p.id === user.id);
+      return isInCurrentTeam || !isInOtherTeam;
+    });
   };
 
   return (
@@ -310,6 +348,78 @@ const MatchBox: React.FC<MatchBoxProps> = ({
               </Select>
             </FormControl>
 
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1, color: "#3f51b5" }}
+                >
+                  Team 1 Members
+                </Typography>
+                <Autocomplete
+                  multiple
+                  options={getAvailableUsers("team1")}
+                  value={team1}
+                  onChange={(_, newValue) =>
+                    handleTeamMemberChange("team1", newValue)
+                  }
+                  getOptionLabel={(option) => option.name}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      placeholder="Add team members"
+                    />
+                  )}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        label={option.name}
+                        {...getTagProps({ index })}
+                        size="small"
+                        sx={{ backgroundColor: "rgba(63, 81, 181, 0.1)" }}
+                      />
+                    ))
+                  }
+                />
+              </Box>
+
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{ mb: 1, color: "#d81b60" }}
+                >
+                  Team 2 Members
+                </Typography>
+                <Autocomplete
+                  multiple
+                  options={getAvailableUsers("team2")}
+                  value={team2}
+                  onChange={(_, newValue) =>
+                    handleTeamMemberChange("team2", newValue)
+                  }
+                  getOptionLabel={(option) => option.name}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      size="small"
+                      placeholder="Add team members"
+                    />
+                  )}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        label={option.name}
+                        {...getTagProps({ index })}
+                        size="small"
+                        sx={{ backgroundColor: "rgba(216, 27, 96, 0.1)" }}
+                      />
+                    ))
+                  }
+                />
+              </Box>
+            </Box>
+
             <Typography variant="subtitle2" sx={{ mt: 1 }}>
               Game Scores
             </Typography>
@@ -395,10 +505,21 @@ const MatchBox: React.FC<MatchBoxProps> = ({
               label="Best of"
               type="number"
               value={bestOf}
-              onChange={(e) => handleBestOfChange(Number(e.target.value))}
-              inputProps={{ min: 1, max: 9 }}
+              onChange={(e) => {
+                const value = Number(e.target.value);
+                // Only allow odd numbers between 1 and 9
+                if (value >= 1 && value <= 9 && value % 2 === 1) {
+                  handleBestOfChange(value);
+                }
+              }}
+              inputProps={{
+                min: 1,
+                max: 9,
+                step: 2, // This will make the number input increment by 2
+              }}
               size="small"
               fullWidth
+              helperText="Must be an odd number (1, 3, 5, 7, 9)"
             />
           </Box>
         </DialogContent>

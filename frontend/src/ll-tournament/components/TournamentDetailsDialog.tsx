@@ -21,6 +21,14 @@ import TournamentUsers from "./TournamentUsers";
 import MatchBox from "./matchbox";
 import { Tournament } from "../../services/tournamentService";
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  isGuest?: boolean;
+}
+
 interface TournamentDetailsDialogProps {
   open: boolean;
   onClose: () => void;
@@ -35,7 +43,8 @@ interface Match {
 const DroppableBox: React.FC<{
   matches: Match[];
   onRemoveMatch: (id: string) => void;
-}> = ({ matches, onRemoveMatch }) => {
+  tournamentUsers: User[];
+}> = ({ matches, onRemoveMatch, tournamentUsers }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: "matches-container",
   });
@@ -84,6 +93,7 @@ const DroppableBox: React.FC<{
               id={match.id}
               onRemove={() => onRemoveMatch(match.id)}
               position={match.position}
+              tournamentUsers={tournamentUsers}
             />
           </Box>
         ))
@@ -100,6 +110,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const [matches, setMatches] = useState<Match[]>([]);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
+  const [tournamentUsers, setTournamentUsers] = useState<User[]>([]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -153,8 +164,15 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
     setCanRedo(false);
   };
 
-  const handleUserSelect = (user: any) => {
-    console.log("User selected:", user);
+  const handleUserSelect = (user: User) => {
+    setTournamentUsers((prev) => {
+      // If user is already selected, remove them
+      if (prev.some((u) => u.id === user.id)) {
+        return prev.filter((u) => u.id !== user.id);
+      }
+      // Otherwise add them
+      return [...prev, user];
+    });
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -165,7 +183,12 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
         const containerRect = over.rect;
         const activeRect = active.rect;
 
-        if (containerRect && activeRect) {
+        if (
+          containerRect &&
+          activeRect &&
+          "left" in containerRect &&
+          "left" in activeRect
+        ) {
           // Calculate position as percentage of container
           const x =
             ((activeRect.left - containerRect.left + activeRect.width / 2) /
@@ -258,6 +281,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
               <DroppableBox
                 matches={matches}
                 onRemoveMatch={handleRemoveMatch}
+                tournamentUsers={tournamentUsers}
               />
             </Box>
 
