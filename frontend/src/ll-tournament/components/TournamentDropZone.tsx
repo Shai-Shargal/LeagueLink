@@ -10,9 +10,19 @@ import { Box } from "@mui/material";
 import Xarrow, { Xwrapper } from "react-xarrows";
 import MatchBox from "./matchbox";
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string | null;
+  isGuest?: boolean;
+}
+
 interface Match {
   id: string;
   position: { x: number; y: number };
+  round: number;
+  matchNumber: number;
 }
 
 interface Connection {
@@ -22,6 +32,7 @@ interface Connection {
 
 interface TournamentDropZoneProps {
   matches: Match[];
+  tournamentUsers: User[];
   onMatchAdd: (match: Match) => void;
   onMatchRemove: (matchId: string) => void;
   onConnectionAdd: (connection: Connection) => void;
@@ -30,6 +41,7 @@ interface TournamentDropZoneProps {
 
 const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   matches,
+  tournamentUsers,
   onMatchAdd,
   onMatchRemove,
   onConnectionAdd,
@@ -63,9 +75,13 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
 
     // If it's a new match being dropped
     if (!over && active.data.current?.type === "matchbox") {
+      const round = Math.floor(matches.length / 2) + 1;
+      const matchNumber = matches.length + 1;
       onMatchAdd({
         id: active.id as string,
         position: { x: delta.x, y: delta.y },
+        round,
+        matchNumber,
       });
     }
   };
@@ -123,6 +139,7 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
               onRemove={() => onMatchRemove(match.id)}
               onClick={() => handleMatchClick(match.id)}
               isSelected={match.id === selectedMatch}
+              tournamentUsers={tournamentUsers}
             />
           ))}
 
