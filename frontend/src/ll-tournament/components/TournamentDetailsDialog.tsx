@@ -10,7 +10,7 @@ import {
 import { Close as CloseIcon } from "@mui/icons-material";
 import TournamentToolbar from "./TournamentToolbar";
 import TournamentUsers from "./TournamentUsers";
-import MatchBox from "./matchbox";
+import TournamentDropZone from "./TournamentDropZone";
 import { Tournament } from "../../services/tournamentService";
 
 interface User {
@@ -138,8 +138,8 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
                 canRedo={canRedo}
               />
             </Box>
+            <TournamentDropZone />
           </Box>
-
           {/* Right side: Users list */}
           <Box
             sx={{
