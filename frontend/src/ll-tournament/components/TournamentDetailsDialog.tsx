@@ -189,6 +189,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
             <TournamentDropZone
               matches={matches}
               tournamentUsers={tournamentUsers}
+              tournamentId={tournament.id}
               onMatchAdd={handleMatchAdd}
               onMatchRemove={handleMatchRemove}
               onConnectionAdd={handleConnectionAdd}

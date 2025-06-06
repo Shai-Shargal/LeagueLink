@@ -11,6 +11,11 @@ export interface ITeam {
   score: number;
 }
 
+export interface IGameScore {
+  team1Score: number;
+  team2Score: number;
+}
+
 export interface IMatch extends Document {
   tournamentId: mongoose.Types.ObjectId;
   team1: ITeam;
@@ -20,10 +25,13 @@ export interface IMatch extends Document {
     x: number;
     y: number;
   };
+  round: number;
+  matchNumber: number;
   nextMatchId?: mongoose.Types.ObjectId;
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   winner?: mongoose.Types.ObjectId;
-  stats: Record<string, any>;
+  gameScores: IGameScore[];
+  stats?: Record<string, any>;
 }
 
 const matchSchema = new Schema<IMatch>(
@@ -89,23 +97,45 @@ const matchSchema = new Schema<IMatch>(
         required: true,
       },
     },
+    round: {
+      type: Number,
+      required: [true, "Round number is required"],
+      min: 1,
+    },
+    matchNumber: {
+      type: Number,
+      required: [true, "Match number is required"],
+      min: 1,
+    },
     nextMatchId: {
       type: Schema.Types.ObjectId,
       ref: "Match",
     },
     status: {
       type: String,
-      enum: ["PENDING", "IN_PROGRESS", "COMPLETED"],
+      enum: ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
       default: "PENDING",
     },
     winner: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+    gameScores: [
+      {
+        team1Score: {
+          type: Number,
+          default: 0,
+        },
+        team2Score: {
+          type: Number,
+          default: 0,
+        },
+      },
+    ],
     stats: {
       type: Map,
       of: Schema.Types.Mixed,
-      default: {},
+      required: false,
     },
   },
   {
@@ -117,5 +147,6 @@ const matchSchema = new Schema<IMatch>(
 matchSchema.index({ tournamentId: 1 });
 matchSchema.index({ nextMatchId: 1 });
 matchSchema.index({ status: 1 });
+matchSchema.index({ round: 1, matchNumber: 1 });
 
 export const Match = mongoose.model<IMatch>("Match", matchSchema);

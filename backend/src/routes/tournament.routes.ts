@@ -135,7 +135,6 @@ router.delete("/:id", protect, async (req, res) => {
 
 // Add a match to a tournament
 router.post("/:id/matches", async (req, res) => {
-  console.log("test");
   try {
     const tournament = await Tournament.findById(req.params.id);
     if (!tournament) {
@@ -144,7 +143,54 @@ router.post("/:id/matches", async (req, res) => {
         .json({ success: false, error: "Tournament not found" });
     }
 
-    const match = new Match({ ...req.body, tournamentId: tournament._id });
+    // Validate required fields
+    const requiredFields = [
+      "team1",
+      "team2",
+      "bestOf",
+      "position",
+      "round",
+      "matchNumber",
+    ];
+    for (const field of requiredFields) {
+      if (!req.body[field]) {
+        return res.status(400).json({
+          success: false,
+          error: `Missing required field: ${field}`,
+        });
+      }
+    }
+
+    // Create match with all fields
+    const match = new Match({
+      tournamentId: tournament._id,
+      team1: {
+        players: req.body.team1.players.map((player: any) => ({
+          userId: player.userId,
+          username: player.username,
+          profilePicture: player.profilePicture,
+        })),
+        score: req.body.team1.score || 0,
+      },
+      team2: {
+        players: req.body.team2.players.map((player: any) => ({
+          userId: player.userId,
+          username: player.username,
+          profilePicture: player.profilePicture,
+        })),
+        score: req.body.team2.score || 0,
+      },
+      bestOf: req.body.bestOf,
+      position: req.body.position,
+      round: req.body.round,
+      matchNumber: req.body.matchNumber,
+      nextMatchId: req.body.nextMatchId,
+      status: req.body.status || "PENDING",
+      winner: req.body.winner,
+      gameScores: req.body.gameScores || [],
+      stats: req.body.stats,
+    });
+
     await match.save();
 
     tournament.matchIds.push(match._id as mongoose.Types.ObjectId);
@@ -152,7 +198,12 @@ router.post("/:id/matches", async (req, res) => {
 
     res.status(201).json({ success: true, data: match });
   } catch (error: any) {
-    res.status(400).json({ success: false, error: error.message });
+    console.error("Error creating match:", error);
+    res.status(400).json({
+      success: false,
+      error: error.message,
+      details: error.errors, // Include validation errors if any
+    });
   }
 });
 

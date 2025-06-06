@@ -18,8 +18,11 @@ import {
   Autocomplete,
   Chip,
   Avatar,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { Delete, Close, Settings } from "@mui/icons-material";
+import { Delete, Close, Settings, Save } from "@mui/icons-material";
+import axios from "axios";
 
 interface User {
   id: string;
@@ -111,6 +114,9 @@ interface MatchBoxProps {
   tournamentUsers?: User[];
   onClick?: () => void;
   isSelected?: boolean;
+  tournamentId?: string;
+  round?: number;
+  matchNumber?: number;
 }
 
 const MatchBox: React.FC<MatchBoxProps> = ({
@@ -120,6 +126,9 @@ const MatchBox: React.FC<MatchBoxProps> = ({
   tournamentUsers = [],
   onClick,
   isSelected = false,
+  tournamentId,
+  round = 1,
+  matchNumber = 1,
 }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
@@ -145,6 +154,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
     { team1Score: 0, team2Score: 0 },
   ]);
   const [winner, setWinner] = useState<string>("");
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const isInAnyTeam = (id: string) =>
     team1.some((u) => u.id === id) || team2.some((u) => u.id === id);
@@ -222,104 +233,159 @@ const MatchBox: React.FC<MatchBoxProps> = ({
     });
   };
 
+  const handleSave = async () => {
+    if (!tournamentId) {
+      setSaveError("Tournament ID is required");
+      return;
+    }
+
+    try {
+      const matchData = {
+        team1: {
+          players: team1.map((player) => ({
+            userId: player.id,
+            username: player.name,
+            profilePicture: player.avatar,
+          })),
+          score: gameScores.reduce((sum, game) => sum + game.team1Score, 0),
+        },
+        team2: {
+          players: team2.map((player) => ({
+            userId: player.id,
+            username: player.name,
+            profilePicture: player.avatar,
+          })),
+          score: gameScores.reduce((sum, game) => sum + game.team2Score, 0),
+        },
+        bestOf,
+        position,
+        round,
+        matchNumber,
+        status: matchStatus.toUpperCase(),
+        gameScores,
+        winner: winner
+          ? winner === "team1"
+            ? team1[0]?.id
+            : team2[0]?.id
+          : undefined,
+      };
+
+      const response = await axios.post(
+        `http://localhost:5000/api/tournaments/${tournamentId}/matches`,
+        matchData
+      );
+
+      if (response.data.success) {
+        setSaveSuccess(true);
+        setIsSettingsOpen(false);
+      } else {
+        setSaveError(response.data.error || "Failed to save match");
+      }
+    } catch (error: any) {
+      setSaveError(error.response?.data?.error || "Failed to save match");
+    }
+  };
+
   return (
-    <Box
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      onClick={onClick}
-      sx={{
-        backgroundColor: "#1a1a2e",
-        p: 0.75,
-        borderRadius: 1,
-        width: 140,
-        position: "absolute",
-        cursor: "grab",
-        border: isSelected ? "2px solid #2196f3" : "none",
-        boxShadow: isSelected ? "0 0 10px rgba(33, 150, 243, 0.5)" : "none",
-        ...style,
-      }}
-    >
+    <>
       <Box
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+        onClick={onClick}
         sx={{
+          backgroundColor: "#1a1a2e",
+          p: 0.75,
+          borderRadius: 1,
+          width: 140,
           position: "absolute",
-          top: -6,
-          right: -6,
-          display: "flex",
-          gap: 0.5,
+          cursor: "grab",
+          border: isSelected ? "2px solid #2196f3" : "none",
+          boxShadow: isSelected ? "0 0 10px rgba(33, 150, 243, 0.5)" : "none",
+          ...style,
         }}
       >
-        <IconButton
-          size="small"
-          onClick={() => setIsSettingsOpen(true)}
+        <Box
           sx={{
-            backgroundColor: "#2196f3",
-            color: "#fff",
-            width: 16,
-            height: 16,
-            minWidth: 16,
-            "&:hover": {
-              backgroundColor: "#1976d2",
-            },
-            "& .MuiSvgIcon-root": {
-              fontSize: 12,
-            },
+            position: "absolute",
+            top: -6,
+            right: -6,
+            display: "flex",
+            gap: 0.5,
           }}
         >
-          <Settings />
-        </IconButton>
-        <IconButton
-          size="small"
-          onClick={onRemove}
+          <IconButton
+            size="small"
+            onClick={() => setIsSettingsOpen(true)}
+            sx={{
+              backgroundColor: "#2196f3",
+              color: "#fff",
+              width: 16,
+              height: 16,
+              minWidth: 16,
+              "&:hover": {
+                backgroundColor: "#1976d2",
+              },
+              "& .MuiSvgIcon-root": {
+                fontSize: 12,
+              },
+            }}
+          >
+            <Settings />
+          </IconButton>
+          <IconButton
+            size="small"
+            onClick={onRemove}
+            sx={{
+              backgroundColor: "#ff4444",
+              color: "#fff",
+              width: 16,
+              height: 16,
+              minWidth: 16,
+              "&:hover": {
+                backgroundColor: "#cc0000",
+              },
+              "& .MuiSvgIcon-root": {
+                fontSize: 12,
+              },
+            }}
+          >
+            <Close />
+          </IconButton>
+        </Box>
+
+        <TeamSlot
+          id="team1"
+          teamColor={winner === "team1" ? "#4caf50" : "#3f51b5"}
+          title="Team 1"
+          players={team1}
+          onRemovePlayer={(id) =>
+            setTeam1((prev) => prev.filter((u) => u.id !== id))
+          }
+        />
+
+        <Typography
           sx={{
-            backgroundColor: "#ff4444",
-            color: "#fff",
-            width: 16,
-            height: 16,
-            minWidth: 16,
-            "&:hover": {
-              backgroundColor: "#cc0000",
-            },
-            "& .MuiSvgIcon-root": {
-              fontSize: 12,
-            },
+            textAlign: "center",
+            color: "#aaa",
+            fontSize: 10,
+            my: 0.25,
+            fontWeight: 500,
           }}
         >
-          <Close />
-        </IconButton>
+          VS
+        </Typography>
+
+        <TeamSlot
+          id="team2"
+          teamColor={winner === "team2" ? "#4caf50" : "#d81b60"}
+          title="Team 2"
+          players={team2}
+          onRemovePlayer={(id) =>
+            setTeam2((prev) => prev.filter((u) => u.id !== id))
+          }
+        />
       </Box>
-
-      <TeamSlot
-        id="team1"
-        teamColor={winner === "team1" ? "#4caf50" : "#3f51b5"}
-        title="Team 1"
-        players={team1}
-        onRemovePlayer={(id) =>
-          setTeam1((prev) => prev.filter((u) => u.id !== id))
-        }
-      />
-
-      <Typography
-        sx={{
-          textAlign: "center",
-          color: "#aaa",
-          fontSize: 10,
-          my: 0.25,
-          fontWeight: 500,
-        }}
-      >
-        VS
-      </Typography>
-
-      <TeamSlot
-        id="team2"
-        teamColor={winner === "team2" ? "#4caf50" : "#d81b60"}
-        title="Team 2"
-        players={team2}
-        onRemovePlayer={(id) =>
-          setTeam2((prev) => prev.filter((u) => u.id !== id))
-        }
-      />
 
       <Dialog
         open={isSettingsOpen}
@@ -520,10 +586,38 @@ const MatchBox: React.FC<MatchBoxProps> = ({
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleSettingsClose}>Close</Button>
+          <Button onClick={handleSettingsClose}>Cancel</Button>
+          <Button
+            onClick={handleSave}
+            variant="contained"
+            startIcon={<Save />}
+            color="primary"
+          >
+            Save Match
+          </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+
+      <Snackbar
+        open={!!saveError}
+        autoHideDuration={6000}
+        onClose={() => setSaveError(null)}
+      >
+        <Alert severity="error" onClose={() => setSaveError(null)}>
+          {saveError}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={saveSuccess}
+        autoHideDuration={3000}
+        onClose={() => setSaveSuccess(false)}
+      >
+        <Alert severity="success" onClose={() => setSaveSuccess(false)}>
+          Match saved successfully!
+        </Alert>
+      </Snackbar>
+    </>
   );
 };
 

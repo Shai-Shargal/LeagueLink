@@ -33,6 +33,7 @@ interface Connection {
 interface TournamentDropZoneProps {
   matches: Match[];
   tournamentUsers: User[];
+  tournamentId: string;
   onMatchAdd: (match: Match) => void;
   onMatchRemove: (matchId: string) => void;
   onConnectionAdd: (connection: Connection) => void;
@@ -42,6 +43,7 @@ interface TournamentDropZoneProps {
 const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   matches,
   tournamentUsers,
+  tournamentId,
   onMatchAdd,
   onMatchRemove,
   onConnectionAdd,
@@ -140,6 +142,9 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
               onClick={() => handleMatchClick(match.id)}
               isSelected={match.id === selectedMatch}
               tournamentUsers={tournamentUsers}
+              tournamentId={tournamentId}
+              round={match.round}
+              matchNumber={match.matchNumber}
             />
           ))}
 
