@@ -26,6 +26,7 @@ import {
   SportsTennis as SportsIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import TournamentDetailsDialog from "./TournamentDetailsDialog";
 import { Tournament } from "../../services/tournamentService";
 
@@ -50,6 +51,8 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation(); // Prevent card click when clicking menu
@@ -78,6 +81,9 @@ const TournamentCard: React.FC<TournamentCardProps> = ({
 
   const handleCardClick = () => {
     setDetailsDialogOpen(true);
+    // Update URL with tournament ID while preserving the channel parameter
+    const newUrl = `/dashboard?channel=${channelId}&view=tournaments/${id}`;
+    navigate(newUrl);
   };
 
   const handleDetailsClose = () => {

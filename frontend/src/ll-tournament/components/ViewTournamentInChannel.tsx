@@ -6,8 +6,17 @@ import CreateTournamentBox from "./CreateTournamentBox";
 import CreateTournamentDialog, {
   TournamentFormData,
 } from "./CreateTournamentDialog";
+import TournamentDetailsDialog from "./TournamentDetailsDialog";
+import { Tournament } from "../../services/tournamentService";
+import api from "../../services/api";
 
-const ViewTournamentInChannel: React.FC = () => {
+interface ViewTournamentInChannelProps {
+  tournamentId?: string;
+}
+
+const ViewTournamentInChannel: React.FC<ViewTournamentInChannelProps> = ({
+  tournamentId,
+}) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const channelId =
@@ -15,6 +24,26 @@ const ViewTournamentInChannel: React.FC = () => {
 
   const [openDialog, setOpenDialog] = React.useState(false);
   const [refreshKey, setRefreshKey] = React.useState(0); // for refreshing TournamentList
+  const [detailsDialogOpen, setDetailsDialogOpen] =
+    React.useState(!!tournamentId);
+  const [tournament, setTournament] = React.useState<Tournament | null>(null);
+
+  React.useEffect(() => {
+    const fetchTournament = async () => {
+      if (tournamentId) {
+        try {
+          const response = await api.get(`/tournaments/${tournamentId}`);
+          if (response.data.success) {
+            setTournament(response.data.data);
+          }
+        } catch (error) {
+          console.error("Error fetching tournament:", error);
+        }
+      }
+    };
+
+    fetchTournament();
+  }, [tournamentId]);
 
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
@@ -48,6 +77,12 @@ const ViewTournamentInChannel: React.FC = () => {
     navigate(`/channel/${channelId}`);
   };
 
+  const handleDetailsClose = () => {
+    setDetailsDialogOpen(false);
+    // Update URL to remove tournament ID
+    navigate(`/dashboard?channel=${channelId}&view=tournaments`);
+  };
+
   return (
     <Box
       sx={{
@@ -73,6 +108,13 @@ const ViewTournamentInChannel: React.FC = () => {
       <Box sx={{ minWidth: 220, maxWidth: 300, flexShrink: 0 }}>
         <CreateTournamentBox onCreate={handleOpenDialog} />
       </Box>
+      {tournamentId && tournament && (
+        <TournamentDetailsDialog
+          open={detailsDialogOpen}
+          onClose={handleDetailsClose}
+          tournament={{ ...tournament, id: tournamentId }}
+        />
+      )}
     </Box>
   );
 };

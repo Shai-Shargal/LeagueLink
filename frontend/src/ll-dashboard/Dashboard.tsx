@@ -56,6 +56,10 @@ const Dashboard: React.FC = () => {
   }
 
   const renderContent = () => {
+    if (view?.startsWith("tournaments/") && channelId) {
+      const tournamentId = view.split("/")[1];
+      return <ViewTournamentInChannel tournamentId={tournamentId} />;
+    }
     if (view === "tournaments" && channelId) {
       return <ViewTournamentInChannel />;
     }
