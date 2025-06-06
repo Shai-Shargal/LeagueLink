@@ -230,4 +230,27 @@ router.delete("/:id/matches/:matchId", protect, async (req, res) => {
   }
 });
 
+// Get all matches for a tournament
+router.get("/:id/matches", async (req, res) => {
+  try {
+    const tournament = await Tournament.findById(req.params.id);
+    if (!tournament) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Tournament not found" });
+    }
+
+    const matches = await Match.find({ tournamentId: tournament._id })
+      .populate("team1.players.userId", "username profilePicture")
+      .populate("team2.players.userId", "username profilePicture")
+      .populate("winner", "username profilePicture")
+      .sort({ round: 1, matchNumber: 1 });
+
+    res.json({ success: true, data: matches });
+  } catch (error: any) {
+    console.error("Error fetching tournament matches:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export default router;

@@ -23,6 +23,28 @@ interface Match {
   position: { x: number; y: number };
   round: number;
   matchNumber: number;
+  team1: {
+    players: Array<{
+      userId: string;
+      username: string;
+      profilePicture?: string;
+    }>;
+    score: number;
+  };
+  team2: {
+    players: Array<{
+      userId: string;
+      username: string;
+      profilePicture?: string;
+    }>;
+    score: number;
+  };
+  bestOf: number;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  gameScores: Array<{
+    team1Score: number;
+    team2Score: number;
+  }>;
 }
 
 interface Connection {
@@ -84,6 +106,11 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
         position: { x: delta.x, y: delta.y },
         round,
         matchNumber,
+        team1: { players: [], score: 0 },
+        team2: { players: [], score: 0 },
+        bestOf: 3,
+        status: "PENDING",
+        gameScores: [],
       });
     }
   };
