@@ -24,6 +24,8 @@ interface User {
 interface Match {
   id: string;
   position: { x: number; y: number };
+  round: number;
+  matchNumber: number;
 }
 
 interface Connection {
@@ -49,9 +51,17 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const [tournamentUsers, setTournamentUsers] = useState<User[]>([]);
 
   const handleCreateMatch = () => {
+    const round = Math.floor(matches.length / 2) + 1;
+    const matchNumber = matches.length + 1;
+
     const newMatch: Match = {
       id: `match-${Date.now()}`,
-      position: { x: 0, y: 0 },
+      position: {
+        x: round * 200, // Space matches horizontally based on round
+        y: (matchNumber - 1) * 150, // Space matches vertically
+      },
+      round,
+      matchNumber,
     };
     setMatches((prev) => [...prev, newMatch]);
     setCanUndo(true);
@@ -84,7 +94,14 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   };
 
   const handleConnectionAdd = (connection: Connection) => {
-    setConnections((prev) => [...prev, connection]);
+    // Only add connection if it doesn't already exist
+    if (
+      !connections.some(
+        (conn) => conn.start === connection.start && conn.end === connection.end
+      )
+    ) {
+      setConnections((prev) => [...prev, connection]);
+    }
   };
 
   const handleUndo = () => {

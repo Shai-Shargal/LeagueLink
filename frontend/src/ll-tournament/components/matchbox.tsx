@@ -109,6 +109,8 @@ interface MatchBoxProps {
   onRemove?: () => void;
   position?: { x: number; y: number };
   tournamentUsers?: User[];
+  onClick?: () => void;
+  isSelected?: boolean;
 }
 
 const MatchBox: React.FC<MatchBoxProps> = ({
@@ -116,6 +118,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
   onRemove,
   position = { x: 0, y: 0 },
   tournamentUsers = [],
+  onClick,
+  isSelected = false,
 }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
@@ -223,6 +227,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      onClick={onClick}
       sx={{
         backgroundColor: "#1a1a2e",
         p: 0.75,
@@ -230,6 +235,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         width: 140,
         position: "absolute",
         cursor: "grab",
+        border: isSelected ? "2px solid #2196f3" : "none",
+        boxShadow: isSelected ? "0 0 10px rgba(33, 150, 243, 0.5)" : "none",
         ...style,
       }}
     >

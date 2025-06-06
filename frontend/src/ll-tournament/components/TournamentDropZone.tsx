@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -35,6 +35,9 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   onConnectionAdd,
   onMatchMove,
 }) => {
+  const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
+  const [connections, setConnections] = useState<Connection[]>([]);
+
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
       distance: 10,
@@ -64,15 +67,37 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
         id: active.id as string,
         position: { x: delta.x, y: delta.y },
       });
-      return;
     }
+  };
 
-    // If it's a connection being created
-    if (over && active.id !== over.id) {
-      onConnectionAdd({
-        start: active.id as string,
-        end: over.id as string,
-      });
+  const handleMatchClick = (matchId: string) => {
+    if (!selectedMatch) {
+      // First match selection
+      setSelectedMatch(matchId);
+    } else if (selectedMatch !== matchId) {
+      // Second match selection - create connection
+      const newConnection = {
+        start: selectedMatch,
+        end: matchId,
+      };
+
+      // Check if connection already exists
+      const connectionExists = connections.some(
+        (conn) =>
+          (conn.start === newConnection.start &&
+            conn.end === newConnection.end) ||
+          (conn.start === newConnection.end && conn.end === newConnection.start)
+      );
+
+      if (!connectionExists) {
+        setConnections((prev) => [...prev, newConnection]);
+        onConnectionAdd(newConnection);
+      }
+
+      setSelectedMatch(null);
+    } else {
+      // Clicking the same match - deselect
+      setSelectedMatch(null);
     }
   };
 
@@ -96,6 +121,25 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
               id={match.id}
               position={match.position}
               onRemove={() => onMatchRemove(match.id)}
+              onClick={() => handleMatchClick(match.id)}
+              isSelected={match.id === selectedMatch}
+            />
+          ))}
+
+          {connections.map((connection, index) => (
+            <Xarrow
+              key={index}
+              start={connection.start}
+              end={connection.end}
+              color="#2196f3"
+              strokeWidth={2}
+              path="grid"
+              startAnchor="right"
+              endAnchor="left"
+              showHead={false}
+              showTail={false}
+              gridBreak="0%"
+              curveness={0.5}
             />
           ))}
         </Xwrapper>
