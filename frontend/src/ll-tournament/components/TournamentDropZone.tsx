@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -25,6 +25,7 @@ interface TournamentDropZoneProps {
   onMatchAdd: (match: Match) => void;
   onMatchRemove: (matchId: string) => void;
   onConnectionAdd: (connection: Connection) => void;
+  onMatchMove: (matchId: string, position: { x: number; y: number }) => void;
 }
 
 const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
@@ -32,6 +33,7 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   onMatchAdd,
   onMatchRemove,
   onConnectionAdd,
+  onMatchMove,
 }) => {
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
@@ -42,21 +44,31 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   const sensors = useSensors(mouseSensor);
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
+    const { active, over, delta } = event;
 
-    if (!over) {
-      // If dropped in empty space, add new match
-      if (active.data.current?.type === "matchbox") {
-        onMatchAdd({
-          id: active.id as string,
-          position: { x: event.delta.x, y: event.delta.y },
+    // If it's an existing match being moved
+    if (matches.some((match) => match.id === active.id)) {
+      const match = matches.find((m) => m.id === active.id);
+      if (match) {
+        onMatchMove(match.id, {
+          x: match.position.x + delta.x,
+          y: match.position.y + delta.y,
         });
       }
       return;
     }
 
-    // If dropped on another match, create connection
-    if (active.id !== over.id) {
+    // If it's a new match being dropped
+    if (!over && active.data.current?.type === "matchbox") {
+      onMatchAdd({
+        id: active.id as string,
+        position: { x: delta.x, y: delta.y },
+      });
+      return;
+    }
+
+    // If it's a connection being created
+    if (over && active.id !== over.id) {
       onConnectionAdd({
         start: active.id as string,
         end: over.id as string,

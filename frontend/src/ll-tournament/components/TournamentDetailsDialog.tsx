@@ -58,8 +58,21 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   };
 
   const handleMatchAdd = (match: Match) => {
-    setMatches((prev) => [...prev, match]);
-    setCanUndo(true);
+    if (!matches.some((m) => m.id === match.id)) {
+      setMatches((prev) => [...prev, match]);
+      setCanUndo(true);
+    }
+  };
+
+  const handleMatchMove = (
+    matchId: string,
+    position: { x: number; y: number }
+  ) => {
+    setMatches((prev) =>
+      prev.map((match) =>
+        match.id === matchId ? { ...match, position } : match
+      )
+    );
   };
 
   const handleMatchRemove = (matchId: string) => {
@@ -161,6 +174,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
               onMatchAdd={handleMatchAdd}
               onMatchRemove={handleMatchRemove}
               onConnectionAdd={handleConnectionAdd}
+              onMatchMove={handleMatchMove}
             />
           </Box>
           {/* Right side: Users list */}
