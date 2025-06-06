@@ -21,14 +21,20 @@ interface User {
   isGuest?: boolean;
 }
 
+interface Match {
+  id: string;
+  position: { x: number; y: number };
+}
+
+interface Connection {
+  start: string;
+  end: string;
+}
+
 interface TournamentDetailsDialogProps {
   open: boolean;
   onClose: () => void;
   tournament: Omit<Tournament, "_id"> & { id: string };
-}
-
-interface Match {
-  id: string;
 }
 
 const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
@@ -37,6 +43,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   tournament,
 }) => {
   const [matches, setMatches] = useState<Match[]>([]);
+  const [connections, setConnections] = useState<Connection[]>([]);
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [tournamentUsers, setTournamentUsers] = useState<User[]>([]);
@@ -44,14 +51,27 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const handleCreateMatch = () => {
     const newMatch: Match = {
       id: `match-${Date.now()}`,
+      position: { x: 0, y: 0 },
     };
     setMatches((prev) => [...prev, newMatch]);
     setCanUndo(true);
   };
 
-  const handleRemoveMatch = (matchId: string) => {
+  const handleMatchAdd = (match: Match) => {
+    setMatches((prev) => [...prev, match]);
+    setCanUndo(true);
+  };
+
+  const handleMatchRemove = (matchId: string) => {
     setMatches((prev) => prev.filter((match) => match.id !== matchId));
+    setConnections((prev) =>
+      prev.filter((conn) => conn.start !== matchId && conn.end !== matchId)
+    );
     setCanUndo(matches.length > 1);
+  };
+
+  const handleConnectionAdd = (connection: Connection) => {
+    setConnections((prev) => [...prev, connection]);
   };
 
   const handleUndo = () => {
@@ -68,11 +88,9 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
 
   const handleUserSelect = (user: User) => {
     setTournamentUsers((prev) => {
-      // If user is already selected, remove them
       if (prev.some((u) => u.id === user.id)) {
         return prev.filter((u) => u.id !== user.id);
       }
-      // Otherwise add them
       return [...prev, user];
     });
   };
@@ -138,7 +156,12 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
                 canRedo={canRedo}
               />
             </Box>
-            <TournamentDropZone />
+            <TournamentDropZone
+              matches={matches}
+              onMatchAdd={handleMatchAdd}
+              onMatchRemove={handleMatchRemove}
+              onConnectionAdd={handleConnectionAdd}
+            />
           </Box>
           {/* Right side: Users list */}
           <Box

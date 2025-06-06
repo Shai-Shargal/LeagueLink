@@ -20,10 +20,19 @@ interface Connection {
   end: string;
 }
 
-const TournamentDropZone: React.FC = () => {
-  const [matches, setMatches] = useState<Match[]>([]);
-  const [connections, setConnections] = useState<Connection[]>([]);
+interface TournamentDropZoneProps {
+  matches: Match[];
+  onMatchAdd: (match: Match) => void;
+  onMatchRemove: (matchId: string) => void;
+  onConnectionAdd: (connection: Connection) => void;
+}
 
+const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
+  matches,
+  onMatchAdd,
+  onMatchRemove,
+  onConnectionAdd,
+}) => {
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
       distance: 10,
@@ -35,15 +44,23 @@ const TournamentDropZone: React.FC = () => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (over && active.id !== over.id) {
-      // Add new connection
-      setConnections((prev) => [
-        ...prev,
-        {
-          start: active.id as string,
-          end: over.id as string,
-        },
-      ]);
+    if (!over) {
+      // If dropped in empty space, add new match
+      if (active.data.current?.type === "matchbox") {
+        onMatchAdd({
+          id: active.id as string,
+          position: { x: event.delta.x, y: event.delta.y },
+        });
+      }
+      return;
+    }
+
+    // If dropped on another match, create connection
+    if (active.id !== over.id) {
+      onConnectionAdd({
+        start: active.id as string,
+        end: over.id as string,
+      });
     }
   };
 
@@ -62,19 +79,11 @@ const TournamentDropZone: React.FC = () => {
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <Xwrapper>
           {matches.map((match) => (
-            <MatchBox key={match.id} id={match.id} position={match.position} />
-          ))}
-
-          {connections.map((connection, index) => (
-            <Xarrow
-              key={index}
-              start={connection.start}
-              end={connection.end}
-              color="#2196f3"
-              strokeWidth={2}
-              path="grid"
-              startAnchor="right"
-              endAnchor="left"
+            <MatchBox
+              key={match.id}
+              id={match.id}
+              position={match.position}
+              onRemove={() => onMatchRemove(match.id)}
             />
           ))}
         </Xwrapper>

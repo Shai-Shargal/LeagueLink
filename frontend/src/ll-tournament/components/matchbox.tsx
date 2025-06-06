@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useDroppable } from "@dnd-kit/core";
+import { useDroppable, useDraggable } from "@dnd-kit/core";
 import {
   Box,
   Typography,
@@ -114,9 +114,24 @@ interface MatchBoxProps {
 const MatchBox: React.FC<MatchBoxProps> = ({
   id = "matchbox",
   onRemove,
-  position,
+  position = { x: 0, y: 0 },
   tournamentUsers = [],
 }) => {
+  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+    id,
+    data: {
+      type: "matchbox",
+    },
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x + position.x}px, ${transform.y + position.y}px, 0)`,
+      }
+    : {
+        transform: `translate3d(${position.x}px, ${position.y}px, 0)`,
+      };
+
   const [team1, setTeam1] = useState<User[]>([]);
   const [team2, setTeam2] = useState<User[]>([]);
   const [bestOf, setBestOf] = useState<number>(3);
@@ -205,12 +220,17 @@ const MatchBox: React.FC<MatchBoxProps> = ({
 
   return (
     <Box
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
       sx={{
         backgroundColor: "#1a1a2e",
         p: 0.75,
         borderRadius: 1,
         width: 140,
-        position: "relative",
+        position: "absolute",
+        cursor: "grab",
+        ...style,
       }}
     >
       <Box
