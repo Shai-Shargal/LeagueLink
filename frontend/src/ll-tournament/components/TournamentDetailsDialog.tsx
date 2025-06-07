@@ -24,6 +24,7 @@ interface User {
 
 interface Match {
   id: string;
+  _id?: string;
   position: { x: number; y: number };
   round: number;
   matchNumber: number;
@@ -72,10 +73,12 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
   const [tournamentUsers, setTournamentUsers] = useState<User[]>([]);
+  const [isFetching, setIsFetching] = useState(false);
 
   const fetchTournamentMatches = async () => {
     if (open && tournament.id) {
       console.log("Fetching matches for tournament:", tournament.id);
+      setIsFetching(true);
       try {
         const token = localStorage.getItem("token");
         const response = await api.get(`/matches/tournament/${tournament.id}`, {
@@ -88,6 +91,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
           // Transform the matches to match our frontend interface
           const transformedMatches = response.data.data.map((match: any) => ({
             id: match._id,
+            _id: match._id,
             position: match.position,
             round: match.round,
             matchNumber: match.matchNumber,
@@ -102,6 +106,8 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
         }
       } catch (error) {
         console.error("Error fetching tournament matches:", error);
+      } finally {
+        setIsFetching(false);
       }
     }
   };
@@ -200,7 +206,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="lg"
+      maxWidth="xl"
       fullWidth
       PaperProps={{
         sx: {
@@ -215,9 +221,10 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
+          borderBottom: "1px solid rgba(255,255,255,0.1)",
         }}
       >
-        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+        <Typography variant="h6" component="div">
           {tournament.name}
         </Typography>
         <IconButton onClick={onClose} sx={{ color: "rgba(255,255,255,0.7)" }}>
@@ -267,6 +274,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
               onConnectionAdd={handleConnectionAdd}
               onMatchMove={handleMatchMove}
               connections={connections}
+              isFetching={isFetching}
             />
           </Box>
           {/* Right side: Users list */}

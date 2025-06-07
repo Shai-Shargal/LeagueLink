@@ -45,6 +45,7 @@ interface Match {
     team1Score: number;
     team2Score: number;
   }>;
+  _id?: string;
 }
 
 interface Connection {
@@ -61,6 +62,7 @@ interface TournamentDropZoneProps {
   onConnectionAdd: (connection: Connection) => void;
   onMatchMove: (matchId: string, position: { x: number; y: number }) => void;
   connections: Connection[];
+  isFetching?: boolean;
 }
 
 const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
@@ -72,6 +74,7 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   onConnectionAdd,
   onMatchMove,
   connections,
+  isFetching = false,
 }) => {
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
   const updateXarrow = useXarrow();
@@ -117,53 +120,37 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
     }
   };
 
-  const handleMatchClick = (matchId: string) => {
+  const handleMatchClick = (match: Match) => {
     console.log(
       "Clicked match:",
-      matchId,
+      match.id,
       "Currently selected:",
       selectedMatch
     );
 
     if (!selectedMatch) {
       // First match selection
-      setSelectedMatch(matchId);
-      console.log("Selected first match:", matchId);
-    } else if (selectedMatch !== matchId) {
+      setSelectedMatch(match.id);
+      console.log("Selected first match:", match.id);
+    } else if (selectedMatch !== match.id) {
       // Second match selection - create connection
       console.log(
         "Creating connection between:",
         selectedMatch,
         "and",
-        matchId
+        match.id
       );
 
       const newConnection = {
         start: selectedMatch,
-        end: matchId,
+        end: match.id,
       };
 
-      // Check if connection already exists (in either direction)
-      const connectionExists = connections.some((conn) => {
-        const isDirectMatch =
-          conn.start === newConnection.start && conn.end === newConnection.end;
-        const isReverseMatch =
-          conn.start === newConnection.end && conn.end === newConnection.start;
-        return isDirectMatch || isReverseMatch;
-      });
-
-      if (!connectionExists) {
-        console.log("Adding new connection");
-        onConnectionAdd(newConnection);
-      } else {
-        console.log("Connection already exists");
-      }
-
-      // Reset selection after creating connection
+      onConnectionAdd(newConnection);
       setSelectedMatch(null);
     } else {
       // Clicking the same match - deselect
-      console.log("Deselecting match:", matchId);
+      console.log("Deselecting match:", match.id);
       setSelectedMatch(null);
     }
   };
@@ -205,13 +192,26 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
                 key={match.id}
                 id={match.id}
                 position={match.position}
-                onRemove={() => onMatchRemove(match.id)}
-                onClick={() => handleMatchClick(match.id)}
-                isSelected={match.id === selectedMatch}
                 tournamentUsers={tournamentUsers}
                 tournamentId={tournamentId}
                 round={match.round}
                 matchNumber={match.matchNumber}
+                onRemove={() => onMatchRemove(match.id)}
+                onClick={() => handleMatchClick(match)}
+                isSelected={selectedMatch === match.id}
+                isFetching={isFetching}
+                initialData={
+                  match._id
+                    ? {
+                        team1: match.team1,
+                        team2: match.team2,
+                        bestOf: match.bestOf,
+                        status: match.status,
+                        gameScores: match.gameScores,
+                        _id: match._id,
+                      }
+                    : undefined
+                }
               />
             ))}
 

@@ -27,7 +27,7 @@ import axios from "axios";
 interface User {
   id: string;
   name: string;
-  email: string;
+  email?: string;
   avatar: string | null;
   isGuest?: boolean;
 }
@@ -117,6 +117,32 @@ interface MatchBoxProps {
   tournamentId?: string;
   round?: number;
   matchNumber?: number;
+  isFetching?: boolean;
+  initialData?: {
+    team1: {
+      players: Array<{
+        userId: string;
+        username: string;
+        profilePicture?: string;
+      }>;
+      score: number;
+    };
+    team2: {
+      players: Array<{
+        userId: string;
+        username: string;
+        profilePicture?: string;
+      }>;
+      score: number;
+    };
+    bestOf: number;
+    status: string;
+    gameScores: Array<{
+      team1Score: number;
+      team2Score: number;
+    }>;
+    _id: string;
+  };
 }
 
 const MatchBox: React.FC<MatchBoxProps> = ({
@@ -129,6 +155,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
   tournamentId,
   round = 1,
   matchNumber = 1,
+  isFetching = false,
+  initialData,
 }) => {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id,
@@ -159,6 +187,47 @@ const MatchBox: React.FC<MatchBoxProps> = ({
   const [isSaved, setIsSaved] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [matchId, setMatchId] = useState<string | null>(null);
+
+  // Initialize match data when component mounts or initialData changes
+  React.useEffect(() => {
+    if (initialData) {
+      // Convert the initial data to match our component's state format
+      const team1Players = initialData.team1.players.map((player) => ({
+        id: player.userId,
+        name: player.username,
+        avatar: player.profilePicture || null,
+      }));
+      const team2Players = initialData.team2.players.map((player) => ({
+        id: player.userId,
+        name: player.username,
+        avatar: player.profilePicture || null,
+      }));
+
+      setTeam1(team1Players);
+      setTeam2(team2Players);
+      setBestOf(initialData.bestOf);
+      setMatchStatus(initialData.status.toLowerCase());
+      setGameScores(initialData.gameScores);
+      setMatchId(initialData._id);
+      setIsSaved(true);
+
+      // Calculate winner based on game scores
+      const team1Wins = initialData.gameScores.filter(
+        (game) => game.team1Score > game.team2Score
+      ).length;
+      const team2Wins = initialData.gameScores.filter(
+        (game) => game.team2Score > game.team1Score
+      ).length;
+
+      if (team1Wins > initialData.bestOf / 2) {
+        setWinner("team1");
+      } else if (team2Wins > initialData.bestOf / 2) {
+        setWinner("team2");
+      } else {
+        setWinner("");
+      }
+    }
+  }, [initialData]);
 
   const isInAnyTeam = (id: string) =>
     team1.some((u) => u.id === id) || team2.some((u) => u.id === id);
@@ -413,6 +482,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
           <IconButton
             size="small"
             onClick={handleRemove}
+            disabled={isSaved || isFetching}
             sx={{
               backgroundColor: "#ff4444",
               color: "#fff",
@@ -425,8 +495,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
               "& .MuiSvgIcon-root": {
                 fontSize: 12,
               },
-              opacity: isSaved ? 0.5 : 1,
-              cursor: isSaved ? "not-allowed" : "pointer",
+              opacity: isSaved || isFetching ? 0.5 : 1,
+              cursor: isSaved || isFetching ? "not-allowed" : "pointer",
             }}
           >
             <Close />
@@ -471,6 +541,12 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         onClose={handleSettingsClose}
         maxWidth="sm"
         fullWidth
+        PaperProps={{
+          sx: {
+            backgroundColor: "#1a1a1a",
+            color: "#fff",
+          },
+        }}
       >
         <DialogTitle>Match Settings</DialogTitle>
         <DialogContent>
@@ -495,7 +571,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                   variant="subtitle2"
                   sx={{ mb: 1, color: "#3f51b5" }}
                 >
-                  Team 1 Members
+                  Team 1
                 </Typography>
                 <Autocomplete
                   multiple
@@ -508,17 +584,21 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
+                      variant="outlined"
                       size="small"
-                      placeholder="Add team members"
+                      placeholder="Select players"
                     />
                   )}
                   renderTags={(value, getTagProps) =>
                     value.map((option, index) => (
                       <Chip
                         label={option.name}
+                        avatar={
+                          <Avatar src={option.avatar || undefined}>
+                            {option.name.charAt(0)}
+                          </Avatar>
+                        }
                         {...getTagProps({ index })}
-                        size="small"
-                        sx={{ backgroundColor: "rgba(63, 81, 181, 0.1)" }}
                       />
                     ))
                   }
@@ -530,7 +610,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                   variant="subtitle2"
                   sx={{ mb: 1, color: "#d81b60" }}
                 >
-                  Team 2 Members
+                  Team 2
                 </Typography>
                 <Autocomplete
                   multiple
@@ -543,125 +623,48 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                   renderInput={(params) => (
                     <TextField
                       {...params}
+                      variant="outlined"
                       size="small"
-                      placeholder="Add team members"
+                      placeholder="Select players"
                     />
                   )}
                   renderTags={(value, getTagProps) =>
                     value.map((option, index) => (
                       <Chip
                         label={option.name}
+                        avatar={
+                          <Avatar src={option.avatar || undefined}>
+                            {option.name.charAt(0)}
+                          </Avatar>
+                        }
                         {...getTagProps({ index })}
-                        size="small"
-                        sx={{ backgroundColor: "rgba(216, 27, 96, 0.1)" }}
                       />
                     ))
                   }
                 />
               </Box>
+
+              <TextField
+                label="Best of"
+                type="number"
+                value={bestOf}
+                onChange={(e) => {
+                  const value = Number(e.target.value);
+                  // Only allow odd numbers between 1 and 9
+                  if (value >= 1 && value <= 9 && value % 2 === 1) {
+                    handleBestOfChange(value);
+                  }
+                }}
+                inputProps={{
+                  min: 1,
+                  max: 9,
+                  step: 2, // This will make the number input increment by 2
+                }}
+                size="small"
+                fullWidth
+                helperText="Must be an odd number (1, 3, 5, 7, 9)"
+              />
             </Box>
-
-            <Typography variant="subtitle2" sx={{ mt: 1 }}>
-              Game Scores
-            </Typography>
-            <Grid container spacing={1}>
-              {gameScores.map((game, index) => (
-                <Grid item xs={12} key={index}>
-                  <Box
-                    sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}
-                  >
-                    <Typography
-                      variant="caption"
-                      sx={{ color: "text.secondary" }}
-                    >
-                      Game {index + 1}
-                    </Typography>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: "#3f51b5", fontWeight: 500 }}
-                        >
-                          {team1.length > 0
-                            ? team1.map((p) => p.name).join(", ")
-                            : "Team 1"}
-                        </Typography>
-                        <TextField
-                          type="number"
-                          value={game.team1Score}
-                          onChange={(e) =>
-                            handleGameScoreChange(
-                              index,
-                              "team1",
-                              Number(e.target.value)
-                            )
-                          }
-                          size="small"
-                          fullWidth
-                          sx={{
-                            mt: 0.5,
-                            "& .MuiOutlinedInput-root": {
-                              backgroundColor: "rgba(63, 81, 181, 0.1)",
-                            },
-                          }}
-                        />
-                      </Box>
-                      <Typography sx={{ px: 1 }}>vs</Typography>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography
-                          variant="caption"
-                          sx={{ color: "#d81b60", fontWeight: 500 }}
-                        >
-                          {team2.length > 0
-                            ? team2.map((p) => p.name).join(", ")
-                            : "Team 2"}
-                        </Typography>
-                        <TextField
-                          type="number"
-                          value={game.team2Score}
-                          onChange={(e) =>
-                            handleGameScoreChange(
-                              index,
-                              "team2",
-                              Number(e.target.value)
-                            )
-                          }
-                          size="small"
-                          fullWidth
-                          sx={{
-                            mt: 0.5,
-                            "& .MuiOutlinedInput-root": {
-                              backgroundColor: "rgba(216, 27, 96, 0.1)",
-                            },
-                          }}
-                        />
-                      </Box>
-                    </Box>
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-
-            <TextField
-              label="Best of"
-              type="number"
-              value={bestOf}
-              onChange={(e) => {
-                const value = Number(e.target.value);
-                // Only allow odd numbers between 1 and 9
-                if (value >= 1 && value <= 9 && value % 2 === 1) {
-                  handleBestOfChange(value);
-                }
-              }}
-              inputProps={{
-                min: 1,
-                max: 9,
-                step: 2, // This will make the number input increment by 2
-              }}
-              size="small"
-              fullWidth
-              helperText="Must be an odd number (1, 3, 5, 7, 9)"
-            />
           </Box>
         </DialogContent>
         <DialogActions>
