@@ -156,6 +156,9 @@ const MatchBox: React.FC<MatchBoxProps> = ({
   const [winner, setWinner] = useState<string>("");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [matchId, setMatchId] = useState<string | null>(null);
 
   const isInAnyTeam = (id: string) =>
     team1.some((u) => u.id === id) || team2.some((u) => u.id === id);
@@ -277,6 +280,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
 
       if (response.data.success) {
         setSaveSuccess(true);
+        setIsSaved(true);
+        setMatchId(response.data.data._id);
         setIsSettingsOpen(false);
       } else {
         setSaveError(response.data.error || "Failed to save match");
@@ -284,6 +289,52 @@ const MatchBox: React.FC<MatchBoxProps> = ({
     } catch (error: any) {
       setSaveError(error.response?.data?.error || "Failed to save match");
     }
+  };
+
+  const handleDelete = async () => {
+    if (!isSaved || !matchId) {
+      setDeleteError(
+        "You can only delete saved matches. Use the X button to remove unsaved matches."
+      );
+      return;
+    }
+
+    try {
+      const response = await axios.delete(
+        `http://localhost:5000/api/matches/${matchId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.data.success) {
+        onRemove?.();
+      } else {
+        setDeleteError(response.data.message || "Failed to delete match");
+      }
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        setDeleteError("Invalid match ID. Please try saving the match again.");
+      } else if (error.response?.status === 404) {
+        setDeleteError("Match not found. It may have been already deleted.");
+      } else {
+        setDeleteError(
+          error.response?.data?.message || "Failed to delete match"
+        );
+      }
+    }
+  };
+
+  const handleRemove = () => {
+    if (isSaved) {
+      setDeleteError(
+        "Please use the delete button in settings to delete saved matches."
+      );
+      return;
+    }
+    onRemove?.();
   };
 
   return (
@@ -361,7 +412,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
           </IconButton>
           <IconButton
             size="small"
-            onClick={onRemove}
+            onClick={handleRemove}
             sx={{
               backgroundColor: "#ff4444",
               color: "#fff",
@@ -374,6 +425,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
               "& .MuiSvgIcon-root": {
                 fontSize: 12,
               },
+              opacity: isSaved ? 0.5 : 1,
+              cursor: isSaved ? "not-allowed" : "pointer",
             }}
           >
             <Close />
@@ -416,7 +469,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
       <Dialog
         open={isSettingsOpen}
         onClose={handleSettingsClose}
-        maxWidth="xs"
+        maxWidth="sm"
         fullWidth
       >
         <DialogTitle>Match Settings</DialogTitle>
@@ -612,14 +665,14 @@ const MatchBox: React.FC<MatchBoxProps> = ({
           </Box>
         </DialogContent>
         <DialogActions>
+          {isSaved && (
+            <Button onClick={handleDelete} color="error" startIcon={<Delete />}>
+              Delete Match
+            </Button>
+          )}
           <Button onClick={handleSettingsClose}>Cancel</Button>
-          <Button
-            onClick={handleSave}
-            variant="contained"
-            startIcon={<Save />}
-            color="primary"
-          >
-            Save Match
+          <Button onClick={handleSave} color="primary" startIcon={<Save />}>
+            Save
           </Button>
         </DialogActions>
       </Dialog>
@@ -635,8 +688,18 @@ const MatchBox: React.FC<MatchBoxProps> = ({
       </Snackbar>
 
       <Snackbar
+        open={!!deleteError}
+        autoHideDuration={6000}
+        onClose={() => setDeleteError(null)}
+      >
+        <Alert severity="error" onClose={() => setDeleteError(null)}>
+          {deleteError}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
         open={saveSuccess}
-        autoHideDuration={3000}
+        autoHideDuration={6000}
         onClose={() => setSaveSuccess(false)}
       >
         <Alert severity="success" onClose={() => setSaveSuccess(false)}>

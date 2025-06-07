@@ -49,7 +49,7 @@ router.post("/", async (req, res) => {
 });
 
 // Get all tournaments for a channel
-router.get("/channel/:channelId", protect, async (req, res) => {
+router.get("/channel/:channelId", async (req, res) => {
   try {
     const tournaments = await Tournament.find({
       channelId: req.params.channelId,
@@ -64,7 +64,7 @@ router.get("/channel/:channelId", protect, async (req, res) => {
 });
 
 // Get a single tournament
-router.get("/:id", protect, async (req, res) => {
+router.get("/:id", async (req, res) => {
   try {
     const tournament = await Tournament.findById(req.params.id).populate(
       "matchIds"
