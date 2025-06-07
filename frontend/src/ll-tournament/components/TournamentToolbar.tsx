@@ -4,6 +4,7 @@ import {
   Add as AddIcon,
   Undo as UndoIcon,
   Redo as RedoIcon,
+  Refresh as RefreshIcon,
 } from "@mui/icons-material";
 
 interface TournamentToolbarProps {
@@ -12,6 +13,7 @@ interface TournamentToolbarProps {
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  onRefresh: () => void;
 }
 
 const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
@@ -20,6 +22,7 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
   onRedo,
   canUndo,
   canRedo,
+  onRefresh,
 }) => {
   return (
     <Box
@@ -55,47 +58,62 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
         sx={{ borderColor: "rgba(255,255,255,0.1)" }}
       />
 
-      <Box sx={{ display: "flex", gap: 1 }}>
-        <Tooltip title="Undo">
-          <span>
-            <IconButton
-              onClick={onUndo}
-              disabled={!canUndo}
-              size="small"
-              sx={{
-                color: canUndo
-                  ? "rgba(255,255,255,0.7)"
-                  : "rgba(255,255,255,0.3)",
-                "&:hover": {
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                },
-              }}
-            >
-              <UndoIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
+      <Tooltip title="Refresh">
+        <span>
+          <IconButton
+            onClick={onRefresh}
+            size="small"
+            sx={{
+              color: "rgba(255,255,255,0.7)",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
+            }}
+          >
+            <RefreshIcon fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
 
-        <Tooltip title="Redo">
-          <span>
-            <IconButton
-              onClick={onRedo}
-              disabled={!canRedo}
-              size="small"
-              sx={{
-                color: canRedo
-                  ? "rgba(255,255,255,0.7)"
-                  : "rgba(255,255,255,0.3)",
-                "&:hover": {
-                  backgroundColor: "rgba(255,255,255,0.1)",
-                },
-              }}
-            >
-              <RedoIcon fontSize="small" />
-            </IconButton>
-          </span>
-        </Tooltip>
-      </Box>
+      <Tooltip title="Undo">
+        <span>
+          <IconButton
+            onClick={onUndo}
+            disabled={!canUndo}
+            size="small"
+            sx={{
+              color: canUndo
+                ? "rgba(255,255,255,0.7)"
+                : "rgba(255,255,255,0.3)",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
+            }}
+          >
+            <UndoIcon fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
+
+      <Tooltip title="Redo">
+        <span>
+          <IconButton
+            onClick={onRedo}
+            disabled={!canRedo}
+            size="small"
+            sx={{
+              color: canRedo
+                ? "rgba(255,255,255,0.7)"
+                : "rgba(255,255,255,0.3)",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
+            }}
+          >
+            <RedoIcon fontSize="small" />
+          </IconButton>
+        </span>
+      </Tooltip>
     </Box>
   );
 };

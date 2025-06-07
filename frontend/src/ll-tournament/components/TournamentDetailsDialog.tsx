@@ -73,37 +73,40 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const [canRedo, setCanRedo] = useState(false);
   const [tournamentUsers, setTournamentUsers] = useState<User[]>([]);
 
-  useEffect(() => {
-    const fetchTournamentMatches = async () => {
-      if (open && tournament.id) {
-        console.log("Fetching matches for tournament:", tournament.id);
-        try {
-          const response = await api.get(
-            `/tournaments/${tournament.id}/matches`
-          );
-          console.log("Matches response:", response.data);
-          if (response.data.success) {
-            // Transform the matches to match our frontend interface
-            const transformedMatches = response.data.data.map((match: any) => ({
-              id: match._id,
-              position: match.position,
-              round: match.round,
-              matchNumber: match.matchNumber,
-              team1: match.team1,
-              team2: match.team2,
-              bestOf: match.bestOf,
-              status: match.status,
-              gameScores: match.gameScores,
-            }));
-            console.log("Transformed matches:", transformedMatches);
-            setMatches(transformedMatches);
-          }
-        } catch (error) {
-          console.error("Error fetching tournament matches:", error);
+  const fetchTournamentMatches = async () => {
+    if (open && tournament.id) {
+      console.log("Fetching matches for tournament:", tournament.id);
+      try {
+        const token = localStorage.getItem("token");
+        const response = await api.get(`/matches/tournament/${tournament.id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        console.log("Matches response:", response.data);
+        if (response.data.success) {
+          // Transform the matches to match our frontend interface
+          const transformedMatches = response.data.data.map((match: any) => ({
+            id: match._id,
+            position: match.position,
+            round: match.round,
+            matchNumber: match.matchNumber,
+            team1: match.team1,
+            team2: match.team2,
+            bestOf: match.bestOf,
+            status: match.status,
+            gameScores: match.gameScores,
+          }));
+          console.log("Transformed matches:", transformedMatches);
+          setMatches(transformedMatches);
         }
+      } catch (error) {
+        console.error("Error fetching tournament matches:", error);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     fetchTournamentMatches();
   }, [open, tournament.id]);
 
@@ -252,6 +255,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
                 onRedo={handleRedo}
                 canUndo={canUndo}
                 canRedo={canRedo}
+                onRefresh={fetchTournamentMatches}
               />
             </Box>
             <TournamentDropZone

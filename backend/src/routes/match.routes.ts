@@ -6,6 +6,45 @@ import mongoose from "mongoose";
 
 const router = express.Router();
 
+// Get all matches for a tournament
+router.get("/tournament/:tournamentId", protect, async (req, res) => {
+  try {
+    // Validate if the tournament ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.tournamentId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid tournament ID format",
+      });
+    }
+
+    const tournament = await Tournament.findById(req.params.tournamentId);
+    if (!tournament) {
+      return res.status(404).json({
+        success: false,
+        message: "Tournament not found",
+      });
+    }
+
+    const matches = await Match.find({ tournamentId: tournament._id })
+      .populate("team1.players.userId", "username profilePicture")
+      .populate("team2.players.userId", "username profilePicture")
+      .populate("winner", "username profilePicture")
+      .sort({ round: 1, matchNumber: 1 });
+
+    res.json({
+      success: true,
+      data: matches,
+    });
+  } catch (error: any) {
+    console.error("Fetch Tournament Matches Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching tournament matches",
+      error: error.message,
+    });
+  }
+});
+
 // Delete a match
 router.delete("/:id", protect, async (req, res) => {
   try {
