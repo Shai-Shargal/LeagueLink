@@ -293,6 +293,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         {...listeners}
         {...attributes}
         id={id}
+        data-match-id={id}
+        data-testid={`matchbox-${id}`}
         sx={{
           backgroundColor: "#1a1a2e",
           p: 0.75,
@@ -302,6 +304,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
           cursor: "grab",
           border: isSelected ? "2px solid #2196f3" : "none",
           boxShadow: isSelected ? "0 0 10px rgba(33, 150, 243, 0.5)" : "none",
+          zIndex: 100,
           ...style,
         }}
       >
