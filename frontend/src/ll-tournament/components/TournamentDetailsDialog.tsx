@@ -262,6 +262,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
               onMatchRemove={handleMatchRemove}
               onConnectionAdd={handleConnectionAdd}
               onMatchMove={handleMatchMove}
+              connections={connections}
             />
           </Box>
           {/* Right side: Users list */}

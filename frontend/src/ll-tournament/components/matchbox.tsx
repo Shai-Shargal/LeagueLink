@@ -21,7 +21,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import { Delete, Close, Settings, Save } from "@mui/icons-material";
+import { Delete, Close, Settings, Save, Link } from "@mui/icons-material";
 import axios from "axios";
 
 interface User {
@@ -292,7 +292,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         ref={setNodeRef}
         {...listeners}
         {...attributes}
-        onClick={onClick}
+        id={id}
         sx={{
           backgroundColor: "#1a1a2e",
           p: 0.75,
@@ -314,6 +314,28 @@ const MatchBox: React.FC<MatchBoxProps> = ({
             gap: 0.5,
           }}
         >
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick?.();
+            }}
+            sx={{
+              backgroundColor: "#4caf50",
+              color: "#fff",
+              width: 16,
+              height: 16,
+              minWidth: 16,
+              "&:hover": {
+                backgroundColor: "#388e3c",
+              },
+              "& .MuiSvgIcon-root": {
+                fontSize: 12,
+              },
+            }}
+          >
+            <Link />
+          </IconButton>
           <IconButton
             size="small"
             onClick={() => setIsSettingsOpen(true)}
