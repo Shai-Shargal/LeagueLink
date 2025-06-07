@@ -664,6 +664,93 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                 fullWidth
                 helperText="Must be an odd number (1, 3, 5, 7, 9)"
               />
+
+              <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                Game Scores
+              </Typography>
+              <Grid container spacing={1}>
+                {gameScores.map((game, index) => (
+                  <Grid item xs={12} key={index}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 0.5,
+                      }}
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        Game {index + 1}
+                      </Typography>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
+                        <Box sx={{ flex: 1 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "#3f51b5", fontWeight: 500 }}
+                          >
+                            {team1.length > 0
+                              ? team1.map((p) => p.name).join(", ")
+                              : "Team 1"}
+                          </Typography>
+                          <TextField
+                            type="number"
+                            value={game.team1Score}
+                            onChange={(e) =>
+                              handleGameScoreChange(
+                                index,
+                                "team1",
+                                Number(e.target.value)
+                              )
+                            }
+                            size="small"
+                            fullWidth
+                            sx={{
+                              mt: 0.5,
+                              "& .MuiOutlinedInput-root": {
+                                backgroundColor: "rgba(63, 81, 181, 0.1)",
+                              },
+                            }}
+                          />
+                        </Box>
+                        <Typography sx={{ px: 1 }}>vs</Typography>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: "#d81b60", fontWeight: 500 }}
+                          >
+                            {team2.length > 0
+                              ? team2.map((p) => p.name).join(", ")
+                              : "Team 2"}
+                          </Typography>
+                          <TextField
+                            type="number"
+                            value={game.team2Score}
+                            onChange={(e) =>
+                              handleGameScoreChange(
+                                index,
+                                "team2",
+                                Number(e.target.value)
+                              )
+                            }
+                            size="small"
+                            fullWidth
+                            sx={{
+                              mt: 0.5,
+                              "& .MuiOutlinedInput-root": {
+                                backgroundColor: "rgba(216, 27, 96, 0.1)",
+                              },
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
             </Box>
           </Box>
         </DialogContent>
