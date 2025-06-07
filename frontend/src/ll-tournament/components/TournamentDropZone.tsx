@@ -7,7 +7,7 @@ import {
   MouseSensor,
 } from "@dnd-kit/core";
 import { Box } from "@mui/material";
-import Xarrow, { Xwrapper } from "react-xarrows";
+import Xarrow, { Xwrapper, useXarrow } from "react-xarrows";
 import MatchBox from "./matchbox";
 
 interface User {
@@ -60,6 +60,7 @@ interface TournamentDropZoneProps {
   onMatchRemove: (matchId: string) => void;
   onConnectionAdd: (connection: Connection) => void;
   onMatchMove: (matchId: string, position: { x: number; y: number }) => void;
+  connections: Connection[];
 }
 
 const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
@@ -70,9 +71,10 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   onMatchRemove,
   onConnectionAdd,
   onMatchMove,
+  connections,
 }) => {
   const [selectedMatch, setSelectedMatch] = useState<string | null>(null);
-  const [connections, setConnections] = useState<Connection[]>([]);
+  const updateXarrow = useXarrow();
 
   const mouseSensor = useSensor(MouseSensor, {
     activationConstraint: {
@@ -116,32 +118,52 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   };
 
   const handleMatchClick = (matchId: string) => {
+    console.log(
+      "Clicked match:",
+      matchId,
+      "Currently selected:",
+      selectedMatch
+    );
+
     if (!selectedMatch) {
       // First match selection
       setSelectedMatch(matchId);
+      console.log("Selected first match:", matchId);
     } else if (selectedMatch !== matchId) {
       // Second match selection - create connection
+      console.log(
+        "Creating connection between:",
+        selectedMatch,
+        "and",
+        matchId
+      );
+
       const newConnection = {
         start: selectedMatch,
         end: matchId,
       };
 
-      // Check if connection already exists
-      const connectionExists = connections.some(
-        (conn) =>
-          (conn.start === newConnection.start &&
-            conn.end === newConnection.end) ||
-          (conn.start === newConnection.end && conn.end === newConnection.start)
-      );
+      // Check if connection already exists (in either direction)
+      const connectionExists = connections.some((conn) => {
+        const isDirectMatch =
+          conn.start === newConnection.start && conn.end === newConnection.end;
+        const isReverseMatch =
+          conn.start === newConnection.end && conn.end === newConnection.start;
+        return isDirectMatch || isReverseMatch;
+      });
 
       if (!connectionExists) {
-        setConnections((prev) => [...prev, newConnection]);
+        console.log("Adding new connection");
         onConnectionAdd(newConnection);
+      } else {
+        console.log("Connection already exists");
       }
 
+      // Reset selection after creating connection
       setSelectedMatch(null);
     } else {
       // Clicking the same match - deselect
+      console.log("Deselecting match:", matchId);
       setSelectedMatch(null);
     }
   };
@@ -156,41 +178,86 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
         backgroundColor: "rgba(255,255,255,0.03)",
         borderRadius: 2,
         p: 2,
+        overflow: "visible",
       }}
     >
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
         <Xwrapper>
-          {matches.map((match) => (
-            <MatchBox
-              key={match.id}
-              id={match.id}
-              position={match.position}
-              onRemove={() => onMatchRemove(match.id)}
-              onClick={() => handleMatchClick(match.id)}
-              isSelected={match.id === selectedMatch}
-              tournamentUsers={tournamentUsers}
-              tournamentId={tournamentId}
-              round={match.round}
-              matchNumber={match.matchNumber}
-            />
-          ))}
+          <Box
+            sx={{
+              position: "relative",
+              width: "100%",
+              height: "100%",
+              overflow: "visible",
+              "& svg": {
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                pointerEvents: "none",
+                zIndex: 1000,
+              },
+            }}
+          >
+            {matches.map((match) => (
+              <MatchBox
+                key={match.id}
+                id={match.id}
+                position={match.position}
+                onRemove={() => onMatchRemove(match.id)}
+                onClick={() => handleMatchClick(match.id)}
+                isSelected={match.id === selectedMatch}
+                tournamentUsers={tournamentUsers}
+                tournamentId={tournamentId}
+                round={match.round}
+                matchNumber={match.matchNumber}
+              />
+            ))}
 
-          {connections.map((connection, index) => (
-            <Xarrow
-              key={index}
-              start={connection.start}
-              end={connection.end}
-              color="#2196f3"
-              strokeWidth={2}
-              path="grid"
-              startAnchor="right"
-              endAnchor="left"
-              showHead={false}
-              showTail={false}
-              gridBreak="0%"
-              curveness={0.5}
-            />
-          ))}
+            {connections.map((connection, index) => {
+              console.log("Rendering Xarrow:", {
+                start: connection.start,
+                end: connection.end,
+                startElement: document.getElementById(connection.start),
+                endElement: document.getElementById(connection.end),
+              });
+              return (
+                <Xarrow
+                  key={`${connection.start}-${connection.end}-${index}`}
+                  start={connection.start}
+                  end={connection.end}
+                  color="rgba(76, 175, 80, 0.8)"
+                  strokeWidth={3}
+                  path="grid"
+                  startAnchor="right"
+                  endAnchor="left"
+                  showHead={true}
+                  showTail={true}
+                  gridBreak="0%"
+                  curveness={0.5}
+                  zIndex={1000}
+                  _debug={true}
+                  _extendSVGcanvas={1000}
+                  labels={{
+                    middle: (
+                      <div
+                        style={{
+                          backgroundColor: "rgba(255, 255, 255, 0.9)",
+                          padding: "2px 4px",
+                          borderRadius: "4px",
+                          fontSize: "12px",
+                          boxShadow: "0 0 4px rgba(0,0,0,0.2)",
+                        }}
+                      >
+                        →
+                      </div>
+                    ),
+                  }}
+                />
+              );
+            })}
+          </Box>
         </Xwrapper>
       </DndContext>
     </Box>

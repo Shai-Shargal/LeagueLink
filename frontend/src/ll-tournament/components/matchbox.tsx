@@ -304,7 +304,8 @@ const MatchBox: React.FC<MatchBoxProps> = ({
           cursor: "grab",
           border: isSelected ? "2px solid #2196f3" : "none",
           boxShadow: isSelected ? "0 0 10px rgba(33, 150, 243, 0.5)" : "none",
-          zIndex: 100,
+          zIndex: 1,
+          pointerEvents: "auto",
           ...style,
         }}
       >
