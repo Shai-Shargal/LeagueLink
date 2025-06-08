@@ -142,6 +142,7 @@ interface MatchBoxProps {
       team2Score: number;
     }>;
     _id: string;
+    stats?: Record<string, number>;
   };
 }
 
@@ -187,6 +188,9 @@ const MatchBox: React.FC<MatchBoxProps> = ({
   const [isSaved, setIsSaved] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [matchId, setMatchId] = useState<string | null>(null);
+  const [stats, setStats] = useState<Record<string, number>>({});
+  const [newStatName, setNewStatName] = useState("");
+  const [newStatValue, setNewStatValue] = useState("");
 
   // Initialize match data when component mounts or initialData changes
   React.useEffect(() => {
@@ -210,6 +214,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
       setGameScores(initialData.gameScores);
       setMatchId(initialData._id);
       setIsSaved(true);
+      setStats(initialData.stats || {});
 
       // Calculate winner based on game scores
       const team1Wins = initialData.gameScores.filter(
@@ -305,6 +310,25 @@ const MatchBox: React.FC<MatchBoxProps> = ({
     });
   };
 
+  const handleAddStat = () => {
+    if (newStatName && newStatValue) {
+      setStats((prev) => ({
+        ...prev,
+        [newStatName]: Number(newStatValue),
+      }));
+      setNewStatName("");
+      setNewStatValue("");
+    }
+  };
+
+  const handleRemoveStat = (statName: string) => {
+    setStats((prev) => {
+      const newStats = { ...prev };
+      delete newStats[statName];
+      return newStats;
+    });
+  };
+
   const handleSave = async () => {
     if (!tournamentId) {
       setSaveError("Tournament ID is required");
@@ -313,6 +337,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
 
     try {
       const matchData = {
+        tournamentId,
         team1: {
           players: team1.map((player) => ({
             userId: player.id,
@@ -335,6 +360,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         matchNumber,
         status: matchStatus.toUpperCase(),
         gameScores,
+        stats,
         winner: winner
           ? winner === "team1"
             ? team1[0]?.id
@@ -342,21 +368,26 @@ const MatchBox: React.FC<MatchBoxProps> = ({
           : undefined,
       };
 
-      const response = await axios.post(
-        `http://localhost:5000/api/tournaments/${tournamentId}/matches`,
-        matchData
-      );
-
-      if (response.data.success) {
-        setSaveSuccess(true);
-        setIsSaved(true);
-        setMatchId(response.data.data._id);
-        setIsSettingsOpen(false);
+      if (matchId) {
+        // Update existing match
+        await axios.put(
+          `http://localhost:5000/api/matches/${matchId}`,
+          matchData
+        );
       } else {
-        setSaveError(response.data.error || "Failed to save match");
+        // Create new match
+        const response = await axios.post(
+          `http://localhost:5000/api/tournaments/${tournamentId}/matches`,
+          matchData
+        );
+        setMatchId(response.data.data._id);
       }
+
+      setSaveSuccess(true);
+      setIsSaved(true);
+      setIsSettingsOpen(false);
     } catch (error: any) {
-      setSaveError(error.response?.data?.error || "Failed to save match");
+      setSaveError(error.response?.data?.message || "Error saving match");
     }
   };
 
@@ -539,7 +570,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
       <Dialog
         open={isSettingsOpen}
         onClose={handleSettingsClose}
-        maxWidth="sm"
+        maxWidth="md"
         fullWidth
         PaperProps={{
           sx: {
@@ -752,6 +783,52 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                 ))}
               </Grid>
             </Box>
+
+            {/* Stats Section */}
+            <Box sx={{ mt: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Stats
+              </Typography>
+              <Grid container spacing={2}>
+                {Object.entries(stats).map(([name, value]) => (
+                  <Grid item xs={12} sm={6} key={name}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Typography>
+                        {name}: {value}
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRemoveStat(name)}
+                      >
+                        <Delete fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  </Grid>
+                ))}
+              </Grid>
+              <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+                <TextField
+                  label="Stat Name"
+                  value={newStatName}
+                  onChange={(e) => setNewStatName(e.target.value)}
+                  size="small"
+                />
+                <TextField
+                  label="Value"
+                  type="number"
+                  value={newStatValue}
+                  onChange={(e) => setNewStatValue(e.target.value)}
+                  size="small"
+                />
+                <Button
+                  variant="contained"
+                  onClick={handleAddStat}
+                  disabled={!newStatName || !newStatValue}
+                >
+                  Add Stat
+                </Button>
+              </Box>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions>
@@ -761,7 +838,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
             </Button>
           )}
           <Button onClick={handleSettingsClose}>Cancel</Button>
-          <Button onClick={handleSave} color="primary" startIcon={<Save />}>
+          <Button onClick={handleSave} variant="contained" color="primary">
             Save
           </Button>
         </DialogActions>

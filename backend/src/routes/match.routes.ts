@@ -89,4 +89,116 @@ router.delete("/:id", protect, async (req, res) => {
   }
 });
 
+// Create a new match
+router.post("/", protect, async (req, res) => {
+  try {
+    const {
+      tournamentId,
+      team1,
+      team2,
+      bestOf,
+      position,
+      round,
+      matchNumber,
+      nextMatchId,
+      status,
+      winner,
+      gameScores,
+      stats,
+    } = req.body;
+
+    const match = new Match({
+      tournamentId,
+      team1,
+      team2,
+      bestOf,
+      position,
+      round,
+      matchNumber,
+      nextMatchId,
+      status,
+      winner,
+      gameScores,
+      stats,
+    });
+
+    await match.save();
+
+    // If the match is part of a tournament, add it to the tournament's matchIds
+    if (tournamentId) {
+      await Tournament.findByIdAndUpdate(tournamentId, {
+        $push: { matchIds: match._id },
+      });
+    }
+
+    res.status(201).json({
+      success: true,
+      data: match,
+    });
+  } catch (error: any) {
+    console.error("Create Match Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error creating match",
+      error: error.message,
+    });
+  }
+});
+
+// Update a match
+router.put("/:id", protect, async (req, res) => {
+  try {
+    const {
+      team1,
+      team2,
+      bestOf,
+      position,
+      round,
+      matchNumber,
+      nextMatchId,
+      status,
+      winner,
+      gameScores,
+      stats,
+    } = req.body;
+
+    const match = await Match.findByIdAndUpdate(
+      req.params.id,
+      {
+        team1,
+        team2,
+        bestOf,
+        position,
+        round,
+        matchNumber,
+        nextMatchId,
+        status,
+        winner,
+        gameScores,
+        stats,
+      },
+      { new: true }
+    );
+
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        message: "Match not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: match,
+    });
+  } catch (error: any) {
+    console.error("Update Match Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating match",
+      error: error.message,
+    });
+  }
+});
+
 export default router;
