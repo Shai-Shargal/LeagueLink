@@ -122,26 +122,11 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
   };
 
   const handleMatchClick = (match: Match) => {
-    console.log(
-      "Clicked match:",
-      match.id,
-      "Currently selected:",
-      selectedMatch
-    );
-
     if (!selectedMatch) {
       // First match selection
       setSelectedMatch(match.id);
-      console.log("Selected first match:", match.id);
     } else if (selectedMatch !== match.id) {
       // Second match selection - create connection
-      console.log(
-        "Creating connection between:",
-        selectedMatch,
-        "and",
-        match.id
-      );
-
       const newConnection = {
         start: selectedMatch,
         end: match.id,
@@ -151,7 +136,6 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
       setSelectedMatch(null);
     } else {
       // Clicking the same match - deselect
-      console.log("Deselecting match:", match.id);
       setSelectedMatch(null);
     }
   };
@@ -217,12 +201,6 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
             ))}
 
             {connections.map((connection, index) => {
-              console.log("Rendering Xarrow:", {
-                start: connection.start,
-                end: connection.end,
-                startElement: document.getElementById(connection.start),
-                endElement: document.getElementById(connection.end),
-              });
               return (
                 <Xarrow
                   key={`${connection.start}-${connection.end}-${index}`}
