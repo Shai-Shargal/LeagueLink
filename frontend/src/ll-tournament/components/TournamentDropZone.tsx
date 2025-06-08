@@ -9,6 +9,7 @@ import {
 import { Box } from "@mui/material";
 import Xarrow, { Xwrapper, useXarrow } from "react-xarrows";
 import MatchBox from "./matchbox";
+import TournamentArrows from "./TournamentArrows";
 
 interface User {
   id: string;
@@ -200,42 +201,7 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
               />
             ))}
 
-            {connections.map((connection, index) => {
-              return (
-                <Xarrow
-                  key={`${connection.start}-${connection.end}-${index}`}
-                  start={connection.start}
-                  end={connection.end}
-                  color="rgba(76, 175, 80, 0.8)"
-                  strokeWidth={3}
-                  path="grid"
-                  startAnchor="right"
-                  endAnchor="left"
-                  showHead={true}
-                  showTail={true}
-                  gridBreak="0%"
-                  curveness={0.5}
-                  zIndex={1000}
-                  _debug={true}
-                  _extendSVGcanvas={1000}
-                  labels={{
-                    middle: (
-                      <div
-                        style={{
-                          backgroundColor: "rgba(255, 255, 255, 0.9)",
-                          padding: "2px 4px",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          boxShadow: "0 0 4px rgba(0,0,0,0.2)",
-                        }}
-                      >
-                        →
-                      </div>
-                    ),
-                  }}
-                />
-              );
-            })}
+            <TournamentArrows connections={connections} />
           </Box>
         </Xwrapper>
       </DndContext>
