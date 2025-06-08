@@ -46,6 +46,7 @@ interface Match {
     team2Score: number;
   }>;
   _id?: string;
+  stats?: Record<string, number>;
 }
 
 interface Connection {

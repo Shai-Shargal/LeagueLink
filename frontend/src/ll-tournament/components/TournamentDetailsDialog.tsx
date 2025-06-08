@@ -50,6 +50,7 @@ interface Match {
     team1Score: number;
     team2Score: number;
   }>;
+  stats?: Record<string, number>;
 }
 
 interface Connection {
@@ -100,6 +101,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
             bestOf: match.bestOf,
             status: match.status,
             gameScores: match.gameScores,
+            stats: match.stats || {},
           }));
           console.log("Transformed matches:", transformedMatches);
           setMatches(transformedMatches);
@@ -139,6 +141,7 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
       bestOf: 1,
       status: "PENDING",
       gameScores: [],
+      stats: {},
     };
     setMatches((prev) => [...prev, newMatch]);
     setCanUndo(true);
