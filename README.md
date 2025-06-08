@@ -54,6 +54,8 @@ LeagueLink is a modern web application designed to connect participants and faci
 - Socket.io-client for real-time communication
 - React Router for navigation
 - Redux for state management
+- Storybook for component development and documentation
+- Firebase for authentication and storage
 
 ### Backend
 
@@ -63,12 +65,14 @@ LeagueLink is a modern web application designed to connect participants and faci
 - Socket.io for real-time features
 - JWT for authentication
 - Mongoose for MongoDB object modeling
+- Firebase Admin SDK for backend services
 
 ## 📋 Prerequisites
 
 - Node.js (v16 or higher)
 - MongoDB (v4.4 or higher)
 - npm (v7 or higher) or yarn
+- Firebase account and project setup
 
 ## 🚀 Getting Started
 
@@ -81,14 +85,20 @@ git clone https://github.com/yourusername/LeagueLink.git
 cd LeagueLink
 ```
 
-2. Install frontend dependencies:
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Install frontend dependencies:
 
 ```bash
 cd frontend
 npm install
 ```
 
-3. Install backend dependencies:
+4. Install backend dependencies:
 
 ```bash
 cd ../backend
@@ -102,6 +112,12 @@ npm install
 ```env
 REACT_APP_API_URL=http://localhost:5000
 REACT_APP_SOCKET_URL=http://localhost:5000
+REACT_APP_FIREBASE_API_KEY=your_firebase_api_key
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+REACT_APP_FIREBASE_PROJECT_ID=your_firebase_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+REACT_APP_FIREBASE_APP_ID=your_firebase_app_id
 ```
 
 2. Backend Environment (.env):
@@ -110,6 +126,9 @@ REACT_APP_SOCKET_URL=http://localhost:5000
 PORT=5000
 MONGODB_URI=mongodb://localhost:27017/leaguelink
 JWT_SECRET=your_jwt_secret
+FIREBASE_PROJECT_ID=your_firebase_project_id
+FIREBASE_PRIVATE_KEY=your_firebase_private_key
+FIREBASE_CLIENT_EMAIL=your_firebase_client_email
 ```
 
 ### Running the Application
@@ -128,10 +147,18 @@ cd frontend
 npm run dev
 ```
 
+3. Start Storybook (for component development):
+
+```bash
+cd frontend
+npm run storybook
+```
+
 The application will be available at:
 
 - Frontend: http://localhost:3000
 - Backend: http://localhost:5000
+- Storybook: http://localhost:6006
 
 ## 📁 Project Structure
 
@@ -146,6 +173,7 @@ LeagueLink/
 │   │   ├── ll-channels/     # Channel-related components
 │   │   ├── ll-tournament/   # Tournament-related components
 │   │   └── App.tsx          # Main application component
+│   ├── .storybook/         # Storybook configuration
 │   └── package.json
 ├── backend/
 │   ├── src/
@@ -155,8 +183,19 @@ LeagueLink/
 │   │   ├── services/        # Business logic
 │   │   └── app.ts           # Main application file
 │   └── package.json
+├── .storybook/             # Root Storybook configuration
+├── firebase.json           # Firebase configuration
+├── storage.rules           # Firebase storage rules
+├── cors.json              # CORS configuration
 └── README.md
 ```
+
+## 🔧 Development Tools
+
+- VS Code configuration included in `.vscode/`
+- Postman collection for API testing (`LeagueLink.postman_collection.json`)
+- Storybook for component development and documentation
+- Firebase tools for deployment and management
 
 ## 🤝 Contributing
 

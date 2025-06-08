@@ -838,3 +838,10 @@
 {"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-08T12:24:08.805Z"}
 {"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-06-08T12:24:21.937Z"}
 {"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-06-08T12:24:22.085Z"}
+{"code":"ECONNREFUSED","hostname":"_mongodb._tcp.cluster0.o7pra.mongodb.net","level":"error","message":"Server startup error: querySrv ECONNREFUSED _mongodb._tcp.cluster0.o7pra.mongodb.net","service":"leaguelink-api","stack":"Error: querySrv ECONNREFUSED _mongodb._tcp.cluster0.o7pra.mongodb.net\n    at QueryReqWrap.onresolve [as oncomplete] (node:internal/dns/promises:293:17)","syscall":"querySrv","timestamp":"2025-06-08T15:50:31.317Z"}
+{"level":"info","message":"Connected to MongoDB","service":"leaguelink-api","timestamp":"2025-06-08T15:53:39.838Z"}
+{"level":"info","message":"Server is running on port 5000","service":"leaguelink-api","timestamp":"2025-06-08T15:53:39.845Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-06-08T15:53:44.578Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-06-08T15:53:44.732Z"}
+{"level":"info","message":"Attempting password comparison for user:","service":"leaguelink-api","timestamp":"2025-06-08T15:55:44.660Z"}
+{"level":"info","message":"Password match result:","service":"leaguelink-api","timestamp":"2025-06-08T15:55:44.931Z"}
