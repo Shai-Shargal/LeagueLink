@@ -148,10 +148,25 @@ const TournamentDropZone: React.FC<TournamentDropZoneProps> = ({
         width: "100%",
         height: "100%",
         minHeight: "500px",
-        backgroundColor: "rgba(255,255,255,0.03)",
-        borderRadius: 2,
-        p: 2,
+        backgroundColor: "rgba(0,0,0,0.2)",
+        borderRadius: 3,
+        p: 3,
         overflow: "visible",
+        border: "1px solid rgba(255,255,255,0.1)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        backdropFilter: "blur(10px)",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background:
+            "linear-gradient(45deg, rgba(33,150,243,0.1), rgba(33,150,243,0))",
+          borderRadius: 3,
+          pointerEvents: "none",
+        },
       }}
     >
       <DndContext sensors={sensors} onDragEnd={handleDragEnd}>

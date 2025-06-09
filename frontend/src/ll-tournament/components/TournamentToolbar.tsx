@@ -30,9 +30,12 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
         display: "flex",
         alignItems: "center",
         gap: 1.5,
-        p: 1,
-        backgroundColor: "rgba(255,255,255,0.04)",
-        borderRadius: 1,
+        p: 1.5,
+        backgroundColor: "rgba(0,0,0,0.2)",
+        borderRadius: 2,
+        border: "1px solid rgba(255,255,255,0.1)",
+        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        backdropFilter: "blur(10px)",
       }}
     >
       <Button
@@ -44,12 +47,18 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
           backgroundColor: "#2196F3",
           minWidth: "unset",
           px: 2,
+          py: 1,
+          borderRadius: 1.5,
+          fontWeight: 600,
+          textTransform: "none",
+          boxShadow: "0 2px 4px rgba(33,150,243,0.3)",
           "&:hover": {
             backgroundColor: "#1976D2",
+            boxShadow: "0 4px 8px rgba(33,150,243,0.4)",
           },
         }}
       >
-        Create
+        Create Match
       </Button>
 
       <Divider
@@ -65,9 +74,12 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
             size="small"
             sx={{
               color: "rgba(255,255,255,0.7)",
+              backgroundColor: "rgba(255,255,255,0.05)",
               "&:hover": {
                 backgroundColor: "rgba(255,255,255,0.1)",
+                color: "#fff",
               },
+              transition: "all 0.2s ease",
             }}
           >
             <RefreshIcon fontSize="small" />
@@ -85,9 +97,12 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
               color: canUndo
                 ? "rgba(255,255,255,0.7)"
                 : "rgba(255,255,255,0.3)",
+              backgroundColor: "rgba(255,255,255,0.05)",
               "&:hover": {
                 backgroundColor: "rgba(255,255,255,0.1)",
+                color: "#fff",
               },
+              transition: "all 0.2s ease",
             }}
           >
             <UndoIcon fontSize="small" />
@@ -105,9 +120,12 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
               color: canRedo
                 ? "rgba(255,255,255,0.7)"
                 : "rgba(255,255,255,0.3)",
+              backgroundColor: "rgba(255,255,255,0.05)",
               "&:hover": {
                 backgroundColor: "rgba(255,255,255,0.1)",
+                color: "#fff",
               },
+              transition: "all 0.2s ease",
             }}
           >
             <RedoIcon fontSize="small" />

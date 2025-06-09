@@ -574,8 +574,59 @@ const MatchBox: React.FC<MatchBoxProps> = ({
         fullWidth
         PaperProps={{
           sx: {
-            backgroundColor: "#1a1a1a",
+            backgroundColor: "rgba(26, 26, 46, 0.95)",
             color: "#fff",
+            borderRadius: 3,
+            border: "1px solid rgba(255,255,255,0.1)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+            backdropFilter: "blur(10px)",
+            "& .MuiDialogTitle-root": {
+              borderBottom: "1px solid rgba(255,255,255,0.1)",
+              padding: "20px 24px",
+              fontSize: "1.5rem",
+              fontWeight: 600,
+              background:
+                "linear-gradient(45deg, rgba(33,150,243,0.1), rgba(33,150,243,0))",
+            },
+            "& .MuiDialogContent-root": {
+              padding: "24px",
+            },
+            "& .MuiDialogActions-root": {
+              padding: "16px 24px",
+              borderTop: "1px solid rgba(255,255,255,0.1)",
+            },
+            "& .MuiOutlinedInput-root": {
+              backgroundColor: "rgba(255,255,255,0.05)",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.08)",
+              },
+              "&.Mui-focused": {
+                backgroundColor: "rgba(255,255,255,0.1)",
+              },
+            },
+            "& .MuiInputLabel-root": {
+              color: "rgba(255,255,255,0.7)",
+            },
+            "& .MuiSelect-select": {
+              color: "#fff",
+            },
+            "& .MuiChip-root": {
+              backgroundColor: "rgba(255,255,255,0.1)",
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.15)",
+              },
+            },
+            "& .MuiButton-root": {
+              textTransform: "none",
+              fontWeight: 600,
+              borderRadius: 1.5,
+              "&.MuiButton-contained": {
+                boxShadow: "0 2px 4px rgba(33,150,243,0.3)",
+                "&:hover": {
+                  boxShadow: "0 4px 8px rgba(33,150,243,0.4)",
+                },
+              },
+            },
           },
         }}
       >
