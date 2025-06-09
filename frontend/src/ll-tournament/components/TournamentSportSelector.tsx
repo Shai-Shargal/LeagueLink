@@ -135,27 +135,6 @@ const TournamentSportSelector: React.FC<TournamentSportSelectorProps> = ({
           ))}
         </Select>
       </FormControl>
-
-      {selectedSport && (
-        <Box
-          sx={{
-            mt: 2,
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            p: 1,
-            backgroundColor: "rgba(103,58,183,0.1)",
-            borderRadius: 1,
-          }}
-        >
-          <span style={{ fontSize: "1.5rem" }}>
-            {sports.find((s) => s.id === selectedSport)?.emoji}
-          </span>
-          <Typography variant="body2" sx={{ color: "rgba(255,255,255,0.9)" }}>
-            {sports.find((s) => s.id === selectedSport)?.name}
-          </Typography>
-        </Box>
-      )}
     </Box>
   );
 };
