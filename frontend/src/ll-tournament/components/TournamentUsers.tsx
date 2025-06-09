@@ -98,10 +98,13 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
   return (
     <Box
       sx={{
-        background: "rgba(255,255,255,0.03)",
+        background: "rgba(0,0,0,0.2)",
         borderRadius: 2,
         p: 2,
         height: "100%",
+        border: "1px solid rgba(103,58,183,0.2)",
+        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        backdropFilter: "blur(10px)",
       }}
     >
       <Box
@@ -110,9 +113,19 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
           justifyContent: "space-between",
           alignItems: "center",
           mb: 2,
+          pb: 1,
+          borderBottom: "1px solid rgba(103,58,183,0.2)",
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: 600,
+            background: "linear-gradient(45deg, #673AB7, #9C27B0)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
           Tournament Users
         </Typography>
         <Tooltip title="Add Guest User">
@@ -120,10 +133,12 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
             onClick={handleAddGuest}
             sx={{
               color: "rgba(255,255,255,0.7)",
+              backgroundColor: "rgba(103,58,183,0.1)",
               "&:hover": {
-                color: "rgba(255,255,255,0.9)",
-                background: "rgba(255,255,255,0.05)",
+                color: "#fff",
+                backgroundColor: "rgba(103,58,183,0.2)",
               },
+              transition: "all 0.2s ease",
             }}
           >
             <AddIcon />
@@ -139,8 +154,13 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
             sx={{
               borderRadius: 1,
               mb: 0.5,
+              backgroundColor: "rgba(103,58,183,0.03)",
+              border: "1px solid rgba(103,58,183,0.1)",
+              transition: "all 0.2s ease",
               "&:hover": {
-                background: "rgba(255,255,255,0.05)",
+                background: "rgba(103,58,183,0.08)",
+                transform: "translateX(4px)",
+                borderColor: "rgba(103,58,183,0.3)",
               },
             }}
           >
@@ -148,7 +168,9 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
               <Avatar
                 src={user.avatar || undefined}
                 sx={{
-                  bgcolor: user.isGuest ? "primary.main" : "secondary.main",
+                  bgcolor: user.isGuest ? "#673AB7" : "#9C27B0",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                  border: "2px solid rgba(103,58,183,0.2)",
                 }}
               >
                 {user.avatar ? null : <PersonIcon />}
@@ -158,10 +180,16 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
               primary={user.name}
               secondary={user.isGuest ? "Guest User" : user.email}
               primaryTypographyProps={{
-                sx: { fontWeight: 500 },
+                sx: {
+                  fontWeight: 500,
+                  color: "#fff",
+                },
               }}
               secondaryTypographyProps={{
-                sx: { color: "rgba(255,255,255,0.5)" },
+                sx: {
+                  color: "rgba(255,255,255,0.5)",
+                  fontSize: "0.75rem",
+                },
               }}
             />
             {user.isGuest && (
@@ -173,9 +201,12 @@ const TournamentUsers: React.FC<TournamentUsersProps> = ({
                 }}
                 sx={{
                   color: "rgba(255,255,255,0.5)",
+                  backgroundColor: "rgba(103,58,183,0.1)",
                   "&:hover": {
-                    color: "error.main",
+                    color: "#ff4444",
+                    backgroundColor: "rgba(255,68,68,0.1)",
                   },
+                  transition: "all 0.2s ease",
                 }}
               >
                 <CloseIcon fontSize="small" />

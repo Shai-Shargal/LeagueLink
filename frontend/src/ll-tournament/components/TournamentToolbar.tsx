@@ -33,7 +33,7 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
         p: 1.5,
         backgroundColor: "rgba(0,0,0,0.2)",
         borderRadius: 2,
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: "1px solid rgba(103,58,183,0.2)",
         boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
         backdropFilter: "blur(10px)",
       }}
@@ -44,17 +44,17 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
         startIcon={<AddIcon fontSize="small" />}
         onClick={onCreateMatch}
         sx={{
-          backgroundColor: "#2196F3",
+          backgroundColor: "#673AB7",
           minWidth: "unset",
           px: 2,
           py: 1,
           borderRadius: 1.5,
           fontWeight: 600,
           textTransform: "none",
-          boxShadow: "0 2px 4px rgba(33,150,243,0.3)",
+          boxShadow: "0 2px 4px rgba(103,58,183,0.3)",
           "&:hover": {
-            backgroundColor: "#1976D2",
-            boxShadow: "0 4px 8px rgba(33,150,243,0.4)",
+            backgroundColor: "#9C27B0",
+            boxShadow: "0 4px 8px rgba(103,58,183,0.4)",
           },
         }}
       >
@@ -64,7 +64,7 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
       <Divider
         orientation="vertical"
         flexItem
-        sx={{ borderColor: "rgba(255,255,255,0.1)" }}
+        sx={{ borderColor: "rgba(103,58,183,0.2)" }}
       />
 
       <Tooltip title="Refresh">
@@ -74,9 +74,9 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
             size="small"
             sx={{
               color: "rgba(255,255,255,0.7)",
-              backgroundColor: "rgba(255,255,255,0.05)",
+              backgroundColor: "rgba(103,58,183,0.1)",
               "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: "rgba(103,58,183,0.2)",
                 color: "#fff",
               },
               transition: "all 0.2s ease",
@@ -97,9 +97,9 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
               color: canUndo
                 ? "rgba(255,255,255,0.7)"
                 : "rgba(255,255,255,0.3)",
-              backgroundColor: "rgba(255,255,255,0.05)",
+              backgroundColor: "rgba(103,58,183,0.1)",
               "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: "rgba(103,58,183,0.2)",
                 color: "#fff",
               },
               transition: "all 0.2s ease",
@@ -120,9 +120,9 @@ const TournamentToolbar: React.FC<TournamentToolbarProps> = ({
               color: canRedo
                 ? "rgba(255,255,255,0.7)"
                 : "rgba(255,255,255,0.3)",
-              backgroundColor: "rgba(255,255,255,0.05)",
+              backgroundColor: "rgba(103,58,183,0.1)",
               "&:hover": {
-                backgroundColor: "rgba(255,255,255,0.1)",
+                backgroundColor: "rgba(103,58,183,0.2)",
                 color: "#fff",
               },
               transition: "all 0.2s ease",

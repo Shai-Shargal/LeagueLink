@@ -213,9 +213,18 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
       fullWidth
       PaperProps={{
         sx: {
-          backgroundColor: "#1a1a1a",
+          backgroundColor: "rgba(26, 26, 46, 0.95)",
           color: "#fff",
           minHeight: "80vh",
+          borderRadius: 3,
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+          backdropFilter: "blur(10px)",
+          "& .MuiDialogContent-root": {
+            padding: "24px",
+            background:
+              "linear-gradient(45deg, rgba(103,58,183,0.05), rgba(156,39,176,0))",
+          },
         },
       }}
     >
@@ -225,12 +234,32 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
           justifyContent: "space-between",
           alignItems: "center",
           borderBottom: "1px solid rgba(255,255,255,0.1)",
+          padding: "20px 24px",
+          background:
+            "linear-gradient(45deg, rgba(103,58,183,0.1), rgba(156,39,176,0))",
+          "& .MuiTypography-root": {
+            fontSize: "1.5rem",
+            fontWeight: 600,
+            background: "linear-gradient(45deg, #673AB7, #9C27B0)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          },
         }}
       >
         <Typography variant="h6" component="div">
           {tournament.name}
         </Typography>
-        <IconButton onClick={onClose} sx={{ color: "rgba(255,255,255,0.7)" }}>
+        <IconButton
+          onClick={onClose}
+          sx={{
+            color: "rgba(255,255,255,0.7)",
+            "&:hover": {
+              backgroundColor: "rgba(103,58,183,0.1)",
+              color: "#fff",
+            },
+            transition: "all 0.2s ease",
+          }}
+        >
           <CloseIcon />
         </IconButton>
       </DialogTitle>
@@ -254,9 +283,11 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
           >
             <Box
               sx={{
-                backgroundColor: "rgba(255,255,255,0.05)",
+                backgroundColor: "rgba(0,0,0,0.2)",
                 borderRadius: 2,
-                p: 1,
+                p: 1.5,
+                border: "1px solid rgba(103,58,183,0.2)",
+                boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
               }}
             >
               <TournamentToolbar
@@ -287,6 +318,20 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
               alignSelf: "flex-start",
               maxHeight: "60vh",
               overflowY: "auto",
+              "&::-webkit-scrollbar": {
+                width: "8px",
+              },
+              "&::-webkit-scrollbar-track": {
+                background: "rgba(103,58,183,0.05)",
+                borderRadius: "4px",
+              },
+              "&::-webkit-scrollbar-thumb": {
+                background: "rgba(103,58,183,0.2)",
+                borderRadius: "4px",
+                "&:hover": {
+                  background: "rgba(103,58,183,0.3)",
+                },
+              },
             }}
           >
             <TournamentUsers
