@@ -18,33 +18,17 @@ const TournamentArrows: React.FC<TournamentArrowsProps> = ({ connections }) => {
           key={`${connection.start}-${connection.end}-${index}`}
           start={connection.start}
           end={connection.end}
-          color="#9c27b0"
+          color="purple"
           strokeWidth={4}
-          path="straight"
-          startAnchor={{ position: "right", offset: { y: 0 } }}
-          endAnchor={{ position: "left", offset: { y: 0 } }}
-          showHead={false}
+          path="smooth"
+          startAnchor="right"
+          endAnchor="left"
+          showHead={true}
           showTail={false}
-          curveness={0}
+          curveness={0.5}
           zIndex={1000}
           _debug={false}
           _extendSVGcanvas={3000}
-          labels={{
-            middle: (
-              <div
-                style={{
-                  backgroundColor: "#e1bee7",
-                  color: "#6a1b9a",
-                  border: "1px solid #6a1b9a",
-                  padding: "2px 8px",
-                  borderRadius: "8px",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  boxShadow: "0 0 6px rgba(106,27,154,0.15)",
-                }}
-              />
-            ),
-          }}
         />
       ))}
     </>
