@@ -13,6 +13,7 @@ import TournamentUsers from "./TournamentUsers";
 import TournamentDropZone from "./TournamentDropZone";
 import { Tournament } from "../../services/tournamentService";
 import api from "../../services/api";
+import TournamentSportSelector from "./TournamentSportSelector";
 
 interface User {
   id: string;
@@ -75,6 +76,9 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
   const [canRedo, setCanRedo] = useState(false);
   const [tournamentUsers, setTournamentUsers] = useState<User[]>([]);
   const [isFetching, setIsFetching] = useState(false);
+  const [selectedSport, setSelectedSport] = useState<string | null>(
+    tournament.sport || null
+  );
 
   const fetchTournamentMatches = async () => {
     if (open && tournament.id) {
@@ -205,6 +209,18 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
     });
   };
 
+  const handleSportChange = async (sportId: string | null) => {
+    setSelectedSport(sportId);
+    try {
+      // Update tournament sport in the backend
+      await api.patch(`/tournaments/${tournament.id}`, {
+        sport: sportId,
+      });
+    } catch (error) {
+      console.error("Error updating tournament sport:", error);
+    }
+  };
+
   return (
     <Dialog
       open={open}
@@ -311,33 +327,49 @@ const TournamentDetailsDialog: React.FC<TournamentDetailsDialogProps> = ({
               isFetching={isFetching}
             />
           </Box>
-          {/* Right side: Users list */}
+          {/* Right side: Users list and Sport selector */}
           <Box
             sx={{
               flex: 1,
-              alignSelf: "flex-start",
-              maxHeight: "60vh",
-              overflowY: "auto",
-              "&::-webkit-scrollbar": {
-                width: "8px",
-              },
-              "&::-webkit-scrollbar-track": {
-                background: "rgba(103,58,183,0.05)",
-                borderRadius: "4px",
-              },
-              "&::-webkit-scrollbar-thumb": {
-                background: "rgba(103,58,183,0.2)",
-                borderRadius: "4px",
-                "&:hover": {
-                  background: "rgba(103,58,183,0.3)",
-                },
-              },
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
             }}
           >
-            <TournamentUsers
-              channelId={tournament.channelId}
-              onUserSelect={handleUserSelect}
-            />
+            {/* Users list with scroll */}
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0, // Important for flex child scrolling
+                overflowY: "auto",
+                "&::-webkit-scrollbar": {
+                  width: "8px",
+                },
+                "&::-webkit-scrollbar-track": {
+                  background: "rgba(103,58,183,0.05)",
+                  borderRadius: "4px",
+                },
+                "&::-webkit-scrollbar-thumb": {
+                  background: "rgba(103,58,183,0.2)",
+                  borderRadius: "4px",
+                  "&:hover": {
+                    background: "rgba(103,58,183,0.3)",
+                  },
+                },
+              }}
+            >
+              <TournamentUsers
+                channelId={tournament.channelId}
+                onUserSelect={handleUserSelect}
+              />
+            </Box>
+            {/* Sport selector below users */}
+            <Box sx={{ flexShrink: 0 }}>
+              <TournamentSportSelector
+                selectedSport={selectedSport}
+                onSportChange={handleSportChange}
+              />
+            </Box>
           </Box>
         </Box>
       </DialogContent>

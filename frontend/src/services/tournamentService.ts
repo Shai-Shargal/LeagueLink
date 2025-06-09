@@ -10,6 +10,7 @@ export interface Tournament {
   time: string;
   location: string;
   channelId: string;
+  sport?: string;
   createdBy?: {
     username: string;
     profilePicture?: string;
