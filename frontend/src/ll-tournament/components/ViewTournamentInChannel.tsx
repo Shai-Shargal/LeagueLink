@@ -3,6 +3,8 @@ import { Box, Typography, Button } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import TournamentList from "./TournamentList";
 import CreateTournamentBox from "./CreateTournamentBox";
+import ChannelStatsBox from "./ChannelStatsBox";
+import ChannelStatsView from "./ChannelStatsView";
 import CreateTournamentDialog, {
   TournamentFormData,
 } from "./CreateTournamentDialog";
@@ -27,6 +29,9 @@ const ViewTournamentInChannel: React.FC<ViewTournamentInChannelProps> = ({
   const [detailsDialogOpen, setDetailsDialogOpen] =
     React.useState(!!tournamentId);
   const [tournament, setTournament] = React.useState<Tournament | null>(null);
+  const [viewMode, setViewMode] = React.useState<"tournaments" | "stats">(
+    "tournaments"
+  );
 
   React.useEffect(() => {
     const fetchTournament = async () => {
@@ -47,6 +52,11 @@ const ViewTournamentInChannel: React.FC<ViewTournamentInChannelProps> = ({
 
   const handleOpenDialog = () => setOpenDialog(true);
   const handleCloseDialog = () => setOpenDialog(false);
+  const handleViewStats = () => setViewMode("stats");
+  const handleViewTournaments = () => setViewMode("tournaments");
+  const handleToggleView = () => {
+    setViewMode(viewMode === "tournaments" ? "stats" : "tournaments");
+  };
 
   const handleCreateTournament = async (data: TournamentFormData) => {
     if (!channelId) return;
@@ -103,10 +113,22 @@ const ViewTournamentInChannel: React.FC<ViewTournamentInChannelProps> = ({
           onClose={handleCloseDialog}
           onCreate={handleCreateTournament}
         />
-        {channelId && <TournamentList key={refreshKey} channelId={channelId} />}
+        {viewMode === "tournaments" && channelId && (
+          <TournamentList key={refreshKey} channelId={channelId} />
+        )}
+        {viewMode === "stats" && channelId && (
+          <ChannelStatsView
+            channelId={channelId}
+            onBackToTournaments={handleViewTournaments}
+          />
+        )}
       </Box>
       <Box sx={{ minWidth: 220, maxWidth: 300, flexShrink: 0 }}>
         <CreateTournamentBox onCreate={handleOpenDialog} />
+        <ChannelStatsBox
+          onViewStats={handleToggleView}
+          currentView={viewMode}
+        />
       </Box>
       {tournamentId && tournament && (
         <TournamentDetailsDialog

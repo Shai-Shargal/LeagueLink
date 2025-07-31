@@ -16,6 +16,20 @@ export interface IGameScore {
   team2Score: number;
 }
 
+export interface IPlayerStat {
+  playerId: mongoose.Types.ObjectId;
+  playerName: string;
+  value: number;
+}
+
+export interface IMatchStats {
+  [statName: string]: {
+    value: number;
+    playerId?: mongoose.Types.ObjectId;
+    playerName?: string;
+  };
+}
+
 export interface IMatch extends Document {
   tournamentId: mongoose.Types.ObjectId;
   team1: ITeam;
@@ -31,7 +45,7 @@ export interface IMatch extends Document {
   status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
   winner?: mongoose.Types.ObjectId;
   gameScores: IGameScore[];
-  stats?: Record<string, any>;
+  stats?: IMatchStats;
 }
 
 const matchSchema = new Schema<IMatch>(

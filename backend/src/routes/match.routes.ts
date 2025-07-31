@@ -201,4 +201,41 @@ router.put("/:id", protect, async (req, res) => {
   }
 });
 
+// Get all matches for a specific player
+router.get("/player/:playerId", protect, async (req, res) => {
+  try {
+    // Validate if the player ID is a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.playerId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid player ID format",
+      });
+    }
+
+    const matches = await Match.find({
+      $or: [
+        { "team1.players.userId": req.params.playerId },
+        { "team2.players.userId": req.params.playerId },
+      ],
+    })
+      .populate("tournamentId", "name")
+      .populate("team1.players.userId", "username profilePicture")
+      .populate("team2.players.userId", "username profilePicture")
+      .populate("winner", "username profilePicture")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      success: true,
+      data: matches,
+    });
+  } catch (error: any) {
+    console.error("Fetch Player Matches Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching player matches",
+      error: error.message,
+    });
+  }
+});
+
 export default router;

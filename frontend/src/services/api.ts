@@ -10,6 +10,20 @@ const api = axios.create({
   },
 });
 
+// Add request interceptor to include token in all requests
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error: any) => {
+    return Promise.reject(error);
+  }
+);
+
 export interface RegisterData {
   username: string;
   email: string;
@@ -180,7 +194,7 @@ export const authService = {
       });
       console.log("Raw getMyChannels response:", response.data);
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in getMyChannels:", error);
       if (error.response) {
         console.error("Error response:", error.response.data);
@@ -241,7 +255,7 @@ export const authService = {
         },
       });
       return response.data;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error in getChannel:", error);
       throw error;
     }

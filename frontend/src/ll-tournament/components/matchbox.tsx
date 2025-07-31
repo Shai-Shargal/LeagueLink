@@ -22,7 +22,7 @@ import {
   Alert,
 } from "@mui/material";
 import { Delete, Close, Settings, Save, Link } from "@mui/icons-material";
-import axios from "axios";
+import api from "../../services/api";
 
 interface User {
   id: string;
@@ -142,7 +142,10 @@ interface MatchBoxProps {
       team2Score: number;
     }>;
     _id: string;
-    stats?: Record<string, number>;
+    stats?: Record<
+      string,
+      { value: number; playerId?: string; playerName?: string }
+    >;
   };
 }
 
@@ -188,9 +191,12 @@ const MatchBox: React.FC<MatchBoxProps> = ({
   const [isSaved, setIsSaved] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [matchId, setMatchId] = useState<string | null>(null);
-  const [stats, setStats] = useState<Record<string, number>>({});
+  const [stats, setStats] = useState<
+    Record<string, { value: number; playerId?: string; playerName?: string }>
+  >({});
   const [newStatName, setNewStatName] = useState("");
   const [newStatValue, setNewStatValue] = useState("");
+  const [newStatPlayerId, setNewStatPlayerId] = useState<string>("");
 
   // Initialize match data when component mounts or initialData changes
   React.useEffect(() => {
@@ -214,7 +220,25 @@ const MatchBox: React.FC<MatchBoxProps> = ({
       setGameScores(initialData.gameScores);
       setMatchId(initialData._id);
       setIsSaved(true);
-      setStats(initialData.stats || {});
+      // Convert old stats format to new format if needed
+      const convertedStats: Record<
+        string,
+        { value: number; playerId?: string; playerName?: string }
+      > = {};
+      if (initialData.stats) {
+        Object.entries(initialData.stats).forEach(([key, value]) => {
+          if (typeof value === "number") {
+            convertedStats[key] = { value };
+          } else if (typeof value === "object" && value !== null) {
+            convertedStats[key] = value as {
+              value: number;
+              playerId?: string;
+              playerName?: string;
+            };
+          }
+        });
+      }
+      setStats(convertedStats);
 
       // Calculate winner based on game scores
       const team1Wins = initialData.gameScores.filter(
@@ -312,12 +336,20 @@ const MatchBox: React.FC<MatchBoxProps> = ({
 
   const handleAddStat = () => {
     if (newStatName && newStatValue) {
+      const selectedPlayer = [...team1, ...team2].find(
+        (p) => p.id === newStatPlayerId
+      );
       setStats((prev) => ({
         ...prev,
-        [newStatName]: Number(newStatValue),
+        [newStatName]: {
+          value: Number(newStatValue),
+          playerId: newStatPlayerId || undefined,
+          playerName: selectedPlayer?.name || undefined,
+        },
       }));
       setNewStatName("");
       setNewStatValue("");
+      setNewStatPlayerId("");
     }
   };
 
@@ -370,14 +402,11 @@ const MatchBox: React.FC<MatchBoxProps> = ({
 
       if (matchId) {
         // Update existing match
-        await axios.put(
-          `http://localhost:5000/api/matches/${matchId}`,
-          matchData
-        );
+        await api.put(`/matches/${matchId}`, matchData);
       } else {
         // Create new match
-        const response = await axios.post(
-          `http://localhost:5000/api/tournaments/${tournamentId}/matches`,
+        const response = await api.post(
+          `/tournaments/${tournamentId}/matches`,
           matchData
         );
         setMatchId(response.data.data._id);
@@ -400,14 +429,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
     }
 
     try {
-      const response = await axios.delete(
-        `http://localhost:5000/api/matches/${matchId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      const response = await api.delete(`/matches/${matchId}`);
 
       if (response.data.success) {
         onRemove?.();
@@ -841,11 +863,12 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                 Stats
               </Typography>
               <Grid container spacing={2}>
-                {Object.entries(stats).map(([name, value]) => (
+                {Object.entries(stats).map(([name, statData]) => (
                   <Grid item xs={12} sm={6} key={name}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Typography>
-                        {name}: {value}
+                        {name}: {statData.value}
+                        {statData.playerName && ` (${statData.playerName})`}
                       </Typography>
                       <IconButton
                         size="small"
@@ -857,7 +880,7 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                   </Grid>
                 ))}
               </Grid>
-              <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
+              <Box sx={{ mt: 2, display: "flex", gap: 1, flexWrap: "wrap" }}>
                 <TextField
                   label="Stat Name"
                   value={newStatName}
@@ -871,6 +894,23 @@ const MatchBox: React.FC<MatchBoxProps> = ({
                   onChange={(e) => setNewStatValue(e.target.value)}
                   size="small"
                 />
+                <FormControl size="small" sx={{ minWidth: 150 }}>
+                  <InputLabel>Player (Optional)</InputLabel>
+                  <Select
+                    value={newStatPlayerId}
+                    onChange={(e) => setNewStatPlayerId(e.target.value)}
+                    label="Player (Optional)"
+                  >
+                    <MenuItem value="">
+                      <em>No specific player</em>
+                    </MenuItem>
+                    {[...team1, ...team2].map((player) => (
+                      <MenuItem key={player.id} value={player.id}>
+                        {player.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
                 <Button
                   variant="contained"
                   onClick={handleAddStat}
